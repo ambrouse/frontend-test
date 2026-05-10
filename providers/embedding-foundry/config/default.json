@@ -1,0 +1,6 @@
+{
+  "profile": "bge-m3 batch 64",
+  "branch": "main",
+  "port": 8120,
+  "installDirectory": "D:/AIHub/providers/embedding-foundry"
+}

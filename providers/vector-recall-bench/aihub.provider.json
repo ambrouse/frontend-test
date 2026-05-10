@@ -1,0 +1,79 @@
+{
+  "id": "vector-recall-bench",
+  "name": "Vector Recall Bench",
+  "type": "embedding",
+  "repoUrl": "https://github.com/ntc-ai/vector-recall-bench",
+  "description": "Measure recall across vector stores.",
+  "tags": [
+    "vector",
+    "recall",
+    "bench"
+  ],
+  "accentColor": "#38bdf8",
+  "visual": {
+    "imageUrl": "/assets/projects/embedding-foundry.jpg",
+    "focus": "64% 48%",
+    "ambient": "#31a8de",
+    "ambientSoft": "#08283b"
+  },
+  "installStatus": "installed",
+  "runStatus": "stopped",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 6,
+      "ramMb": 16384,
+      "vramMb": 4096,
+      "diskGb": 44,
+      "gpuRequired": false
+    },
+    "recommended": {
+      "cpuCores": 10,
+      "ramMb": 32768,
+      "vramMb": 8192,
+      "diskGb": 79,
+      "gpuRequired": false
+    }
+  },
+  "editableConfig": {
+    "profile": "Recall sweep",
+    "branch": "main",
+    "port": 8251,
+    "installDirectory": "D:/AIHub/providers/vector-recall-bench"
+  },
+  "lastBenchmark": {
+    "headlineMetric": "14k q/min",
+    "secondaryMetric": "recall 0.91",
+    "latencyMs": null,
+    "throughput": 14000,
+    "vramPeakMb": 3072,
+    "measuredAt": "2026-05-10T09:12:00.000Z"
+  },
+  "lastRunAt": "2026-05-10T09:12:00.000Z",
+  "runtime": {
+    "defaultPort": 8251,
+    "healthUrl": "http://localhost:8251/health",
+    "metricsUrl": "http://localhost:8251/metrics"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  },
+  "compatibility": {
+    "level": "green",
+    "reasons": [
+      "Hardware has enough resources for the recommended profile."
+    ]
+  }
+}

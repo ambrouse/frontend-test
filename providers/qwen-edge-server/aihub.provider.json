@@ -1,0 +1,80 @@
+{
+  "id": "qwen-edge-server",
+  "name": "Qwen Edge Server",
+  "type": "llm",
+  "repoUrl": "https://github.com/ntc-ai/qwen-edge-server",
+  "description": "Run Qwen edge profiles with API routing.",
+  "tags": [
+    "qwen",
+    "edge",
+    "api"
+  ],
+  "accentColor": "#14b8a6",
+  "visual": {
+    "imageUrl": "/assets/projects/local-llm.jpg",
+    "focus": "66% 48%",
+    "ambient": "#1f8c86",
+    "ambientSoft": "#0a2f31"
+  },
+  "installStatus": "installed",
+  "runStatus": "stopped",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 8,
+      "ramMb": 24576,
+      "vramMb": 10240,
+      "diskGb": 42,
+      "gpuRequired": true
+    },
+    "recommended": {
+      "cpuCores": 12,
+      "ramMb": 49152,
+      "vramMb": 20480,
+      "diskGb": 76,
+      "gpuRequired": true
+    }
+  },
+  "editableConfig": {
+    "profile": "Qwen2.5 14B edge",
+    "branch": "main",
+    "port": 8211,
+    "installDirectory": "D:/AIHub/providers/qwen-edge-server"
+  },
+  "lastBenchmark": {
+    "headlineMetric": "61 tok/s",
+    "secondaryMetric": "TTFT 520 ms",
+    "latencyMs": 520,
+    "throughput": 61,
+    "vramPeakMb": 9216,
+    "measuredAt": "2026-05-10T09:12:00.000Z"
+  },
+  "lastRunAt": "2026-05-10T09:12:00.000Z",
+  "runtime": {
+    "defaultPort": 8211,
+    "healthUrl": "http://localhost:8211/health",
+    "metricsUrl": "http://localhost:8211/metrics"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  },
+  "compatibility": {
+    "level": "yellow",
+    "reasons": [
+      "Runs, but free RAM is below recommended level.",
+      "Runs, but VRAM is near the limit; use a lighter profile."
+    ]
+  }
+}

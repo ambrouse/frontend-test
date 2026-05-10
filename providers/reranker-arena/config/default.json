@@ -1,0 +1,6 @@
+{
+  "profile": "Rerank suite",
+  "branch": "main",
+  "port": 8252,
+  "installDirectory": "D:/AIHub/providers/reranker-arena"
+}

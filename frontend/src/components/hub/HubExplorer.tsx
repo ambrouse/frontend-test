@@ -1,7 +1,8 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, startTransition, useEffect, useMemo, useState } from "react";
+import { fetchFeaturedProviders, fetchProviders } from "@/services/apiClient";
 import { hubProjects } from "@/services/mockData";
 import type { HubProject, ProjectType } from "@/services/types";
 import { formatProjectType } from "@/utils/format";
@@ -19,11 +20,13 @@ const projectTypes: Array<ProjectType | "all"> = [
   "tooling",
 ];
 
-const featuredProjects = getFeaturedProjects(hubProjects).slice(0, 30);
+const initialFeaturedProjects = getFeaturedProjects(hubProjects).slice(0, 30);
 
 export function HubExplorer() {
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
   const [query, setQuery] = useState("");
+  const [projects, setProjects] = useState<HubProject[]>(hubProjects);
+  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(initialFeaturedProjects);
   const [activeSlide, setActiveSlide] = useState(0);
   const [previousProject, setPreviousProject] = useState<HubProject | null>(null);
 
@@ -53,6 +56,31 @@ export function HubExplorer() {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    void fetchProviders({ signal: controller.signal })
+      .then((response) => {
+        startTransition(() => setProjects(response.providers));
+      })
+      .catch(() => {
+        // Keep static fallback; the UI must never wait for backend availability.
+      });
+
+    void fetchFeaturedProviders({ signal: controller.signal })
+      .then((response) => {
+        startTransition(() => {
+          setFeaturedProjects(response.providers.length > 0 ? response.providers : initialFeaturedProjects);
+          setActiveSlide(0);
+        });
+      })
+      .catch(() => {
+        // Static featured providers are already rendered.
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
     if (featuredProjects.length === 0) {
       return;
     }
@@ -65,7 +93,7 @@ export function HubExplorer() {
     }, 6200);
 
     return () => window.clearInterval(timer);
-  }, []);
+  }, [featuredProjects]);
 
   useEffect(() => {
     if (!previousProject) {
@@ -79,7 +107,7 @@ export function HubExplorer() {
   const visibleProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return hubProjects.filter((project) => {
+    return projects.filter((project) => {
       const matchesType = activeType === "all" || project.type === activeType;
       const matchesQuery =
         normalizedQuery.length === 0 ||
@@ -89,9 +117,9 @@ export function HubExplorer() {
 
       return matchesType && matchesQuery;
     });
-  }, [activeType, query]);
+  }, [activeType, projects, query]);
 
-  const featuredProject = featuredProjects[activeSlide] ?? hubProjects[0];
+  const featuredProject = featuredProjects[activeSlide] ?? projects[0] ?? hubProjects[0];
 
   return (
     <div className="page-flow">

@@ -1,0 +1,6 @@
+{
+  "profile": "Cache proxy",
+  "branch": "main",
+  "port": 8253,
+  "installDirectory": "D:/AIHub/providers/semantic-cache-proxy"
+}

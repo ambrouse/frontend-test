@@ -1,0 +1,6 @@
+{
+  "profile": "Telemetry agent",
+  "branch": "main",
+  "port": 8274,
+  "installDirectory": "D:/AIHub/providers/gpu-observability-lite"
+}

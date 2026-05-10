@@ -1,0 +1,6 @@
+{
+  "profile": "Whisper large",
+  "branch": "main",
+  "port": 8261,
+  "installDirectory": "D:/AIHub/providers/multilingual-speech-lab"
+}

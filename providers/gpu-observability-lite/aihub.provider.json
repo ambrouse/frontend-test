@@ -1,0 +1,79 @@
+{
+  "id": "gpu-observability-lite",
+  "name": "GPU Observability Lite",
+  "type": "tooling",
+  "repoUrl": "https://github.com/ntc-ai/gpu-observability-lite",
+  "description": "Sample GPU process metrics.",
+  "tags": [
+    "gpu",
+    "metrics",
+    "dash"
+  ],
+  "accentColor": "#38bdf8",
+  "visual": {
+    "imageUrl": "/assets/projects/local-llm.jpg",
+    "focus": "48% 50%",
+    "ambient": "#0f766e",
+    "ambientSoft": "#062827"
+  },
+  "installStatus": "installed",
+  "runStatus": "running",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 4,
+      "ramMb": 8192,
+      "vramMb": 0,
+      "diskGb": 12,
+      "gpuRequired": false
+    },
+    "recommended": {
+      "cpuCores": 8,
+      "ramMb": 16384,
+      "vramMb": 0,
+      "diskGb": 22,
+      "gpuRequired": false
+    }
+  },
+  "editableConfig": {
+    "profile": "Telemetry agent",
+    "branch": "main",
+    "port": 8274,
+    "installDirectory": "D:/AIHub/providers/gpu-observability-lite"
+  },
+  "lastBenchmark": {
+    "headlineMetric": "1s samples",
+    "secondaryMetric": "4 streams",
+    "latencyMs": 1000,
+    "throughput": 4,
+    "vramPeakMb": 1024,
+    "measuredAt": "2026-05-10T09:12:00.000Z"
+  },
+  "lastRunAt": "2026-05-10T09:12:00.000Z",
+  "runtime": {
+    "defaultPort": 8274,
+    "healthUrl": "http://localhost:8274/health",
+    "metricsUrl": "http://localhost:8274/metrics"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  },
+  "compatibility": {
+    "level": "green",
+    "reasons": [
+      "Hardware has enough resources for the recommended profile."
+    ]
+  }
+}

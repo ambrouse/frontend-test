@@ -1,0 +1,80 @@
+{
+  "id": "llama-router-farm",
+  "name": "Llama Router Farm",
+  "type": "llm",
+  "repoUrl": "https://github.com/ntc-ai/llama-router-farm",
+  "description": "Route chat traffic across GGUF workers.",
+  "tags": [
+    "llama",
+    "router",
+    "workers"
+  ],
+  "accentColor": "#2dd4bf",
+  "visual": {
+    "imageUrl": "/assets/projects/local-llm.jpg",
+    "focus": "66% 48%",
+    "ambient": "#1f8c86",
+    "ambientSoft": "#0a2f31"
+  },
+  "installStatus": "not_installed",
+  "runStatus": "stopped",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 10,
+      "ramMb": 32768,
+      "vramMb": 12288,
+      "diskGb": 64,
+      "gpuRequired": true
+    },
+    "recommended": {
+      "cpuCores": 14,
+      "ramMb": 65536,
+      "vramMb": 24576,
+      "diskGb": 115,
+      "gpuRequired": true
+    }
+  },
+  "editableConfig": {
+    "profile": "Router balanced",
+    "branch": "main",
+    "port": 8212,
+    "installDirectory": "D:/AIHub/providers/llama-router-farm"
+  },
+  "lastBenchmark": {
+    "headlineMetric": "184 req/min",
+    "secondaryMetric": "p95 1.8s",
+    "latencyMs": 1800,
+    "throughput": 184,
+    "vramPeakMb": 11264,
+    "measuredAt": "2026-05-10T09:12:00.000Z"
+  },
+  "lastRunAt": "2026-05-10T09:12:00.000Z",
+  "runtime": {
+    "defaultPort": 8212,
+    "healthUrl": "http://localhost:8212/health",
+    "metricsUrl": "http://localhost:8212/metrics"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  },
+  "compatibility": {
+    "level": "yellow",
+    "reasons": [
+      "Runs, but free RAM is below recommended level.",
+      "Runs, but VRAM is near the limit; use a lighter profile."
+    ]
+  }
+}

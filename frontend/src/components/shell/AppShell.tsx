@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Boxes, Cpu, Moon, Settings, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { fetchActiveTasks } from "@/services/apiClient";
 import { runningTasks } from "@/services/mockData";
 
 type ThemeMode = "dark" | "light";
@@ -28,10 +29,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const currentPathname = pathname ?? "/";
   const [theme, setTheme] = useState<ThemeMode>("dark");
-  const activeTasks = useMemo(
+  const fallbackActiveTasks = useMemo(
     () => runningTasks.filter((task) => task.status === "running" || task.status === "installing"),
     [],
   );
+  const [activeTaskCount, setActiveTaskCount] = useState(fallbackActiveTasks.length);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("ai-hub-theme") as ThemeMode | null;
@@ -43,6 +45,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem("ai-hub-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchActiveTasks({ signal: controller.signal })
+      .then((response) => setActiveTaskCount(response.count))
+      .catch(() => {
+        setActiveTaskCount(fallbackActiveTasks.length);
+      });
+
+    return () => controller.abort();
+  }, [fallbackActiveTasks.length]);
 
   const handleToggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
@@ -86,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="command-bar">
           <div className="top-status">
             <span className="live-dot" aria-hidden="true" />
-            <span>{activeTasks.length} task live</span>
+            <span>{activeTaskCount} task live</span>
           </div>
 
           <button className="theme-toggle" type="button" onClick={handleToggleTheme} aria-label="Đổi theme">

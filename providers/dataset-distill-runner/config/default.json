@@ -1,0 +1,6 @@
+{
+  "profile": "Distill pass",
+  "branch": "stable",
+  "port": 8233,
+  "installDirectory": "D:/AIHub/providers/dataset-distill-runner"
+}

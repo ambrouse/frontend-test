@@ -5,14 +5,20 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
+      - "backend/**"
+      - "providers/**"
       - ".github/workflows/**"
       - "docs/**"
+      - "plans/**"
   pull_request:
     branches: [main]
     paths:
       - "frontend/**"
+      - "backend/**"
+      - "providers/**"
       - ".github/workflows/**"
       - "docs/**"
+      - "plans/**"
   workflow_dispatch:
 
 concurrency:
@@ -87,3 +93,39 @@ jobs:
 
       - name: Audit all dependencies
         run: npm audit --audit-level=moderate
+
+  backend:
+    name: Backend API tests
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            runner: ubuntu-24.04
+          - name: Windows x64
+            runner: windows-2025
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install backend
+        run: python -m pip install -e ".[dev]"
+
+      - name: Seed provider fixtures
+        run: python scripts/seed_providers.py
+
+      - name: Run backend tests
+        run: pytest

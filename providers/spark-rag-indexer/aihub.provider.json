@@ -1,0 +1,79 @@
+{
+  "id": "spark-rag-indexer",
+  "name": "Spark RAG Indexer",
+  "type": "spark-llm",
+  "repoUrl": "https://github.com/ntc-ai/spark-rag-indexer",
+  "description": "Build vector indexes with Spark executors.",
+  "tags": [
+    "spark",
+    "rag",
+    "index"
+  ],
+  "accentColor": "#2563eb",
+  "visual": {
+    "imageUrl": "/assets/projects/spark-llm.jpg",
+    "focus": "62% 48%",
+    "ambient": "#1d4ed8",
+    "ambientSoft": "#071936"
+  },
+  "installStatus": "installed",
+  "runStatus": "stopped",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 12,
+      "ramMb": 49152,
+      "vramMb": 12288,
+      "diskGb": 160,
+      "gpuRequired": true
+    },
+    "recommended": {
+      "cpuCores": 16,
+      "ramMb": 98304,
+      "vramMb": 24576,
+      "diskGb": 288,
+      "gpuRequired": true
+    }
+  },
+  "editableConfig": {
+    "profile": "Index workers",
+    "branch": "main",
+    "port": 8231,
+    "installDirectory": "D:/AIHub/providers/spark-rag-indexer"
+  },
+  "lastBenchmark": {
+    "headlineMetric": "5.8k docs/min",
+    "secondaryMetric": "8 workers",
+    "latencyMs": null,
+    "throughput": 5800,
+    "vramPeakMb": 11264,
+    "measuredAt": "2026-05-10T09:12:00.000Z"
+  },
+  "lastRunAt": "2026-05-10T09:12:00.000Z",
+  "runtime": {
+    "defaultPort": 8231,
+    "healthUrl": "http://localhost:8231/health",
+    "metricsUrl": "http://localhost:8231/metrics"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  },
+  "compatibility": {
+    "level": "red",
+    "reasons": [
+      "RAM free is short by 11096 MB."
+    ]
+  }
+}

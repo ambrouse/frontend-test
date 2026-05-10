@@ -20,6 +20,14 @@ yarn-error.log*
 pnpm-debug.log*
 .eslintcache
 tsconfig.tsbuildinfo
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+providers/**/runtime/*
+!providers/**/runtime/.gitkeep
+providers/**/logs/*
+!providers/**/logs/.gitkeep
 
 # OS/editor
 .DS_Store

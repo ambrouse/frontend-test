@@ -1,0 +1,6 @@
+{
+  "profile": "Cache audit",
+  "branch": "main",
+  "port": 8272,
+  "installDirectory": "D:/AIHub/providers/model-cache-manager"
+}

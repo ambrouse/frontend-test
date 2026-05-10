@@ -1,0 +1,79 @@
+{
+  "id": "camera-qa-studio",
+  "name": "Camera QA Studio",
+  "type": "vision",
+  "repoUrl": "https://github.com/ntc-ai/camera-qa-studio",
+  "description": "Inspect camera frames with caption review.",
+  "tags": [
+    "camera",
+    "qa",
+    "caption"
+  ],
+  "accentColor": "#22d3ee",
+  "visual": {
+    "imageUrl": "/assets/projects/vision-lab.jpg",
+    "focus": "62% 72%",
+    "ambient": "#0284c7",
+    "ambientSoft": "#061f35"
+  },
+  "installStatus": "installed",
+  "runStatus": "stopped",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 6,
+      "ramMb": 16384,
+      "vramMb": 8192,
+      "diskGb": 28,
+      "gpuRequired": true
+    },
+    "recommended": {
+      "cpuCores": 10,
+      "ramMb": 32768,
+      "vramMb": 16384,
+      "diskGb": 50,
+      "gpuRequired": true
+    }
+  },
+  "editableConfig": {
+    "profile": "Realtime QA",
+    "branch": "stable",
+    "port": 8221,
+    "installDirectory": "D:/AIHub/providers/camera-qa-studio"
+  },
+  "lastBenchmark": {
+    "headlineMetric": "42 FPS",
+    "secondaryMetric": "p95 44 ms",
+    "latencyMs": 44,
+    "throughput": 42,
+    "vramPeakMb": 7168,
+    "measuredAt": "2026-05-10T09:12:00.000Z"
+  },
+  "lastRunAt": "2026-05-10T09:12:00.000Z",
+  "runtime": {
+    "defaultPort": 8221,
+    "healthUrl": "http://localhost:8221/health",
+    "metricsUrl": "http://localhost:8221/metrics"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  },
+  "compatibility": {
+    "level": "yellow",
+    "reasons": [
+      "Runs, but VRAM is near the limit; use a lighter profile."
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "profile": "Triton single GPU",
+  "branch": "release/1.x",
+  "port": 8241,
+  "installDirectory": "D:/AIHub/providers/triton-blueprint-serve"
+}

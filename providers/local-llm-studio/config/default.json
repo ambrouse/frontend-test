@@ -1,0 +1,6 @@
+{
+  "profile": "Qwen 14B Q4_K_M",
+  "branch": "main",
+  "port": 7860,
+  "installDirectory": "D:/AIHub/providers/local-llm-studio"
+}

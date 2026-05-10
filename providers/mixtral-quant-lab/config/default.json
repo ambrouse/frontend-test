@@ -1,0 +1,6 @@
+{
+  "profile": "MoE Q4 sweep",
+  "branch": "main",
+  "port": 8214,
+  "installDirectory": "D:/AIHub/providers/mixtral-quant-lab"
+}

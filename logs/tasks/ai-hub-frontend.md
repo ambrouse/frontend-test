@@ -1,5 +1,16 @@
 # AI Hub Frontend Work Log
 
+## Update 2026-05-10 - Backend implementation phase 1-3
+
+- Added `backend/` FastAPI app with cache-first hardware, provider, task, and health APIs.
+- Added provider registry that serves in-memory warm snapshots and refreshes from `providers/*/aihub.provider.json`.
+- Added `providers/` seed folders for 30 frontend providers with manifest/config/runtime/log/script layout.
+- Added backend pytest contract and latency tests.
+- Added frontend `apiClient` with 250 ms timeout and static fallback behavior for Hub/AppShell so render is not blocked by backend.
+- Updated CI to run backend pytest on Linux and Windows.
+- Warm-path local averages: health 1.851 ms, hardware 1.918 ms, providers 2.307 ms, featured 2.244 ms.
+- Verified: backend pytest pass, frontend typecheck pass, frontend test pass, frontend build pass.
+
 ## Update 2026-05-10 - Backend provider runtime plan
 
 - Read the requested `plan-skill` from `.codex/skills/project-workflow/references/github-skills/plan-skill/SKILL.md`.
