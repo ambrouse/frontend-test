@@ -1,0 +1,69 @@
+name: Frontend Production Artifact
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "frontend-v*"
+    paths:
+      - "frontend/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  build-artifact:
+    name: Build deployable frontend artifact
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Stage artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifact
+          mkdir -p artifact/.next artifact/public
+          cp -R .next/standalone artifact/
+          cp -R .next/static artifact/.next/static
+          cp -R public/. artifact/public/
+          cp package.json package-lock.json artifact/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-hub-frontend-${{ github.sha }}
+          path: frontend/artifact
+          if-no-files-found: error
+          retention-days: 14

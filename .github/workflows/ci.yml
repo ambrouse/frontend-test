@@ -1,36 +1,89 @@
-name: CI
+name: Frontend CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/**"
+      - "docs/**"
   pull_request:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/**"
+      - "docs/**"
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: frontend
 
 jobs:
-  frontend:
-    name: Frontend checks
-    runs-on: ubuntu-latest
+  verify:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            runner: ubuntu-24.04
+          - name: Linux ARM64
+            runner: ubuntu-24.04-arm
+          - name: Windows x64
+            runner: windows-2025
+          - name: Windows ARM64
+            runner: windows-11-arm
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 23
+          node-version: 22
           cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: npm ci
 
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
+      - name: Unit tests
         run: npm run test
 
-      - name: Build
+      - name: Production build
         run: npm run build
+
+  dependency-audit:
+    name: Production dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high

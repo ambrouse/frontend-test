@@ -1,27 +1,19 @@
-# AI Hub Frontend
+# AI Hub
 
-Dark-first Next.js frontend for a local AI project hub. The app helps inspect machine resources, browse AI providers, and review project readiness before install/run actions.
+Monorepo for the local AI Hub frontend and provider integration notes.
 
-## Stack
+## Structure
 
-- [Next.js](https://nextjs.org/) App Router
-- [React](https://react.dev/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Vitest](https://vitest.dev/)
+- `frontend/`: Next.js frontend application.
+- `docs/`: provider contract and architecture notes.
+- `plans/`: implementation plans.
+- `logs/`: work logs.
 
-## Features
-
-- Hardware cockpit for CPU, GPU, RAM, VRAM, disk, temperature, and running tasks.
-- Provider Hub with project cards, compatibility ping, search, filter, and project carousel.
-- Project detail page with requirements, benchmark, config, logs, and action states.
-- Dark/light theme with project-aware ambient backgrounds.
-- Mock service layer ready for a backend API adapter.
-
-## Scripts
+## Frontend
 
 ```bash
-npm install
-npm run dev
+cd frontend
+npm ci
 npm run typecheck
 npm run test
 npm run build
@@ -29,17 +21,6 @@ npm run build
 
 PowerShell note: if `npm.ps1` is blocked by execution policy, use `npm.cmd`.
 
-## Project Structure
+## CI/CD
 
-- `src/app`: Next.js App Router pages.
-- `src/components`: UI components.
-- `src/services`: mock data, types, compatibility logic.
-- `src/utils`: formatting helpers.
-- `src/styles`: global design system and theme styles.
-- `docs`: task and design documentation.
-- `logs`: implementation logs.
-- `plans`: implementation plans.
-
-## CI
-
-GitHub Actions runs install, typecheck, tests, and production build on pushes and pull requests to `main`.
+GitHub Actions runs frontend checks from `frontend/` on Linux and Windows, including x64 and ARM64 runners, then builds a production artifact from `main`.

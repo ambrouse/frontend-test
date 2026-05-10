@@ -86,12 +86,12 @@ const projectsSeed: Omit<HubProject, "compatibility">[] = [
     repoUrl: "https://github.com/ntc-ai/vision-lab",
     description: "Pipeline detection, segmentation và captioning cho camera hoặc batch ảnh.",
     tags: ["yolo", "sam", "caption"],
-    accentColor: "#f59e0b",
+    accentColor: "#22d3ee",
     visual: {
       imageUrl: "/assets/projects/vision-lab.jpg",
       focus: "62% 72%",
-      ambient: "#d58a24",
-      ambientSoft: "#2f1b0b",
+      ambient: "#0284c7",
+      ambientSoft: "#061f35",
     },
     installStatus: "installed",
     runStatus: "stopped",
@@ -134,12 +134,12 @@ const projectsSeed: Omit<HubProject, "compatibility">[] = [
     repoUrl: "https://github.com/ntc-ai/spark-llm-runner",
     description: "Chạy batch inference LLM qua Spark cho dữ liệu lớn và job phân tán.",
     tags: ["spark", "batch", "etl"],
-    accentColor: "#a78bfa",
+    accentColor: "#2563eb",
     visual: {
       imageUrl: "/assets/projects/spark-llm.jpg",
       focus: "62% 48%",
-      ambient: "#7c6df0",
-      ambientSoft: "#181230",
+      ambient: "#1d4ed8",
+      ambientSoft: "#071936",
     },
     installStatus: "not_installed",
     runStatus: "stopped",
@@ -182,12 +182,12 @@ const projectsSeed: Omit<HubProject, "compatibility">[] = [
     repoUrl: "https://github.com/ntc-ai/nvidia-blueprint-rag",
     description: "Blueprint RAG containerized với vector store, reranker và endpoint OpenAI-compatible.",
     tags: ["nvidia", "rag", "containers"],
-    accentColor: "#84cc16",
+    accentColor: "#4ade80",
     visual: {
       imageUrl: "/assets/projects/nvidia-blueprint.jpg",
       focus: "54% 50%",
-      ambient: "#79b81e",
-      ambientSoft: "#17250b",
+      ambient: "#22c55e",
+      ambientSoft: "#052e16",
     },
     installStatus: "failed",
     runStatus: "error",
@@ -332,20 +332,20 @@ const visualPresets = {
   vision: {
     imageUrl: "/assets/projects/vision-lab.jpg",
     focus: "62% 72%",
-    ambient: "#d58a24",
-    ambientSoft: "#2f1b0b",
+    ambient: "#0284c7",
+    ambientSoft: "#061f35",
   },
   "spark-llm": {
     imageUrl: "/assets/projects/spark-llm.jpg",
     focus: "62% 48%",
-    ambient: "#7c6df0",
-    ambientSoft: "#181230",
+    ambient: "#1d4ed8",
+    ambientSoft: "#071936",
   },
   "nvidia-blueprint": {
     imageUrl: "/assets/projects/nvidia-blueprint.jpg",
     focus: "54% 50%",
-    ambient: "#79b81e",
-    ambientSoft: "#17250b",
+    ambient: "#22c55e",
+    ambientSoft: "#052e16",
   },
   embedding: {
     imageUrl: "/assets/projects/embedding-foundry.jpg",
@@ -356,16 +356,26 @@ const visualPresets = {
   speech: {
     imageUrl: "/assets/projects/embedding-foundry.jpg",
     focus: "42% 48%",
-    ambient: "#c026d3",
-    ambientSoft: "#2d0a33",
+    ambient: "#2563eb",
+    ambientSoft: "#071936",
   },
   tooling: {
     imageUrl: "/assets/projects/local-llm.jpg",
     focus: "48% 50%",
-    ambient: "#64748b",
-    ambientSoft: "#111827",
+    ambient: "#0f766e",
+    ambientSoft: "#062827",
   },
 } satisfies Record<ProjectType, HubProject["visual"]>;
+
+const typeAccentColors: Record<ProjectType, string[]> = {
+  llm: ["#2dd4bf", "#22c55e", "#38bdf8"],
+  vision: ["#22d3ee", "#0ea5e9", "#2dd4bf"],
+  "spark-llm": ["#2563eb", "#0284c7", "#38bdf8"],
+  "nvidia-blueprint": ["#4ade80", "#22c55e", "#16a34a"],
+  embedding: ["#38bdf8", "#0ea5e9", "#2dd4bf"],
+  speech: ["#60a5fa", "#2563eb", "#38bdf8"],
+  tooling: ["#0f766e", "#0284c7", "#22c55e"],
+};
 
 const generatedProjectDefinitions: GeneratedProjectDefinition[] = ([
   ["qwen-edge-server", "Qwen Edge Server", "llm", "llm", "Run Qwen edge profiles with OpenAI-compatible routing.", ["qwen", "edge", "api"], "#14b8a6", "installed", "stopped", 8, 24, 10, 42, true, "Qwen2.5 14B edge", "main", 8211, "61 tok/s", "TTFT 520 ms", 61, 520, 9, "2026-05-09T10:12:00.000Z"],
@@ -386,8 +396,13 @@ const generatedProjectDefinitions: GeneratedProjectDefinition[] = ([
   ["reranker-arena", "Reranker Arena", "embedding", "embedding", "Compare local rerankers for RAG answer quality.", ["rerank", "rag", "score"], "#0ea5e9", "not_installed", "stopped", 8, 24, 8, 58, true, "Rerank suite", "main", 8252, "1.1k pairs/s", "nDCG 0.84", 1100, undefined, 7, "2026-05-02T10:05:00.000Z"],
   ["multilingual-speech-lab", "Multilingual Speech Lab", "speech", "speech", "Transcribe and align multilingual audio batches locally.", ["whisper", "speech", "align"], "#d946ef", "installed", "stopped", 8, 24, 8, 80, true, "Whisper large", "main", 8261, "18x realtime", "WER 7.4", 18, undefined, 7, "2026-05-09T22:10:00.000Z"],
   ["voice-clone-sandbox", "Voice Clone Sandbox", "speech", "speech", "Experiment with local voice profiles and safety gated export.", ["voice", "tts", "sandbox"], "#e879f9", "not_installed", "stopped", 10, 32, 12, 110, true, "TTS lab", "main", 8262, "31 clips/min", "p95 2.2s", 31, 2200, 11, "2026-05-04T21:34:00.000Z"],
+  ["audio-diarization-node", "Audio Diarization Node", "speech", "speech", "Split speaker turns and export timeline JSON for meetings.", ["diarize", "speaker", "timeline"], "#60a5fa", "installed", "stopped", 8, 16, 6, 48, true, "Speaker timeline", "main", 8263, "9.8x realtime", "DER 6.2", 9.8, undefined, 5, "2026-05-08T23:20:00.000Z"],
   ["promptops-control-plane", "PromptOps Control Plane", "tooling", "tooling", "Track prompts, model configs, and local endpoint health.", ["promptops", "config", "health"], "#64748b", "installed", "running", 4, 8, 0, 16, false, "Control plane", "main", 8271, "12 endpoints", "live sync", 12, undefined, 1, "2026-05-10T06:28:00.000Z"],
   ["model-cache-manager", "Model Cache Manager", "tooling", "tooling", "Clean, pin, and move model caches across fast disks.", ["cache", "models", "disk"], "#94a3b8", "installed", "stopped", 4, 8, 0, 20, false, "Cache audit", "main", 8272, "318 GB free", "scan 9s", 318, 9000, 1, "2026-05-10T05:50:00.000Z"],
+  ["agent-runbook-studio", "Agent Runbook Studio", "tooling", "tooling", "Manage repeatable local agent runbooks with health checks.", ["agent", "runbook", "health"], "#0f766e", "not_installed", "stopped", 4, 8, 0, 18, false, "Runbook base", "main", 8273, "42 runs/day", "success 96%", 42, undefined, 1, "2026-05-07T09:42:00.000Z"],
+  ["gpu-observability-lite", "GPU Observability Lite", "tooling", "tooling", "Sample GPU, process, and queue metrics for dashboard panels.", ["gpu", "metrics", "dash"], "#0284c7", "installed", "running", 4, 8, 0, 12, false, "Telemetry agent", "main", 8274, "1s samples", "4 streams", 4, 1000, 1, "2026-05-10T04:18:00.000Z"],
+  ["semantic-cache-proxy", "Semantic Cache Proxy", "embedding", "embedding", "Cache similar prompt responses using local embedding distance.", ["cache", "embedding", "proxy"], "#22c55e", "not_installed", "stopped", 6, 16, 4, 36, false, "Cache proxy", "main", 8253, "87% hits", "p95 42 ms", 87, 42, 3, "2026-05-06T15:27:00.000Z"],
+  ["bluegreen-deploy-gateway", "Bluegreen Deploy Gateway", "tooling", "tooling", "Switch local provider endpoints between blue and green slots.", ["deploy", "gateway", "routing"], "#38bdf8", "installed", "stopped", 4, 8, 0, 24, false, "Bluegreen routes", "main", 8275, "24 routes", "swap 3s", 24, 3000, 1, "2026-05-05T06:35:00.000Z"],
 ] satisfies GeneratedProjectTuple[]).map(
   ([
     id,
@@ -440,14 +455,14 @@ const generatedProjectDefinitions: GeneratedProjectDefinition[] = ([
   }),
 ) satisfies GeneratedProjectDefinition[];
 
-const generatedProjects: Omit<HubProject, "compatibility">[] = generatedProjectDefinitions.map((project) => ({
+const generatedProjects: Omit<HubProject, "compatibility">[] = generatedProjectDefinitions.map((project, index) => ({
   id: project.id,
   name: project.name,
   type: project.type,
   repoUrl: `https://github.com/ntc-ai/${project.id}`,
   description: project.description,
   tags: project.tags,
-  accentColor: project.accentColor,
+  accentColor: typeAccentColors[project.type][index % typeAccentColors[project.type].length],
   visual: visualPresets[project.visualType],
   installStatus: project.installStatus,
   runStatus: project.runStatus,

@@ -18,7 +18,7 @@ const projectTypes: Array<ProjectType | "all"> = [
   "speech",
   "tooling",
 ];
-const featuredProjectCount = 20;
+const featuredProjectCount = 30;
 
 export function HubExplorer() {
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
