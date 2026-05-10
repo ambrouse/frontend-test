@@ -34,7 +34,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const currentPathname = pathname ?? "/";
   const [theme, setTheme] = useState<ThemeMode>("dark");
-  const [isThemeChanging, setIsThemeChanging] = useState(false);
   const activeTasks = useMemo(
     () => runningTasks.filter((task) => task.status === "running" || task.status === "installing"),
     [],
@@ -52,25 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   const handleToggleTheme = () => {
-    if (isThemeChanging) {
-      return;
-    }
-
-    setIsThemeChanging(true);
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.themeNext = nextTheme;
-    document.documentElement.dataset.themeTransition = "prepare";
-
-    window.setTimeout(() => {
-      document.documentElement.dataset.themeTransition = "commit";
-      setTheme(nextTheme);
-    }, 180);
-
-    window.setTimeout(() => {
-      delete document.documentElement.dataset.themeTransition;
-      delete document.documentElement.dataset.themeNext;
-      setIsThemeChanging(false);
-    }, 1180);
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
   };
 
   return (
@@ -120,7 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </header>
 
-        <main key={currentPathname} className="main-stage">
+        <main className="main-stage">
           {children}
         </main>
       </div>

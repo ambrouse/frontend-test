@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { hubProjects } from "@/services/mockData";
 import type { HubProject, ProjectType } from "@/services/types";
 import { formatProjectType } from "@/utils/format";
@@ -18,18 +18,38 @@ const projectTypes: Array<ProjectType | "all"> = [
   "speech",
   "tooling",
 ];
-const featuredProjectCount = 30;
+
+const featuredProjects = getFeaturedProjects(hubProjects).slice(0, 30);
 
 export function HubExplorer() {
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
   const [query, setQuery] = useState("");
-  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(hubProjects.slice(0, featuredProjectCount));
   const [activeSlide, setActiveSlide] = useState(0);
   const [previousProject, setPreviousProject] = useState<HubProject | null>(null);
 
   useEffect(() => {
-    setFeaturedProjects(shuffleProjects(hubProjects).slice(0, featuredProjectCount));
-    setActiveSlide(0);
+    document.documentElement.style.setProperty("--page-accent", "#0ea5b7");
+    document.documentElement.style.setProperty("--page-accent-soft", "#062026");
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+
+    const preload = () => {
+      featuredProjects.slice(0, 8).forEach((project) => {
+        const image = new Image();
+        image.decoding = "async";
+        image.src = project.visual.imageUrl;
+      });
+    };
+
+    if (idleWindow.requestIdleCallback && idleWindow.cancelIdleCallback) {
+      const idleId = idleWindow.requestIdleCallback(preload, { timeout: 1200 });
+      return () => idleWindow.cancelIdleCallback?.(idleId);
+    }
+
+    const timer = globalThis.setTimeout(preload, 240);
+    return () => globalThis.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -42,10 +62,19 @@ export function HubExplorer() {
         setPreviousProject(featuredProjects[currentSlide] ?? null);
         return (currentSlide + 1) % featuredProjects.length;
       });
-    }, 5400);
+    }, 6200);
 
     return () => window.clearInterval(timer);
-  }, [featuredProjects]);
+  }, []);
+
+  useEffect(() => {
+    if (!previousProject) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setPreviousProject(null), 620);
+    return () => window.clearTimeout(timer);
+  }, [previousProject]);
 
   const visibleProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -64,65 +93,12 @@ export function HubExplorer() {
 
   const featuredProject = featuredProjects[activeSlide] ?? hubProjects[0];
 
-  useEffect(() => {
-    if (!previousProject) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => setPreviousProject(null), 720);
-    return () => window.clearTimeout(timer);
-  }, [previousProject]);
-
-  useEffect(() => {
-        document.documentElement.style.setProperty("--page-accent", featuredProject.visual.ambient);
-        document.documentElement.style.setProperty("--page-accent-soft", featuredProject.visual.ambientSoft);
-  }, [featuredProject]);
-
   return (
     <div className="page-flow">
-      <section
-        className="hub-carousel"
-        data-project-type={featuredProject.type}
-        style={
-          {
-            "--project-accent": featuredProject.accentColor,
-            "--project-image": `url(${featuredProject.visual.imageUrl})`,
-            "--project-focus": featuredProject.visual.focus,
-          } as React.CSSProperties
-        }
-      >
-        {previousProject ? (
-          <div
-            key={`previous-${previousProject.id}`}
-            className="hub-carousel-bg is-previous"
-            style={
-              {
-                "--project-image": `url(${previousProject.visual.imageUrl})`,
-                "--project-focus": previousProject.visual.focus,
-                "--project-accent": previousProject.accentColor,
-              } as React.CSSProperties
-            }
-            aria-hidden="true"
-          />
-        ) : null}
-        <div key={`current-${featuredProject.id}`} className="hub-carousel-bg is-current" aria-hidden="true" />
-        <div key={`copy-${featuredProject.id}`} className="hub-carousel-copy">
-          <span className="project-type">{formatProjectType(featuredProject.type)}</span>
-          <h1>{featuredProject.name}</h1>
-          <div className="hub-status-strip" aria-label="Tổng quan project">
-            <CompatibilityPing
-              level={featuredProject.compatibility.level}
-              reasons={featuredProject.compatibility.reasons}
-            />
-            <span>{featuredProject.installStatus.replace("_", " ")}</span>
-            <span>{featuredProject.lastBenchmark.headlineMetric}</span>
-          </div>
-        </div>
-
-      </section>
+      <HubCarousel featuredProject={featuredProject} previousProject={previousProject} />
 
       <div className="hub-tools">
-        <div className="filter-dock" aria-label="Lọc provider">
+        <div className="filter-dock" aria-label="Loc provider">
           {projectTypes.map((type) => (
             <button
               key={type}
@@ -137,29 +113,81 @@ export function HubExplorer() {
 
         <label className="hub-search hub-search-inline">
           <Search size={18} aria-hidden="true" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Tìm LLM, vision, repo..."
-          />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tim LLM, vision, repo..." />
         </label>
       </div>
 
-      <section className="project-bento" aria-label="Danh sách project">
-        {visibleProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
-      </section>
+      <ProjectGrid projects={visibleProjects} />
     </div>
   );
 }
 
-function shuffleProjects(projects: HubProject[]) {
-  return [...projects]
-    .map((project) => ({
-      project,
-      sort: Math.random(),
-    }))
-    .sort((left, right) => left.sort - right.sort)
-    .map(({ project }) => project);
+const HubCarousel = memo(function HubCarousel({
+  featuredProject,
+  previousProject,
+}: {
+  featuredProject: HubProject;
+  previousProject: HubProject | null;
+}) {
+  return (
+    <section
+      className="hub-carousel"
+      data-project-type={featuredProject.type}
+      style={
+        {
+          "--project-accent": featuredProject.accentColor,
+          "--project-image": `url(${featuredProject.visual.imageUrl})`,
+          "--project-focus": featuredProject.visual.focus,
+        } as React.CSSProperties
+      }
+    >
+      {previousProject ? (
+        <div
+          key={`previous-${previousProject.id}`}
+          className="hub-carousel-bg is-previous"
+          style={
+            {
+              "--project-image": `url(${previousProject.visual.imageUrl})`,
+              "--project-focus": previousProject.visual.focus,
+              "--project-accent": previousProject.accentColor,
+            } as React.CSSProperties
+          }
+          aria-hidden="true"
+        />
+      ) : null}
+      <div key={`current-${featuredProject.id}`} className="hub-carousel-bg is-current" aria-hidden="true" />
+      <div key={`copy-${featuredProject.id}`} className="hub-carousel-copy">
+        <span className="project-type">{formatProjectType(featuredProject.type)}</span>
+        <h1>{featuredProject.name}</h1>
+        <div className="hub-status-strip" aria-label="Tong quan project">
+          <CompatibilityPing level={featuredProject.compatibility.level} reasons={featuredProject.compatibility.reasons} />
+          <span>{featuredProject.installStatus.replace("_", " ")}</span>
+          <span>{featuredProject.lastBenchmark.headlineMetric}</span>
+        </div>
+      </div>
+    </section>
+  );
+});
+
+const ProjectGrid = memo(function ProjectGrid({ projects }: { projects: HubProject[] }) {
+  return (
+    <section className="project-bento" aria-label="Danh sach project">
+      {projects.map((project) => (
+        <ProjectCard key={project.id} project={project} />
+      ))}
+    </section>
+  );
+});
+
+function getFeaturedProjects(projects: HubProject[]) {
+  return [...projects].sort((left, right) => hashProjectId(left.id) - hashProjectId(right.id));
+}
+
+function hashProjectId(id: string) {
+  let hash = 0;
+  for (let index = 0; index < id.length; index += 1) {
+    hash = (hash * 31 + id.charCodeAt(index)) % 997;
+  }
+
+  return hash;
 }

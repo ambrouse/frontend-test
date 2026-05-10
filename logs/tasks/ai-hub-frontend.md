@@ -1,5 +1,14 @@
 # AI Hub Frontend Work Log
 
+## Update 2026-05-10 - Hub performance pass
+
+- Removed heavy per-card theme bloom and the delayed theme toggle lock.
+- Stopped Hub carousel from changing body ambient color on every slide.
+- Memoized provider cards/grid so carousel slide changes do not re-render the full provider list.
+- Replaced expensive route/card/filter animations with lighter opacity/transform transitions.
+- Fixed light card arrow placement and increased light-card text contrast.
+- Verified: typecheck pass, test pass, build pass.
+
 ## Update 2026-05-10 - Codex skill wrapper and responsive polish
 
 - Added `.codex/skills/project-workflow` as a Codex-compatible wrapper.

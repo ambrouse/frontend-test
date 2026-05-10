@@ -24,8 +24,6 @@
   --page-accent: #2fbf71;
   --page-accent-soft: #062416;
   --hub-banner-bleed: clamp(28px, 3vw, 54px);
-  --theme-wash-center: rgba(245, 247, 251, 0.54);
-  --theme-wash-edge: rgba(94, 234, 212, 0.26);
 }
 
 :root[data-theme="light"] {
@@ -47,16 +45,6 @@
   --danger: #be123c;
   --cyan: #0369a1;
   --shadow: 0 28px 96px rgba(54, 78, 86, 0.18);
-}
-
-:root[data-theme-next="light"] {
-  --theme-wash-center: rgba(255, 255, 255, 0.68);
-  --theme-wash-edge: color-mix(in srgb, var(--page-accent) 22%, rgba(255, 255, 255, 0.24));
-}
-
-:root[data-theme-next="dark"] {
-  --theme-wash-center: rgba(7, 10, 14, 0.72);
-  --theme-wash-edge: color-mix(in srgb, var(--page-accent) 24%, rgba(0, 0, 0, 0.34));
 }
 
 * {
@@ -85,8 +73,8 @@ body {
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   letter-spacing: 0;
   transition:
-    color 520ms ease,
-    background 780ms ease;
+    color 160ms ease,
+    background 180ms ease;
 }
 
 :root[data-theme="light"] body {
@@ -124,33 +112,6 @@ body::before {
   .benchmark-panel,
   .config-panel,
   .logs-panel
-)::after {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  content: "";
-  border-radius: inherit;
-  opacity: 0;
-  background:
-    radial-gradient(circle at center, var(--theme-wash-center) 0 18%, var(--theme-wash-edge) 34%, transparent 68%);
-  transform: scale(0.08);
-  transform-origin: center;
-}
-
-:is(
-  .home-hero,
-  .hub-carousel,
-  .detail-hero,
-  .metric-card,
-  .project-card,
-  .task-rail,
-  .insight-panel,
-  .activity-panel,
-  .fit-panel,
-  .benchmark-panel,
-  .config-panel,
-  .logs-panel
 ) {
   position: relative;
   overflow: visible;
@@ -169,44 +130,6 @@ body::before {
 ) > * {
   position: relative;
   z-index: 2;
-}
-
-:root[data-theme-transition] :is(
-  .home-hero,
-  .hub-carousel,
-  .detail-hero,
-  .metric-card,
-  .project-card,
-  .task-rail,
-  .insight-panel,
-  .activity-panel,
-  .fit-panel,
-  .benchmark-panel,
-  .config-panel,
-  .logs-panel
-)::after {
-  animation: surfaceThemeBloom 980ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-@keyframes surfaceThemeBloom {
-  0% {
-    opacity: 0;
-    transform: scale(0.08);
-  }
-
-  24% {
-    opacity: 0.7;
-  }
-
-  68% {
-    opacity: 0.28;
-    transform: scale(2.2);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(2.9);
-  }
 }
 
 a {
@@ -240,7 +163,6 @@ button {
   padding: 22px 14px;
   border-right: 1px solid var(--border);
   background: rgba(7, 10, 14, 0.44);
-  backdrop-filter: blur(18px);
 }
 
 :root[data-theme="light"] .side-dock {
@@ -339,8 +261,7 @@ button {
   align-items: center;
   padding: 18px clamp(18px, 3vw, 36px);
   border-bottom: 1px solid var(--border);
-  background: rgba(9, 11, 14, 0.68);
-  backdrop-filter: blur(22px);
+  background: rgba(9, 11, 14, 0.92);
 }
 
 :root[data-theme="light"] .command-bar {
@@ -395,7 +316,6 @@ button {
   width: 100%;
   margin: 0;
   padding: clamp(16px, 2vw, 28px) clamp(16px, 2.4vw, 34px);
-  animation: routeEnter 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .page-flow {
@@ -404,40 +324,26 @@ button {
 }
 
 .page-flow > * {
-  animation: surfaceEnter 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: surfaceEnter 180ms ease-out both;
 }
 
 .page-flow > :nth-child(2) {
-  animation-delay: 28ms;
+  animation-delay: 16ms;
 }
 
 .page-flow > :nth-child(3) {
-  animation-delay: 54ms;
-}
-
-@keyframes routeEnter {
-  0% {
-    opacity: 0.94;
-    transform: translateY(5px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  animation-delay: 28ms;
 }
 
 @keyframes surfaceEnter {
   0% {
     opacity: 0;
-    transform: translateY(12px) scale(0.992);
-    filter: blur(6px) saturate(0.92);
+    transform: translate3d(0, 6px, 0);
   }
 
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0) saturate(1);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -1057,6 +963,7 @@ button {
     cover;
   background-blend-mode: normal, color, color, normal;
   filter: saturate(0.74) contrast(1.04) brightness(0.66);
+  will-change: opacity;
 }
 
 .hub-carousel-bg::after {
@@ -1074,17 +981,17 @@ button {
 }
 
 .hub-carousel-bg.is-current {
-  animation: carouselImageIn 880ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: carouselImageIn 620ms ease-out both;
 }
 
 .hub-carousel-bg.is-previous {
-  animation: carouselImageOut 880ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: carouselImageOut 620ms ease-out both;
 }
 
 .hub-carousel .project-type,
 .hub-carousel h1,
 .hub-carousel .hub-status-strip {
-  animation: carouselContentEnter 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: carouselContentEnter 260ms ease-out both;
 }
 
 .hub-carousel h1 {
@@ -1098,36 +1005,32 @@ button {
 @keyframes carouselImageIn {
   0% {
     opacity: 0;
-    transform: scale(1.012);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
 @keyframes carouselImageOut {
   0% {
     opacity: 1;
-    transform: scale(1);
   }
 
   100% {
     opacity: 0;
-    transform: scale(1.006);
   }
 }
 
 @keyframes carouselContentEnter {
   0% {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translate3d(0, 4px, 0);
   }
 
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -1397,35 +1300,12 @@ button {
     var(--surface);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 26px 80px color-mix(in srgb, var(--project-accent) 10%, transparent);
-  animation: cardEnter 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    0 16px 44px color-mix(in srgb, var(--project-accent) 8%, transparent);
+  content-visibility: auto;
+  contain-intrinsic-size: 220px 124px;
   transition:
     transform 180ms ease,
-    border-color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.project-card:nth-child(2),
-.project-card:nth-child(5) {
-  animation-delay: 24ms;
-}
-
-.project-card:nth-child(3),
-.project-card:nth-child(4) {
-  animation-delay: 48ms;
-}
-
-@keyframes cardEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(14px) scale(0.988);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+    border-color 180ms ease;
 }
 
 .project-card:hover {
@@ -1433,7 +1313,7 @@ button {
   border-color: color-mix(in srgb, var(--project-accent) 62%, var(--border));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 32px 90px color-mix(in srgb, var(--project-accent) 16%, transparent);
+    0 20px 54px color-mix(in srgb, var(--project-accent) 12%, transparent);
 }
 
 .project-card::before {
@@ -1457,7 +1337,6 @@ button {
   background-position: center, center, var(--project-focus);
   background-size: cover, cover, cover;
   opacity: 0.42;
-  filter: saturate(0.78) contrast(1.05) brightness(0.86);
   transition:
     opacity 180ms ease,
     transform 220ms ease;
@@ -1470,8 +1349,8 @@ button {
 
 :root[data-theme="light"] .project-card {
   --text: #07171d;
-  --muted: rgba(58, 86, 100, 0.9);
-  --subtle: rgba(88, 117, 130, 0.84);
+  --muted: rgba(28, 56, 68, 0.94);
+  --subtle: rgba(54, 83, 96, 0.92);
   --border: rgba(14, 116, 144, 0.18);
   --surface-soft: rgba(14, 116, 144, 0.08);
   --success: #059669;
@@ -1484,47 +1363,45 @@ button {
     rgba(255, 255, 255, 0.92);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 20px 56px rgba(14, 116, 144, 0.12);
+    0 14px 36px rgba(14, 116, 144, 0.1);
 }
 
 :root[data-theme="light"] .project-card:hover {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.94),
-    0 24px 68px color-mix(in srgb, var(--project-accent) 18%, rgba(14, 116, 144, 0.14));
+    0 18px 44px color-mix(in srgb, var(--project-accent) 14%, rgba(14, 116, 144, 0.12));
 }
 
 :root[data-theme="light"] .project-card-image {
   inset: 0;
   width: auto;
   background:
-    linear-gradient(90deg, rgba(239, 249, 255, 0.98), rgba(239, 249, 255, 0.82) 36%, rgba(239, 249, 255, 0.44) 68%, rgba(239, 249, 255, 0.2)),
+    linear-gradient(90deg, rgba(246, 253, 255, 0.98), rgba(246, 253, 255, 0.9) 42%, rgba(246, 253, 255, 0.64) 72%, rgba(246, 253, 255, 0.36)),
     radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--project-accent) 16%, transparent), transparent 40%),
     var(--project-image);
   background-position: center, center, var(--project-focus);
   background-size: cover, cover, cover;
-  opacity: 0.72;
-  filter: saturate(0.76) contrast(1) brightness(0.96);
+  opacity: 0.82;
 }
 
 :root[data-theme="light"] .project-card:hover .project-card-image {
-  opacity: 0.8;
+  opacity: 0.88;
 }
 
 :root[data-theme="light"] .project-card[data-project-type="vision"] .project-card-image {
   background:
-    linear-gradient(90deg, rgba(239, 249, 255, 0.98), rgba(239, 249, 255, 0.84) 38%, rgba(239, 249, 255, 0.48) 70%, rgba(239, 249, 255, 0.22)),
+    linear-gradient(90deg, rgba(246, 253, 255, 0.98), rgba(246, 253, 255, 0.9) 42%, rgba(246, 253, 255, 0.66) 72%, rgba(246, 253, 255, 0.4)),
     radial-gradient(circle at 72% 82%, color-mix(in srgb, var(--project-accent) 16%, transparent), transparent 38%),
     var(--project-image);
   background-position:
     center,
     center,
     58% 62%;
-  opacity: 0.74;
-  filter: saturate(0.76) contrast(1) brightness(0.96);
+  opacity: 0.84;
 }
 
 :root[data-theme="light"] .project-card[data-project-type="vision"]:hover .project-card-image {
-  opacity: 0.82;
+  opacity: 0.9;
 }
 
 :root[data-theme="light"] .project-card h2,
@@ -1533,6 +1410,10 @@ button {
 :root[data-theme="light"] .tag-row,
 :root[data-theme="light"] .requirement-row {
   max-width: 72%;
+}
+
+:root[data-theme="light"] .project-card-bottom {
+  max-width: 100%;
 }
 
 :root[data-theme="light"] .project-glyph {
@@ -1553,8 +1434,7 @@ button {
 :root[data-theme="light"] .project-card .open-link,
 :root[data-theme="light"] .project-card .compatibility-ping {
   border-color: rgba(14, 116, 144, 0.18);
-  background: rgba(255, 255, 255, 0.66);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .project-card-top,

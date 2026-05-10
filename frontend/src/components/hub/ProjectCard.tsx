@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ArrowUpRight, Box, Cpu, Database, HardDrive } from "lucide-react";
+import { memo } from "react";
 import type { HubProject } from "@/services/types";
 import { formatMemory, formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
 
-export function ProjectCard({ project }: { project: HubProject }) {
+function ProjectCardComponent({ project }: { project: HubProject }) {
   return (
     <article
       className="project-card"
@@ -66,3 +67,5 @@ export function ProjectCard({ project }: { project: HubProject }) {
     </article>
   );
 }
+
+export const ProjectCard = memo(ProjectCardComponent);
