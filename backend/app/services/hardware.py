@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from copy import deepcopy
+from datetime import UTC, datetime
 from threading import Lock
 from time import monotonic
+from typing import Any, cast
 
 from app.schemas.models import HardwareSnapshot
 from app.services.provider_seed import SEED_HARDWARE
@@ -35,21 +37,25 @@ class HardwareService:
         if psutil is None:
             return self._snapshot
 
-        seed = SEED_HARDWARE.copy()
+        seed: dict[str, Any] = deepcopy(SEED_HARDWARE)
         virtual_memory = psutil.virtual_memory()
         disk_usage = psutil.disk_usage(".")
+        cpu_seed = cast(dict[str, Any], seed["cpu"])
         seed["cpu"] = {
-            **seed["cpu"],
-            "cores": psutil.cpu_count(logical=True) or seed["cpu"]["cores"],
+            **cpu_seed,
+            "cores": psutil.cpu_count(logical=True) or cpu_seed["cores"],
             "usagePercent": psutil.cpu_percent(interval=None),
         }
-        seed["ram"] = {"totalMb": int(virtual_memory.total / 1024 / 1024), "usedMb": int(virtual_memory.used / 1024 / 1024)}
+        seed["ram"] = {
+            "totalMb": int(virtual_memory.total / 1024 / 1024),
+            "usedMb": int(virtual_memory.used / 1024 / 1024),
+        }
         seed["disk"] = {
             "totalGb": int(disk_usage.total / 1024 / 1024 / 1024),
             "freeGb": int(disk_usage.free / 1024 / 1024 / 1024),
             "installPathFreeGb": int(disk_usage.free / 1024 / 1024 / 1024),
         }
-        seed["timestamp"] = datetime.now(timezone.utc).isoformat()
+        seed["timestamp"] = datetime.now(UTC).isoformat()
         return HardwareSnapshot.model_validate(seed)
 
 

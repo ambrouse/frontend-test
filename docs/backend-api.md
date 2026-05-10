@@ -14,8 +14,18 @@ The backend provides low-latency cached data for the frontend. Requests should r
 - `GET /api/providers/featured`
 - `GET /api/providers/summary`
 - `GET /api/providers/{provider_id}`
+- `GET /api/providers/{provider_id}/status`
+- `GET /api/providers/{provider_id}/metrics`
+- `GET /api/providers/{provider_id}/logs`
+- `GET /api/providers/{provider_id}/config`
+- `PATCH /api/providers/{provider_id}/config`
+- `POST /api/providers/{provider_id}/install`
+- `POST /api/providers/{provider_id}/run`
+- `POST /api/providers/{provider_id}/stop`
+- `DELETE /api/providers/{provider_id}`
 - `GET /api/tasks`
 - `GET /api/tasks/active`
+- `GET /api/tasks/{task_id}`
 
 ## Latency Rules
 
@@ -23,6 +33,23 @@ The backend provides low-latency cached data for the frontend. Requests should r
 - Provider manifests live in `providers/*/aihub.provider.json`.
 - Provider registry keeps an in-memory cache and refreshes from disk only after a short TTL.
 - Frontend uses static fallback data first and fetches backend data with a short timeout, so backend startup or IO cannot block the first paint.
+- Provider lifecycle actions are queued in a backend task store. Request handlers return immediately with a task id; long clone, setup, run, stop, or delete work stays off the request path.
+- Provider config/status/log/metrics files live under each `providers/{id}/` folder and are small JSON or log files so the UI can poll cheaply.
+- Real deploy clones are created only under `deploy/{provider_id}` during install and are removed during delete.
+
+## Provider Lifecycle Body
+
+All lifecycle actions accept the same optional body:
+
+```json
+{
+  "dryRun": false,
+  "force": false,
+  "nvidiaApiKey": "optional runtime secret"
+}
+```
+
+`nvidiaApiKey` is passed only to the child process environment. It is not written to tracked files by the backend. Provider scripts may write local `.env` files during install, and those files are ignored by git.
 
 ## Run
 

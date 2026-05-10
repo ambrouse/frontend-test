@@ -10,3 +10,8 @@ def repo_root() -> Path:
 @lru_cache(maxsize=1)
 def providers_root() -> Path:
     return repo_root() / "providers"
+
+
+@lru_cache(maxsize=1)
+def deploy_root() -> Path:
+    return repo_root() / "deploy"

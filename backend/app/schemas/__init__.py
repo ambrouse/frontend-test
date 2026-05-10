@@ -3,8 +3,8 @@ from .models import (
     Compatibility,
     HardwareSnapshot,
     HubProject,
-    ProviderListResponse,
     ProjectLog,
+    ProviderListResponse,
     RunningTask,
 )
 

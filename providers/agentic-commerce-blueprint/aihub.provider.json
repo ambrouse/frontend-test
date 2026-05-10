@@ -1,0 +1,76 @@
+{
+  "id": "agentic-commerce-blueprint",
+  "name": "Agentic Commerce Blueprint",
+  "type": "nvidia-blueprint",
+  "repoUrl": "https://github.com/baolnq-ai/Agentic-Commerce-blueprint-provider-",
+  "description": "Dockerized NVIDIA agentic commerce stack with storefront, merchant APIs, agents, Milvus, MinIO and Phoenix.",
+  "tags": ["commerce", "agents", "nvidia"],
+  "accentColor": "#22c55e",
+  "visual": {
+    "imageUrl": "/assets/projects/nvidia-blueprint.jpg",
+    "focus": "54% 50%",
+    "ambient": "#22c55e",
+    "ambientSoft": "#052e16"
+  },
+  "installStatus": "not_installed",
+  "runStatus": "stopped",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 8,
+      "ramMb": 24576,
+      "vramMb": 0,
+      "diskGb": 32,
+      "gpuRequired": false,
+      "notes": "API mode can use NVIDIA hosted endpoints; local NIM mode needs NVIDIA GPU."
+    },
+    "recommended": {
+      "cpuCores": 16,
+      "ramMb": 65536,
+      "vramMb": 24576,
+      "diskGb": 160,
+      "gpuRequired": true
+    }
+  },
+  "editableConfig": {
+    "profile": "api mode",
+    "branch": "main",
+    "port": 8088,
+    "installDirectory": "deploy/agentic-commerce-blueprint"
+  },
+  "lastBenchmark": {
+    "headlineMetric": "0 req/min",
+    "secondaryMetric": "not started",
+    "latencyMs": 0,
+    "throughput": 0,
+    "vramPeakMb": 0,
+    "measuredAt": "2026-05-10T00:00:00.000Z"
+  },
+  "lastRunAt": "2026-05-10T00:00:00.000Z",
+  "runtime": {
+    "defaultPort": 8088,
+    "healthUrl": "http://localhost:8088/api/health",
+    "metricsUrl": "http://localhost:8088/metrics",
+    "statusFile": "runtime/status.json",
+    "metricsFile": "runtime/metrics.json",
+    "pidFile": "runtime/provider.pid",
+    "logFile": "logs/runtime.log"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "delete": "scripts/windows/delete.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "delete": "scripts/linux/delete.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  }
+}

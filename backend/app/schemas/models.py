@@ -6,7 +6,7 @@ ProjectType = Literal["llm", "vision", "spark-llm", "nvidia-blueprint", "embeddi
 CompatibilityLevel = Literal["green", "yellow", "red"]
 InstallStatus = Literal["not_installed", "installed", "installing", "failed"]
 RunStatus = Literal["stopped", "running", "error"]
-TaskStatus = Literal["installing", "running", "stopping", "failed", "completed"]
+TaskStatus = Literal["queued", "installing", "running", "stopping", "deleting", "failed", "completed"]
 LogLevel = Literal["info", "warn", "error", "debug"]
 
 
@@ -152,3 +152,55 @@ class ProjectLog(BaseModel):
     level: LogLevel
     timestamp: str
     message: str
+
+
+class ProviderStatus(BaseModel):
+    projectId: str
+    state: str
+    pid: int | None = None
+    port: int
+    platform: str
+    startedAt: str | None = None
+    uptimeSec: int = 0
+    currentStep: str
+    progressPercent: int
+    health: dict = Field(default_factory=dict)
+
+
+class ProviderMetrics(BaseModel):
+    sampledAt: str
+    platform: str
+    process: dict = Field(default_factory=dict)
+    service: dict = Field(default_factory=dict)
+    benchmark: dict = Field(default_factory=dict)
+
+
+class ProviderConfig(BaseModel):
+    profile: str
+    branch: str
+    port: int
+    installDirectory: str
+    env: dict[str, str] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class ProviderActionRequest(BaseModel):
+    nvidiaApiKey: str | None = None
+    force: bool = False
+    dryRun: bool = False
+
+
+class ProviderActionResponse(BaseModel):
+    taskId: str
+    status: TaskStatus
+    warnings: list[str] = Field(default_factory=list)
+
+
+class ProviderLogsResponse(BaseModel):
+    logs: list[ProjectLog]
+    cursor: int
+
+
+class TaskListResponse(BaseModel):
+    tasks: list[RunningTask]
+    total: int

@@ -1,9 +1,17 @@
 from app.schemas.models import RunningTask
-from app.services.provider_seed import RUNNING_TASKS
+from app.services.task_store import task_store
 
 
 def active_tasks() -> list[RunningTask]:
-    return [RunningTask.model_validate(task) for task in RUNNING_TASKS if task["status"] in {"running", "installing"}]
+    return task_store.active()
+
+
+def all_tasks() -> list[RunningTask]:
+    return task_store.list_tasks()
+
+
+def get_task(task_id: str) -> RunningTask | None:
+    return task_store.get(task_id)
 
 
 def task_summary() -> dict:

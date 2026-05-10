@@ -16,6 +16,7 @@ Tich hop 2 provider that vao AI Hub:
 Ket qua cuoi cung:
 
 - Frontend van render gan nhu ngay lap tuc.
+- Frontend phai noi vao backend that cho hardware/provider/tasks/logs/config/status/metrics; mock data chi duoc dung lam fallback offline trong dev/test, khong hien giao dien gia khi backend dang chay.
 - Provider chi clone source that vao `deploy/{providerId}` khi user bam install tren web.
 - Neu user delete provider thi xoa sach deploy/runtime/log/task lien quan.
 - Moi lifecycle tren frontend phai dung duoc: install, start/run, stop, delete, logs, config, metrics, benchmark, status/detail.
@@ -139,6 +140,28 @@ Moi provider moi phai co:
 - `GET /api/events`
 
 Tat ca action dai phai la background task, request path chi tao task va return nhanh.
+
+## Frontend real-data policy
+
+- AppShell:
+  - `GET /api/tasks/active` la source chinh cho live task count.
+  - Neu backend timeout/offline moi dung fallback local trong 250ms.
+- Home:
+  - `GET /api/hardware/snapshot`, `GET /api/providers/summary`, `GET /api/tasks`.
+  - Khong hard-code CPU/GPU/RAM/task khi backend available.
+  - Skeleton/lightweight stale state phai hien ngay, sau do replace bang backend data.
+- Hub list:
+  - `GET /api/providers` va `GET /api/providers/featured`.
+  - Provider cards hien install/run/status/metric tu backend.
+  - Static `hubProjects` chi duoc dung de render SSR/dev fallback neu backend khong reachable.
+- Hub detail:
+  - `GET /api/providers/{id}`, `/status`, `/metrics`, `/logs`, `/config`.
+  - Action buttons dung lifecycle API that.
+  - Logs/metrics/config khong dung mock khi backend reachable.
+- Testing:
+  - Vitest phai co case backend success de dam bao UI/API client khong lay mock.
+  - Vitest phai co case backend timeout de dam bao fallback khong block UI.
+  - Browser smoke phai verify data co the doi theo backend fixture.
 
 ## Co che chong timeout va khung UI
 
@@ -317,6 +340,10 @@ Thoi gian du kien: 3-5 gio.
 Viec can lam:
 
 - Add API client functions for lifecycle/status/logs/config/metrics/benchmark/tasks/events.
+- Replace mock-first display bang backend-first/stale-while-revalidate display:
+  - SSR/static co the dung seed de page hien ngay.
+  - Client mount phai fetch backend immediately va replace data neu backend online.
+  - Khong giu metric/hardware/task gia khi backend da tra data.
 - Hub detail:
   - Install, Start, Stop, Delete buttons.
   - Loading states per action.
@@ -336,6 +363,8 @@ Viec can lam:
 Pass criteria:
 
 - All frontend functions have visible loading/error/success states.
+- Khi backend online, Home/Hub/Detail dung backend data that.
+- Khi backend offline, UI fallback trong 250ms va khong khung.
 - No button feels frozen; action returns task immediately.
 - Theme/page navigation remains responsive.
 - Vitest covers API client/task state helpers.
@@ -387,13 +416,28 @@ Viec can lam:
 - Update logs after each phase:
   - `logs/tasks/real-provider-integration.md`
 - CI:
-  - backend pytest.
+  - backend pytest voi coverage threshold.
+  - backend ruff lint va format check.
+  - backend mypy hoac pyright strict enough cho app code.
+  - backend pip-audit/safety dependency audit.
+  - backend import smoke va FastAPI OpenAPI schema generation.
+  - backend latency test gate cho warm path.
+  - backend provider manifest validation.
+  - backend lifecycle dry-run tests tren Windows va Linux.
   - frontend typecheck/test/build.
   - provider manifest validation.
   - script syntax checks:
     - PowerShell parser on `.ps1`.
     - bash `bash -n` on `.sh`.
   - secret scan pattern for `NVIDIA_API_KEY`, `nvapi-`, `.env`.
+  - dependency lock/cache dung rieng cho frontend/backend.
+  - matrix:
+    - backend: Linux x64, Linux ARM64 neu runner co san, Windows x64.
+    - frontend: Linux x64/ARM64, Windows x64/ARM64.
+  - artifact:
+    - pytest junit/coverage xml.
+    - frontend test report/build summary.
+    - provider validation report.
 - Final commands:
   - `git diff --check`
   - `pytest` in backend

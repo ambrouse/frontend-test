@@ -44,6 +44,9 @@ class ProviderRegistry:
     def get_provider(self, provider_id: str) -> HubProject | None:
         return next((provider for provider in self._warm_providers() if provider.id == provider_id), None)
 
+    def provider_root(self, provider_id: str) -> Path:
+        return self._root / provider_id
+
     def refresh(self) -> None:
         with self._lock:
             scanned = self._scan_provider_manifests()
@@ -65,9 +68,35 @@ class ProviderRegistry:
         for manifest_path in sorted(self._root.glob("*/aihub.provider.json")):
             with manifest_path.open("r", encoding="utf-8") as manifest_file:
                 data = json.load(manifest_file)
-            data["compatibility"] = evaluate_compatibility(hardware, data["requirements"]["minimum"], data["requirements"]["recommended"])
+            data["compatibility"] = evaluate_compatibility(
+                hardware, data["requirements"]["minimum"], data["requirements"]["recommended"]
+            )
+            data = self._apply_runtime_overlay(manifest_path.parent, data)
             providers.append(HubProject.model_validate(data))
         return providers
+
+    def _apply_runtime_overlay(self, provider_root: Path, data: dict) -> dict:
+        status_path = provider_root / data.get("runtime", {}).get("statusFile", "runtime/status.json")
+        if not status_path.exists():
+            return data
+        try:
+            status = json.loads(status_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return data
+        state = status.get("state")
+        if state in {"installed", "running", "stopped"}:
+            data["installStatus"] = "installed"
+        elif state == "not_installed":
+            data["installStatus"] = "not_installed"
+        elif state == "failed":
+            data["installStatus"] = "failed"
+        if state == "running":
+            data["runStatus"] = "running"
+        elif state == "failed":
+            data["runStatus"] = "error"
+        else:
+            data["runStatus"] = "stopped"
+        return data
 
 
 def _hash_id(provider_id: str) -> int:

@@ -95,7 +95,7 @@ jobs:
         run: npm audit --audit-level=moderate
 
   backend:
-    name: Backend API tests
+    name: Backend production gates
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     strategy:
@@ -122,10 +122,64 @@ jobs:
           cache: pip
 
       - name: Install backend
-        run: python -m pip install -e ".[dev]"
+        run: |
+          python -m pip install --upgrade pip setuptools
+          python -m pip install -e ".[dev]"
 
       - name: Seed provider fixtures
         run: python scripts/seed_providers.py
 
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Mypy typecheck
+        run: mypy app
+
+      - name: Validate provider manifests
+        run: python scripts/validate_providers.py
+
+      - name: Secret scan
+        run: python scripts/check_no_secrets.py
+
       - name: Run backend tests
-        run: pytest
+        run: pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=70
+
+      - name: Generate OpenAPI schema
+        run: python -c "from app.main import app; import json; print(json.dumps(app.openapi())[:200])"
+
+      - name: Audit Python dependencies
+        if: runner.os == 'Linux'
+        run: pip-audit --skip-editable
+
+  provider-scripts:
+    name: Provider script validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bash syntax
+        run: |
+          bash -n setup.sh
+          find providers -path "*/scripts/linux/*.sh" -print0 | xargs -0 -n1 bash -n
+
+      - name: PowerShell syntax
+        shell: pwsh
+        run: |
+          $scripts = @(Get-Item setup.ps1) + @(Get-ChildItem providers -Recurse -Filter *.ps1)
+          $scripts | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors)
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_.Message }
+              exit 1
+            }
+          }

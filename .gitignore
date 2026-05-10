@@ -12,6 +12,8 @@ dist/
 # local env
 .env
 .env*.local
+**/.env
+**/.env.local
 
 # logs and caches
 npm-debug.log*
@@ -21,6 +23,7 @@ pnpm-debug.log*
 .eslintcache
 tsconfig.tsbuildinfo
 .pytest_cache/
+.coverage
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -28,6 +31,9 @@ providers/**/runtime/*
 !providers/**/runtime/.gitkeep
 providers/**/logs/*
 !providers/**/logs/.gitkeep
+sua-loi-provider/
+deploy/*
+!deploy/.gitkeep
 
 # OS/editor
 .DS_Store

@@ -1,7 +1,27 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from app.schemas.models import HubProject, ProviderListResponse
+from app.schemas.models import (
+    HubProject,
+    ProviderActionRequest,
+    ProviderActionResponse,
+    ProviderConfig,
+    ProviderListResponse,
+    ProviderLogsResponse,
+    ProviderMetrics,
+    ProviderStatus,
+)
 from app.services.provider_registry import provider_registry
+from app.services.provider_runtime import (
+    delete_provider,
+    install_provider,
+    patch_provider_config,
+    provider_config,
+    provider_logs,
+    provider_metrics,
+    provider_status,
+    run_provider,
+    stop_provider,
+)
 
 router = APIRouter(prefix="/api/providers", tags=["providers"])
 
@@ -34,3 +54,60 @@ def provider_detail(provider_id: str) -> HubProject:
     if provider is None:
         raise HTTPException(status_code=404, detail="Provider not found")
     return provider
+
+
+@router.get("/{provider_id}/status", response_model=ProviderStatus)
+def status(provider_id: str) -> ProviderStatus:
+    return _provider_call(lambda: provider_status(provider_id))
+
+
+@router.get("/{provider_id}/metrics", response_model=ProviderMetrics)
+def metrics(provider_id: str) -> ProviderMetrics:
+    return _provider_call(lambda: provider_metrics(provider_id))
+
+
+@router.get("/{provider_id}/logs", response_model=ProviderLogsResponse)
+def logs(
+    provider_id: str,
+    tail: int = Query(default=200, ge=1, le=1000),
+    cursor: int | None = Query(default=None, ge=0),
+    level: str | None = Query(default=None),
+) -> ProviderLogsResponse:
+    return _provider_call(lambda: provider_logs(provider_id, tail=tail, cursor=cursor, level=level))
+
+
+@router.get("/{provider_id}/config", response_model=ProviderConfig)
+def config(provider_id: str) -> ProviderConfig:
+    return _provider_call(lambda: provider_config(provider_id))
+
+
+@router.patch("/{provider_id}/config", response_model=ProviderConfig)
+def update_config(provider_id: str, patch: dict) -> ProviderConfig:
+    return _provider_call(lambda: patch_provider_config(provider_id, patch))
+
+
+@router.post("/{provider_id}/install", response_model=ProviderActionResponse)
+def install(provider_id: str, request: ProviderActionRequest | None = None) -> ProviderActionResponse:
+    return _provider_call(lambda: install_provider(provider_id, request or ProviderActionRequest()))
+
+
+@router.post("/{provider_id}/run", response_model=ProviderActionResponse)
+def run(provider_id: str, request: ProviderActionRequest | None = None) -> ProviderActionResponse:
+    return _provider_call(lambda: run_provider(provider_id, request or ProviderActionRequest()))
+
+
+@router.post("/{provider_id}/stop", response_model=ProviderActionResponse)
+def stop(provider_id: str, request: ProviderActionRequest | None = None) -> ProviderActionResponse:
+    return _provider_call(lambda: stop_provider(provider_id, request or ProviderActionRequest()))
+
+
+@router.delete("/{provider_id}", response_model=ProviderActionResponse)
+def delete(provider_id: str, request: ProviderActionRequest | None = None) -> ProviderActionResponse:
+    return _provider_call(lambda: delete_provider(provider_id, request or ProviderActionRequest()))
+
+
+def _provider_call(callback):
+    try:
+        return callback()
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Provider not found") from None

@@ -13,7 +13,7 @@ export type InstallStatus = "not_installed" | "installed" | "installing" | "fail
 
 export type RunStatus = "stopped" | "running" | "error";
 
-export type TaskStatus = "installing" | "running" | "stopping" | "failed" | "completed";
+export type TaskStatus = "queued" | "installing" | "running" | "stopping" | "deleting" | "failed" | "completed";
 
 export type LogLevel = "info" | "warn" | "error" | "debug";
 
@@ -22,13 +22,13 @@ export type HardwareSnapshot = {
     name: string;
     cores: number;
     usagePercent: number;
-    temperatureC: number;
+    temperatureC: number | null;
   };
   gpu: {
     name: string;
     vendor: string;
     usagePercent: number;
-    temperatureC: number;
+    temperatureC: number | null;
     vramTotalMb: number;
     vramUsedMb: number;
     driverVersion: string;
@@ -95,6 +95,15 @@ export type HubProject = {
   };
   lastBenchmark: Benchmark;
   lastRunAt: string;
+  runtime?: {
+    defaultPort: number;
+    healthUrl?: string;
+    metricsUrl?: string;
+    statusFile: string;
+    metricsFile: string;
+    pidFile: string;
+    logFile: string;
+  };
 };
 
 export type RunningTask = {
@@ -120,4 +129,56 @@ export type ProjectLog = {
   level: LogLevel;
   timestamp: string;
   message: string;
+};
+
+export type ProviderSummary = {
+  total: number;
+  ready: number;
+  blocked: number;
+  installed: number;
+  running: number;
+};
+
+export type ProviderStatus = {
+  projectId: string;
+  state: string;
+  pid: number | null;
+  port: number;
+  platform: string;
+  startedAt: string | null;
+  uptimeSec: number;
+  currentStep: string;
+  progressPercent: number;
+  health: {
+    level?: string;
+    message?: string;
+  };
+};
+
+export type ProviderMetrics = {
+  sampledAt: string;
+  platform: string;
+  process: Record<string, number>;
+  service: Record<string, number>;
+  benchmark: Record<string, string | number>;
+};
+
+export type ProviderConfig = {
+  profile: string;
+  branch: string;
+  port: number;
+  installDirectory: string;
+  env: Record<string, string>;
+  warnings: string[];
+};
+
+export type ProviderActionResponse = {
+  taskId: string;
+  status: TaskStatus;
+  warnings: string[];
+};
+
+export type ProviderLogsResponse = {
+  logs: ProjectLog[];
+  cursor: number;
 };

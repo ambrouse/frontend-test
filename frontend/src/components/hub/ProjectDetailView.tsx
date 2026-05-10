@@ -3,8 +3,17 @@
 import clsx from "clsx";
 import { CheckCircle2, Copy, Download, Play, RotateCcw, Square, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import {
+  fetchHardwareSnapshot,
+  fetchProviderConfig,
+  fetchProviderDetail,
+  fetchProviderLogs,
+  fetchProviderMetrics,
+  fetchProviderStatus,
+  providerAction,
+} from "@/services/apiClient";
 import { getProjectLogs, hardwareSnapshot } from "@/services/mockData";
-import type { HubProject, LogLevel } from "@/services/types";
+import type { HardwareSnapshot, HubProject, LogLevel, ProjectLog, ProviderConfig, ProviderMetrics, ProviderStatus } from "@/services/types";
 import { formatMemory, formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
 
@@ -12,23 +21,70 @@ const logLevels: Array<LogLevel | "all"> = ["all", "info", "warn", "error", "deb
 
 export function ProjectDetailView({ project }: { project: HubProject }) {
   const [activeLogLevel, setActiveLogLevel] = useState<LogLevel | "all">("all");
-  const [actionState, setActionState] = useState(project.runStatus);
-  const logs = getProjectLogs(project.id);
+  const [projectData, setProjectData] = useState(project);
+  const [hardware, setHardware] = useState<HardwareSnapshot>(hardwareSnapshot);
+  const [status, setStatus] = useState<ProviderStatus | null>(null);
+  const [metrics, setMetrics] = useState<ProviderMetrics | null>(null);
+  const [config, setConfig] = useState<ProviderConfig | null>(null);
+  const [logs, setLogs] = useState<ProjectLog[]>(getProjectLogs(project.id));
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState("");
 
   const visibleLogs = useMemo(() => {
     return activeLogLevel === "all" ? logs : logs.filter((log) => log.level === activeLogLevel);
   }, [activeLogLevel, logs]);
 
-  const availableRamMb = hardwareSnapshot.ram.totalMb - hardwareSnapshot.ram.usedMb;
-  const availableVramMb = hardwareSnapshot.gpu.vramTotalMb - hardwareSnapshot.gpu.vramUsedMb;
+  const availableRamMb = hardware.ram.totalMb - hardware.ram.usedMb;
+  const availableVramMb = hardware.gpu.vramTotalMb - hardware.gpu.vramUsedMb;
+  const effectiveConfig = config ?? {
+    ...projectData.editableConfig,
+    env: {},
+    warnings: [],
+  };
+  const headlineMetric = metrics?.benchmark?.headlineMetric?.toString() ?? projectData.lastBenchmark.headlineMetric;
+  const secondaryMetric = metrics?.benchmark?.secondaryMetric?.toString() ?? projectData.lastBenchmark.secondaryMetric;
+  const runState = status?.state ?? projectData.runStatus;
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--page-accent", project.visual.ambient);
-    document.documentElement.style.setProperty("--page-accent-soft", project.visual.ambientSoft);
-  }, [project]);
+    document.documentElement.style.setProperty("--page-accent", projectData.visual.ambient);
+    document.documentElement.style.setProperty("--page-accent-soft", projectData.visual.ambientSoft);
+  }, [projectData]);
 
-  const handleRunToggle = () => {
-    setActionState((currentState) => (currentState === "running" ? "stopped" : "running"));
+  useEffect(() => {
+    const controller = new AbortController();
+    const load = () => {
+      void fetchProviderDetail(project.id, { signal: controller.signal }).then(setProjectData).catch(() => {});
+      void fetchHardwareSnapshot({ signal: controller.signal }).then(setHardware).catch(() => {});
+      void fetchProviderStatus(project.id, { signal: controller.signal }).then(setStatus).catch(() => {});
+      void fetchProviderMetrics(project.id, { signal: controller.signal }).then(setMetrics).catch(() => {});
+      void fetchProviderConfig(project.id, { signal: controller.signal }).then(setConfig).catch(() => {});
+      void fetchProviderLogs(project.id, { signal: controller.signal, level: activeLogLevel }).then((response) => setLogs(response.logs)).catch(() => {});
+    };
+    load();
+    const interval = window.setInterval(load, 3000);
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+    };
+  }, [activeLogLevel, project.id]);
+
+  const handleAction = async (action: "install" | "run" | "stop" | "delete") => {
+    setPendingAction(action);
+    setActionMessage("");
+    try {
+      const response = await providerAction(project.id, action, { force: true });
+      setActionMessage(`Task ${response.taskId} queued`);
+      const [nextStatus, nextLogs] = await Promise.all([
+        fetchProviderStatus(project.id, { timeoutMs: 1500 }).catch(() => null),
+        fetchProviderLogs(project.id, { timeoutMs: 1500, level: activeLogLevel }).catch(() => null),
+      ]);
+      if (nextStatus) setStatus(nextStatus);
+      if (nextLogs) setLogs(nextLogs.logs);
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : "Action failed");
+    } finally {
+      setPendingAction(null);
+    }
   };
 
   return (
@@ -37,59 +93,61 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
         className="detail-hero"
         style={
           {
-            "--project-accent": project.accentColor,
-            "--project-image": `url(${project.visual.imageUrl})`,
-            "--project-focus": project.visual.focus,
+            "--project-accent": projectData.accentColor,
+            "--project-image": `url(${projectData.visual.imageUrl})`,
+            "--project-focus": projectData.visual.focus,
           } as React.CSSProperties
         }
       >
         <div>
-          <h1>{project.name}</h1>
-          <div className="detail-meta-strip" aria-label="Thông tin project">
-            <span>{formatProjectType(project.type)}</span>
-            <span>{project.installStatus.replace("_", " ")}</span>
-            <span>{project.runStatus}</span>
-            <span>{project.lastBenchmark.headlineMetric}</span>
+          <h1>{projectData.name}</h1>
+          <div className="detail-meta-strip" aria-label="Project information">
+            <span>{formatProjectType(projectData.type)}</span>
+            <span>{projectData.installStatus.replace("_", " ")}</span>
+            <span>{runState}</span>
+            <span>{headlineMetric}</span>
           </div>
         </div>
 
         <div className="detail-actions">
-          <CompatibilityPing level={project.compatibility.level} reasons={project.compatibility.reasons} />
-          <button className="primary-action" type="button" onClick={handleRunToggle}>
-            {actionState === "running" ? <Square size={17} aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}
-            {actionState === "running" ? "Stop" : "Run"}
+          <CompatibilityPing level={projectData.compatibility.level} reasons={projectData.compatibility.reasons} />
+          <button className="primary-action" type="button" onClick={() => handleAction(runState === "running" ? "stop" : "run")} disabled={pendingAction !== null}>
+            {runState === "running" ? <Square size={17} aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}
+            {pendingAction === "run" || pendingAction === "stop" ? "Working" : runState === "running" ? "Stop" : "Run"}
           </button>
-          <button className="ghost-action" type="button">
+          <button className="ghost-action" type="button" onClick={() => handleAction("install")} disabled={pendingAction !== null}>
             <RotateCcw size={17} aria-hidden="true" />
-            Install
+            {pendingAction === "install" ? "Installing" : "Install"}
           </button>
-          <button className="danger-action" type="button">
+          <button className="danger-action" type="button" onClick={() => handleAction("delete")} disabled={pendingAction !== null}>
             <Trash2 size={17} aria-hidden="true" />
-            Delete
+            {pendingAction === "delete" ? "Deleting" : "Delete"}
           </button>
         </div>
       </section>
 
+      {actionMessage ? <p className="detail-action-message">{actionMessage}</p> : null}
+
       <div className="detail-grid">
         <section className="fit-panel" aria-labelledby="fit-title">
           <h2 id="fit-title">Machine fit</h2>
-          <RequirementRow label="CPU cores" current={`${hardwareSnapshot.cpu.cores}`} required={`${project.requirements.minimum.cpuCores}`} isReady={hardwareSnapshot.cpu.cores >= project.requirements.minimum.cpuCores} />
-          <RequirementRow label="RAM free" current={formatMemory(availableRamMb)} required={formatMemory(project.requirements.minimum.ramMb)} isReady={availableRamMb >= project.requirements.minimum.ramMb} />
-          <RequirementRow label="VRAM free" current={formatMemory(availableVramMb)} required={formatMemory(project.requirements.minimum.vramMb)} isReady={availableVramMb >= project.requirements.minimum.vramMb} />
-          <RequirementRow label="Disk free" current={`${hardwareSnapshot.disk.installPathFreeGb} GB`} required={`${project.requirements.minimum.diskGb} GB`} isReady={hardwareSnapshot.disk.installPathFreeGb >= project.requirements.minimum.diskGb} />
+          <RequirementRow label="CPU cores" current={`${hardware.cpu.cores}`} required={`${projectData.requirements.minimum.cpuCores}`} isReady={hardware.cpu.cores >= projectData.requirements.minimum.cpuCores} />
+          <RequirementRow label="RAM free" current={formatMemory(availableRamMb)} required={formatMemory(projectData.requirements.minimum.ramMb)} isReady={availableRamMb >= projectData.requirements.minimum.ramMb} />
+          <RequirementRow label="VRAM free" current={formatMemory(availableVramMb)} required={formatMemory(projectData.requirements.minimum.vramMb)} isReady={availableVramMb >= projectData.requirements.minimum.vramMb} />
+          <RequirementRow label="Disk free" current={`${hardware.disk.installPathFreeGb} GB`} required={`${projectData.requirements.minimum.diskGb} GB`} isReady={hardware.disk.installPathFreeGb >= projectData.requirements.minimum.diskGb} />
         </section>
 
         <section className="benchmark-panel" aria-labelledby="benchmark-title">
           <h2 id="benchmark-title">Last benchmark</h2>
           <div className="benchmark-main">
-            <span>{project.lastBenchmark.headlineMetric}</span>
-            <strong>{project.lastBenchmark.secondaryMetric}</strong>
+            <span>{headlineMetric}</span>
+            <strong>{secondaryMetric}</strong>
           </div>
           <div className="benchmark-grid">
-            <MetricTile label="VRAM peak" value={formatMemory(project.lastBenchmark.vramPeakMb)} />
-            <MetricTile label="Profile" value={project.editableConfig.profile} />
-            <MetricTile label="Port" value={`${project.editableConfig.port}`} />
-            <MetricTile label="Branch" value={project.editableConfig.branch} />
+            <MetricTile label="VRAM peak" value={formatMemory(projectData.lastBenchmark.vramPeakMb)} />
+            <MetricTile label="Profile" value={effectiveConfig.profile} />
+            <MetricTile label="Port" value={`${effectiveConfig.port}`} />
+            <MetricTile label="Branch" value={effectiveConfig.branch} />
           </div>
         </section>
 
@@ -97,15 +155,19 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
           <h2 id="config-title">Quick config</h2>
           <label>
             Profile
-            <input value={project.editableConfig.profile} readOnly />
+            <input value={effectiveConfig.profile} readOnly />
           </label>
           <label>
             Branch
-            <input value={project.editableConfig.branch} readOnly />
+            <input value={effectiveConfig.branch} readOnly />
+          </label>
+          <label className={effectiveConfig.warnings.length ? "config-warning" : undefined}>
+            Port
+            <input value={effectiveConfig.port} readOnly />
           </label>
           <label>
             Install path
-            <input value={project.editableConfig.installDirectory} readOnly />
+            <input value={effectiveConfig.installDirectory} readOnly />
           </label>
         </section>
       </div>
@@ -114,7 +176,7 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
         <div className="logs-heading">
           <div>
             <h2 id="logs-title">Logs</h2>
-            <p>Install/runtime/system output cho lần chạy gần nhất.</p>
+            <p>Install/runtime/system output from backend provider runtime.</p>
           </div>
           <div className="log-actions">
             <button type="button" aria-label="Copy logs">
@@ -126,7 +188,7 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
           </div>
         </div>
 
-        <div className="log-filter" aria-label="Lọc logs">
+        <div className="log-filter" aria-label="Log filter">
           {logLevels.map((level) => (
             <button
               key={level}
@@ -141,7 +203,7 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
 
         <div className="terminal-frame">
           {visibleLogs.length === 0 ? (
-            <p className="empty-log">Không có log ở filter này.</p>
+            <p className="empty-log">No logs for this filter.</p>
           ) : (
             visibleLogs.map((log) => (
               <div key={log.id} className={clsx("log-line", `log-${log.level}`)}>

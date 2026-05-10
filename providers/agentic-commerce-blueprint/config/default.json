@@ -1,0 +1,6 @@
+{
+  "profile": "api mode",
+  "branch": "main",
+  "port": 8088,
+  "installDirectory": "deploy/agentic-commerce-blueprint"
+}

@@ -51,7 +51,7 @@ export function evaluateCompatibility(
     warnings.push("Chạy được nhưng VRAM gần ngưỡng, nên dùng profile nhẹ hơn.");
   }
 
-  if (hardware.gpu.temperatureC >= 78) {
+  if ((hardware.gpu.temperatureC ?? 0) >= 78) {
     warnings.push("GPU đang nóng, nên theo dõi nhiệt độ khi chạy lâu.");
   }
 
