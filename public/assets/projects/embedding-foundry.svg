@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" role="img" aria-label="Abstract embedding background">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#082235"/>
+      <stop offset=".52" stop-color="#121820"/>
+      <stop offset="1" stop-color="#090b0e"/>
+    </linearGradient>
+    <radialGradient id="field" cx=".66" cy=".5" r=".5">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity=".52"/>
+      <stop offset=".46" stop-color="#115f82" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="760" fill="url(#bg)"/>
+  <rect width="1600" height="760" fill="url(#field)"/>
+  <g fill="none" stroke="#7dd3fc" stroke-opacity=".2">
+    <path d="M302 480c128-190 266-268 414-234s254 120 390 84 226-110 336-52"/>
+    <path d="M300 310c182 62 320 72 414 30s198-22 312 60 254 82 420 0"/>
+  </g>
+  <g fill="#7dd3fc" opacity=".24">
+    <circle cx="300" cy="310" r="18"/>
+    <circle cx="532" cy="426" r="12"/>
+    <circle cx="716" cy="246" r="16"/>
+    <circle cx="1026" cy="400" r="20"/>
+    <circle cx="1446" cy="400" r="16"/>
+  </g>
+</svg>

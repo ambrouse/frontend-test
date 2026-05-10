@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" role="img" aria-label="Abstract blueprint background">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#10230b"/>
+      <stop offset=".5" stop-color="#121820"/>
+      <stop offset="1" stop-color="#070a0c"/>
+    </linearGradient>
+    <radialGradient id="chip" cx=".6" cy=".43" r=".5">
+      <stop offset="0" stop-color="#84cc16" stop-opacity=".52"/>
+      <stop offset=".44" stop-color="#466b10" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="760" fill="url(#bg)"/>
+  <rect width="1600" height="760" fill="url(#chip)"/>
+  <g fill="none" stroke="#bef264" stroke-opacity=".2">
+    <rect x="750" y="180" width="430" height="300" rx="32"/>
+    <rect x="828" y="252" width="274" height="156" rx="18"/>
+    <path d="M750 250H450m300 80H320m430 80H520m660-158h240m-240 80h300m-300 80h210"/>
+    <path d="M860 180V80m95 100V34m96 146V98m-190 382v108m95-108v168m96-168v120"/>
+  </g>
+  <g fill="#bef264" opacity=".18">
+    <circle cx="452" cy="250" r="18"/>
+    <circle cx="320" cy="330" r="14"/>
+    <circle cx="1420" cy="252" r="18"/>
+    <circle cx="1480" cy="332" r="14"/>
+  </g>
+</svg>

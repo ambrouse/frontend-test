@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" role="img" aria-label="Abstract Spark LLM background">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#1a1233"/>
+      <stop offset=".52" stop-color="#141820"/>
+      <stop offset="1" stop-color="#090b0e"/>
+    </linearGradient>
+    <radialGradient id="pulse" cx=".66" cy=".46" r=".5">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity=".55"/>
+      <stop offset=".5" stop-color="#5b3fb0" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="760" fill="url(#bg)"/>
+  <rect width="1600" height="760" fill="url(#pulse)"/>
+  <g fill="none" stroke="#c4b5fd" stroke-opacity=".22" stroke-width="2">
+    <path d="M190 450h180l80-145 110 280 90-188h190l70-108 120 230 88-142h290"/>
+    <path d="M980 120c130 42 214 108 252 198s112 142 222 156"/>
+    <path d="M420 150c56 74 106 112 151 114s90 44 136 126"/>
+  </g>
+  <g fill="#a78bfa" opacity=".24">
+    <circle cx="452" cy="306" r="14"/>
+    <circle cx="650" cy="398" r="18"/>
+    <circle cx="1030" cy="520" r="20"/>
+    <circle cx="1212" cy="318" r="16"/>
+  </g>
+</svg>
