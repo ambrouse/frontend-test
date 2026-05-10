@@ -1021,12 +1021,12 @@ button {
   display: grid;
   justify-self: end;
   width: 100%;
-  height: clamp(235px, 20vw, 330px);
+  height: clamp(210px, 19vw, 315px);
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: end;
   overflow: hidden;
-  padding: clamp(22px, 3vw, 42px);
+  padding: clamp(18px, 2.8vw, 38px);
   border-color: color-mix(in srgb, var(--project-accent) 28%, var(--border));
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--project-accent) 9%, var(--surface)), var(--surface));
@@ -1099,13 +1099,11 @@ button {
   0% {
     opacity: 0;
     transform: scale(1.012);
-    filter: saturate(0.94) brightness(0.96);
   }
 
   100% {
     opacity: 1;
     transform: scale(1);
-    filter: saturate(1) brightness(1);
   }
 }
 
@@ -1212,8 +1210,8 @@ button {
 .hub-carousel-copy h1 {
   max-width: 820px;
   margin: 10px 0 0;
-  font-size: clamp(2rem, 3.8vw, 4.2rem);
-  line-height: 0.98;
+  font-size: clamp(1.85rem, 3.35vw, 3.9rem);
+  line-height: 1;
   text-wrap: balance;
 }
 
@@ -1268,9 +1266,9 @@ button {
 }
 
 .hub-search {
-  gap: 10px;
-  height: 54px;
-  padding: 0 16px;
+  gap: 9px;
+  height: clamp(42px, 3.8vw, 50px);
+  padding: 0 clamp(12px, 1.2vw, 16px);
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface-soft);
@@ -1296,11 +1294,11 @@ button {
 
 .filter-dock {
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: clamp(6px, 0.7vw, 8px);
   min-width: 0;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   scroll-padding-inline: 2px;
   scrollbar-color: color-mix(in srgb, var(--accent-2) 48%, var(--accent)) rgba(255, 255, 255, 0.08);
   scrollbar-width: thin;
@@ -1323,10 +1321,11 @@ button {
 .filter-dock button,
 .log-filter button {
   flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 14px;
+  min-height: clamp(32px, 3vw, 36px);
+  padding: 0 clamp(10px, 1.1vw, 13px);
   border-color: var(--border);
   color: var(--muted);
+  font-size: clamp(0.78rem, 1.1vw, 0.9rem);
 }
 
 .filter-dock button.is-active,
@@ -1495,36 +1494,37 @@ button {
 }
 
 :root[data-theme="light"] .project-card-image {
-  inset: 0 0 0 auto;
-  width: 52%;
+  inset: 0;
+  width: auto;
   background:
-    linear-gradient(90deg, rgba(239, 249, 255, 0.98), rgba(239, 249, 255, 0.42) 32%, rgba(239, 249, 255, 0.04)),
-    radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--project-accent) 20%, transparent), transparent 38%),
+    linear-gradient(90deg, rgba(239, 249, 255, 0.98), rgba(239, 249, 255, 0.82) 36%, rgba(239, 249, 255, 0.44) 68%, rgba(239, 249, 255, 0.2)),
+    radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--project-accent) 16%, transparent), transparent 40%),
     var(--project-image);
-  opacity: 0.7;
-  filter: saturate(0.86) contrast(1.02) brightness(0.92);
-  mask-image: linear-gradient(90deg, transparent 0, black 28%, black 100%);
+  background-position: center, center, var(--project-focus);
+  background-size: cover, cover, cover;
+  opacity: 0.72;
+  filter: saturate(0.76) contrast(1) brightness(0.96);
 }
 
 :root[data-theme="light"] .project-card:hover .project-card-image {
-  opacity: 0.82;
+  opacity: 0.8;
 }
 
 :root[data-theme="light"] .project-card[data-project-type="vision"] .project-card-image {
   background:
-    linear-gradient(90deg, rgba(239, 249, 255, 0.96), rgba(239, 249, 255, 0.24) 34%, rgba(239, 249, 255, 0.02)),
-    radial-gradient(circle at 72% 82%, color-mix(in srgb, var(--project-accent) 20%, transparent), transparent 36%),
+    linear-gradient(90deg, rgba(239, 249, 255, 0.98), rgba(239, 249, 255, 0.84) 38%, rgba(239, 249, 255, 0.48) 70%, rgba(239, 249, 255, 0.22)),
+    radial-gradient(circle at 72% 82%, color-mix(in srgb, var(--project-accent) 16%, transparent), transparent 38%),
     var(--project-image);
   background-position:
     center,
     center,
-    62% 72%;
-  opacity: 0.76;
-  filter: saturate(0.84) contrast(1.02) brightness(0.92);
+    58% 62%;
+  opacity: 0.74;
+  filter: saturate(0.76) contrast(1) brightness(0.96);
 }
 
 :root[data-theme="light"] .project-card[data-project-type="vision"]:hover .project-card-image {
-  opacity: 0.86;
+  opacity: 0.82;
 }
 
 :root[data-theme="light"] .project-card h2,
@@ -1576,7 +1576,7 @@ button {
 .project-card-bottom,
 .logs-heading {
   justify-content: space-between;
-  gap: 10px;
+  gap: clamp(6px, 1.6cqw, 10px);
 }
 
 .project-title-row {
@@ -1600,12 +1600,12 @@ button {
 
 .project-card h2 {
   margin: 0;
-  font-size: clamp(0.92rem, 4.5cqw, 1.18rem);
-  line-height: 1.14;
+  font-size: clamp(0.82rem, 4cqw, 1.08rem);
+  line-height: 1.12;
 }
 
 .project-card .project-type {
-  font-size: clamp(0.58rem, 2.1cqw, 0.68rem);
+  font-size: clamp(0.52rem, 1.8cqw, 0.64rem);
 }
 
 .project-card p {
@@ -1613,8 +1613,8 @@ button {
   overflow: hidden;
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: clamp(0.68rem, 2.9cqw, 0.82rem);
-  line-height: 1.35;
+  font-size: clamp(0.6rem, 2.45cqw, 0.76rem);
+  line-height: 1.28;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   line-clamp: 1;
@@ -1631,27 +1631,27 @@ button {
 .requirement-row span {
   padding: clamp(3px, 1cqw, 4px) clamp(5px, 1.8cqw, 7px);
   color: var(--muted);
-  font-size: clamp(0.58rem, 2.1cqw, 0.7rem);
+  font-size: clamp(0.52rem, 1.8cqw, 0.66rem);
   line-height: 1.1;
 }
 
 .requirement-row span {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: clamp(0.62rem, 2.2cqw, 0.72rem);
+  gap: 4px;
+  font-size: clamp(0.54rem, 1.9cqw, 0.66rem);
 }
 
 .project-card-bottom strong {
   display: block;
   margin-top: 2px;
-  font-size: clamp(0.78rem, 3cqw, 0.96rem);
+  font-size: clamp(0.72rem, 2.65cqw, 0.9rem);
 }
 
 .open-link {
   display: grid;
-  width: clamp(28px, 8cqw, 34px);
-  height: clamp(28px, 8cqw, 34px);
+  width: clamp(25px, 7cqw, 32px);
+  height: clamp(25px, 7cqw, 32px);
   place-items: center;
   border: 1px solid var(--border);
   border-radius: 50%;
@@ -1662,23 +1662,23 @@ button {
 .compatibility-ping {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 7px;
+  gap: 4px;
+  padding: clamp(4px, 1.1cqw, 5px) clamp(6px, 1.6cqw, 7px);
   border: 1px solid var(--border);
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.12);
 }
 
 .compatibility-ping span {
-  width: 8px;
-  height: 8px;
+  width: clamp(6px, 1.8cqw, 8px);
+  height: clamp(6px, 1.8cqw, 8px);
   border-radius: 999px;
   background: currentColor;
   box-shadow: 0 0 0 6px color-mix(in srgb, currentColor 18%, transparent);
 }
 
 .compatibility-ping strong {
-  font-size: clamp(0.58rem, 2cqw, 0.68rem);
+  font-size: clamp(0.52rem, 1.75cqw, 0.64rem);
   text-transform: uppercase;
 }
 
@@ -1998,9 +1998,19 @@ button {
   }
 }
 
-@media (max-width: 1600px) {
+@media (max-width: 1800px) {
   .project-bento {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1320px) {
+  .project-bento {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hub-carousel-copy h1 {
+    font-size: clamp(1.75rem, 4vw, 3rem);
   }
 }
 
@@ -2018,10 +2028,6 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .project-bento {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .project-card,
   .project-card:nth-child(1),
   .project-card:nth-child(3),
@@ -2030,10 +2036,25 @@ button {
   }
 }
 
+@media (max-width: 900px) {
+  .project-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hub-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hub-search-inline {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
 @media (max-width: 760px) {
   :root {
     --dock-width: 0px;
-    --hub-banner-bleed: 92px;
+    --hub-banner-bleed: 24px;
   }
 
   .app-frame {
@@ -2082,7 +2103,7 @@ button {
   }
 
   .main-stage {
-    padding: 18px 14px 92px;
+    padding: 14px 12px 88px;
   }
 
   .home-hero {
@@ -2091,16 +2112,28 @@ button {
   }
 
   .hub-carousel {
-    height: 320px;
+    height: 210px;
+    padding: 18px;
   }
 
-  .hub-tools {
-    grid-template-columns: minmax(0, 1fr);
+  .hub-carousel-copy h1 {
+    font-size: clamp(1.65rem, 8vw, 2.6rem);
   }
 
-  .hub-search-inline {
-    justify-self: stretch;
-    width: 100%;
+  .hub-status-strip,
+  .detail-meta-strip {
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .hub-status-strip > span,
+  .detail-meta-strip > span {
+    min-height: 28px;
+    padding: 5px 8px;
+  }
+
+  .hub-search {
+    height: 42px;
   }
 
   .hardware-orbit,
@@ -2112,7 +2145,7 @@ button {
   }
 
   .project-bento {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .project-card,
@@ -2128,6 +2161,12 @@ button {
 
   .requirement-fit-row,
   .log-line {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .project-bento {
     grid-template-columns: 1fr;
   }
 }
