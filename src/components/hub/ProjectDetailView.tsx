@@ -25,7 +25,6 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
   useEffect(() => {
     document.documentElement.style.setProperty("--page-accent", project.visual.ambient);
     document.documentElement.style.setProperty("--page-accent-soft", project.visual.ambientSoft);
-    document.documentElement.style.setProperty("--page-image", `url(${project.visual.imageUrl})`);
   }, [project]);
 
   const handleRunToggle = () => {

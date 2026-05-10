@@ -22,6 +22,7 @@ export function HubExplorer() {
   const [query, setQuery] = useState("");
   const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(hubProjects.slice(0, 4));
   const [activeSlide, setActiveSlide] = useState(0);
+  const [previousProject, setPreviousProject] = useState<HubProject | null>(null);
 
   useEffect(() => {
     setFeaturedProjects(shuffleProjects(hubProjects).slice(0, 4));
@@ -29,7 +30,10 @@ export function HubExplorer() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setActiveSlide((currentSlide) => (currentSlide + 1) % featuredProjects.length);
+      setActiveSlide((currentSlide) => {
+        setPreviousProject(featuredProjects[currentSlide] ?? null);
+        return (currentSlide + 1) % featuredProjects.length;
+      });
     }, 5400);
 
     return () => window.clearInterval(timer);
@@ -53,15 +57,22 @@ export function HubExplorer() {
   const featuredProject = featuredProjects[activeSlide] ?? hubProjects[0];
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--page-accent", featuredProject.visual.ambient);
-    document.documentElement.style.setProperty("--page-accent-soft", featuredProject.visual.ambientSoft);
-    document.documentElement.style.setProperty("--page-image", `url(${featuredProject.visual.imageUrl})`);
+    if (!previousProject) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setPreviousProject(null), 720);
+    return () => window.clearTimeout(timer);
+  }, [previousProject]);
+
+  useEffect(() => {
+        document.documentElement.style.setProperty("--page-accent", featuredProject.visual.ambient);
+        document.documentElement.style.setProperty("--page-accent-soft", featuredProject.visual.ambientSoft);
   }, [featuredProject]);
 
   return (
     <div className="page-flow">
       <section
-        key={featuredProject.id}
         className="hub-carousel"
         style={
           {
@@ -71,7 +82,22 @@ export function HubExplorer() {
           } as React.CSSProperties
         }
       >
-        <div className="hub-carousel-copy">
+        {previousProject ? (
+          <div
+            key={`previous-${previousProject.id}`}
+            className="hub-carousel-bg is-previous"
+            style={
+              {
+                "--project-image": `url(${previousProject.visual.imageUrl})`,
+                "--project-focus": previousProject.visual.focus,
+                "--project-accent": previousProject.accentColor,
+              } as React.CSSProperties
+            }
+            aria-hidden="true"
+          />
+        ) : null}
+        <div key={`current-${featuredProject.id}`} className="hub-carousel-bg is-current" aria-hidden="true" />
+        <div key={`copy-${featuredProject.id}`} className="hub-carousel-copy">
           <span className="project-type">{formatProjectType(featuredProject.type)}</span>
           <h1>{featuredProject.name}</h1>
           <div className="hub-status-strip" aria-label="Tổng quan project">

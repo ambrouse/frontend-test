@@ -120,7 +120,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </header>
 
-        <main className="main-stage">{children}</main>
+        <main key={currentPathname} className="main-stage">
+          {children}
+        </main>
       </div>
     </div>
   );

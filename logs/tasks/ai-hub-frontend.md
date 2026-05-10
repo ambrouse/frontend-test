@@ -44,3 +44,18 @@ Ngày: 2026-05-10
 - Đọc lại `push-code-skill`.
 - Thêm `.gitignore`, `.env.example`, `README.md`, và GitHub Actions CI.
 - Chuẩn bị push lên `https://github.com/ambrouse/frontend-test.git`.
+
+## Cập nhật UI polish 2026-05-10
+
+- Đọc lại `frontend-skill`.
+- Thêm animation xuất hiện khi vào trang và khi chuyển route.
+- Tune light theme, body ambient, project card visual layer.
+- Verify lại: typecheck pass, test pass, build pass.
+
+## Cập nhật light theme 2026-05-10
+
+- Tắt Next dev indicator bằng `devIndicators: false`.
+- Tăng contrast cho navbar light mode.
+- Giảm độ chói body/banner/card trong light mode.
+- Thêm overlay sáng phía text cho hero/detail ở light mode để chữ không chìm vào ảnh.
+- Verify lại: typecheck pass, test pass, build pass.

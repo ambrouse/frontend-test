@@ -6,7 +6,17 @@ import { CompatibilityPing } from "./CompatibilityPing";
 
 export function ProjectCard({ project }: { project: HubProject }) {
   return (
-    <article className="project-card" style={{ "--project-accent": project.accentColor } as React.CSSProperties}>
+    <article
+      className="project-card"
+      style={
+        {
+          "--project-accent": project.accentColor,
+          "--project-image": `url(${project.visual.imageUrl})`,
+          "--project-focus": project.visual.focus,
+        } as React.CSSProperties
+      }
+    >
+      <div className="project-card-image" aria-hidden="true" />
       <div className="project-card-top">
         <span className="project-type">{formatProjectType(project.type)}</span>
         <CompatibilityPing level={project.compatibility.level} reasons={project.compatibility.reasons} />

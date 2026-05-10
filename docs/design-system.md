@@ -37,6 +37,21 @@ Ngày cập nhật: 2026-05-10
 - Body nhận `--page-image`, `--page-accent`, `--page-accent-soft` từ carousel/detail để nền trang hòa với banner hiện tại.
 - Theme switch đổi sang container-first bloom: mỗi container wash màu target từ giữa ra, sau đó root theme mới commit.
 
+## Cập nhật motion và light theme 2026-05-10
+
+- Thêm route enter animation bằng `key={pathname}` trên main stage, thời lượng ngắn để không tạo cảm giác chờ.
+- Thêm surface/card enter animation nhẹ, stagger tối đa 48ms.
+- Tune lại light theme theo hướng xanh-xám/teal mềm hơn, giảm cảm giác trắng phẳng.
+- Project card có lớp ảnh thật tint nhẹ phía trong card để card có chiều sâu hơn ở cả dark/light.
+- Body ambient được tăng độ hiện diện bằng project image và radial tint rõ hơn.
+
+## Light Theme Contrast Pass 2026-05-10
+
+- Light palette chuyển sang nền xanh-xám ít chói hơn.
+- Navbar light mode có surface, border và shadow rõ hơn để không chìm.
+- Banner/detail light mode dùng overlay sáng phía text để chữ giữ tương phản trên ảnh.
+- Card image layer ở light mode giảm opacity/saturation để tránh lóa và giữ text dễ đọc.
+
 Nguồn ảnh:
 
 - Pexels server racks/data center: https://www.pexels.com/photo/server-racks-on-data-center-5480781/
