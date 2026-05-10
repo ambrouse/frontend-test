@@ -8,6 +8,7 @@ export function ProjectCard({ project }: { project: HubProject }) {
   return (
     <article
       className="project-card"
+      data-project-type={project.type}
       style={
         {
           "--project-accent": project.accentColor,

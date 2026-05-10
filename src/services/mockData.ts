@@ -1,5 +1,5 @@
 import { evaluateCompatibility } from "./compatibility";
-import type { HardwareSnapshot, HubProject, ProjectLog, RunningTask } from "./types";
+import type { HardwareSnapshot, HubProject, ProjectLog, ProjectType, RunningTask } from "./types";
 
 export const hardwareSnapshot: HardwareSnapshot = {
   cpu: {
@@ -89,7 +89,7 @@ const projectsSeed: Omit<HubProject, "compatibility">[] = [
     accentColor: "#f59e0b",
     visual: {
       imageUrl: "/assets/projects/vision-lab.jpg",
-      focus: "62% 54%",
+      focus: "62% 72%",
       ambient: "#d58a24",
       ambientSoft: "#2f1b0b",
     },
@@ -270,7 +270,221 @@ const projectsSeed: Omit<HubProject, "compatibility">[] = [
   },
 ];
 
-export const hubProjects: HubProject[] = projectsSeed.map((project) => ({
+type GeneratedProjectDefinition = {
+  id: string;
+  name: string;
+  type: ProjectType;
+  visualType: ProjectType;
+  description: string;
+  tags: string[];
+  accentColor: string;
+  installStatus: HubProject["installStatus"];
+  runStatus: HubProject["runStatus"];
+  cpuCores: number;
+  ramGb: number;
+  vramGb: number;
+  diskGb: number;
+  gpuRequired?: boolean;
+  profile: string;
+  branch?: string;
+  port: number;
+  headlineMetric: string;
+  secondaryMetric: string;
+  throughput?: number;
+  latencyMs?: number;
+  vramPeakGb: number;
+  lastRunAt: string;
+};
+
+type GeneratedProjectTuple = [
+  id: string,
+  name: string,
+  type: ProjectType,
+  visualType: ProjectType,
+  description: string,
+  tags: string[],
+  accentColor: string,
+  installStatus: HubProject["installStatus"],
+  runStatus: HubProject["runStatus"],
+  cpuCores: number,
+  ramGb: number,
+  vramGb: number,
+  diskGb: number,
+  gpuRequired: boolean,
+  profile: string,
+  branch: string | undefined,
+  port: number,
+  headlineMetric: string,
+  secondaryMetric: string,
+  throughput: number | undefined,
+  latencyMs: number | undefined,
+  vramPeakGb: number,
+  lastRunAt: string,
+];
+
+const visualPresets = {
+  llm: {
+    imageUrl: "/assets/projects/local-llm.jpg",
+    focus: "66% 48%",
+    ambient: "#1f8c86",
+    ambientSoft: "#0a2f31",
+  },
+  vision: {
+    imageUrl: "/assets/projects/vision-lab.jpg",
+    focus: "62% 72%",
+    ambient: "#d58a24",
+    ambientSoft: "#2f1b0b",
+  },
+  "spark-llm": {
+    imageUrl: "/assets/projects/spark-llm.jpg",
+    focus: "62% 48%",
+    ambient: "#7c6df0",
+    ambientSoft: "#181230",
+  },
+  "nvidia-blueprint": {
+    imageUrl: "/assets/projects/nvidia-blueprint.jpg",
+    focus: "54% 50%",
+    ambient: "#79b81e",
+    ambientSoft: "#17250b",
+  },
+  embedding: {
+    imageUrl: "/assets/projects/embedding-foundry.jpg",
+    focus: "64% 48%",
+    ambient: "#31a8de",
+    ambientSoft: "#08283b",
+  },
+  speech: {
+    imageUrl: "/assets/projects/embedding-foundry.jpg",
+    focus: "42% 48%",
+    ambient: "#c026d3",
+    ambientSoft: "#2d0a33",
+  },
+  tooling: {
+    imageUrl: "/assets/projects/local-llm.jpg",
+    focus: "48% 50%",
+    ambient: "#64748b",
+    ambientSoft: "#111827",
+  },
+} satisfies Record<ProjectType, HubProject["visual"]>;
+
+const generatedProjectDefinitions: GeneratedProjectDefinition[] = ([
+  ["qwen-edge-server", "Qwen Edge Server", "llm", "llm", "Run Qwen edge profiles with OpenAI-compatible routing.", ["qwen", "edge", "api"], "#14b8a6", "installed", "stopped", 8, 24, 10, 42, true, "Qwen2.5 14B edge", "main", 8211, "61 tok/s", "TTFT 520 ms", 61, 520, 9, "2026-05-09T10:12:00.000Z"],
+  ["llama-router-farm", "Llama Router Farm", "llm", "llm", "Route chat traffic across GGUF workers and fallback models.", ["llama", "router", "workers"], "#2dd4bf", "not_installed", "stopped", 10, 32, 12, 64, true, "Router balanced", "main", 8212, "184 req/min", "p95 1.8s", 184, 1800, 11, "2026-05-07T15:22:00.000Z"],
+  ["deepseek-code-bench", "DeepSeek Code Bench", "llm", "llm", "Benchmark coding models against local repo prompts.", ["code", "eval", "deepseek"], "#60a5fa", "installed", "running", 12, 32, 16, 90, true, "Repo coding suite", "stable", 8213, "43 pass@1", "batch 128", 43, undefined, 14, "2026-05-10T08:10:00.000Z"],
+  ["mixtral-quant-lab", "Mixtral Quant Lab", "llm", "llm", "Compare MoE quant profiles before installing full weights.", ["mixtral", "moe", "quant"], "#22c55e", "not_installed", "stopped", 14, 48, 20, 120, true, "MoE Q4 sweep", "main", 8214, "37 tok/s", "VRAM 18 GB", 37, undefined, 18, "2026-05-06T11:40:00.000Z"],
+  ["camera-qa-studio", "Camera QA Studio", "vision", "vision", "Inspect camera frames with detection and caption review loops.", ["camera", "qa", "caption"], "#f97316", "installed", "stopped", 6, 16, 8, 28, true, "Realtime QA", "stable", 8221, "42 FPS", "p95 44 ms", 42, 44, 7, "2026-05-09T13:18:00.000Z"],
+  ["defect-vision-cell", "Defect Vision Cell", "vision", "vision", "Detect small manufacturing defects from batched image folders.", ["defect", "yolo", "batch"], "#f59e0b", "not_installed", "stopped", 8, 24, 10, 60, true, "Factory batch", "main", 8222, "310 img/min", "mAP 0.72", 310, undefined, 9, "2026-05-04T09:25:00.000Z"],
+  ["ocr-layout-forge", "OCR Layout Forge", "vision", "vision", "Parse screenshots and PDF pages into structured OCR regions.", ["ocr", "layout", "pdf"], "#fb923c", "installed", "stopped", 6, 16, 6, 32, true, "Document layout", "main", 8223, "96 pages/min", "p95 620 ms", 96, 620, 5, "2026-05-08T16:11:00.000Z"],
+  ["sam-desk-segmenter", "SAM Desk Segmenter", "vision", "vision", "Segment objects from workstation screenshots and camera stills.", ["sam", "segment", "mask"], "#facc15", "not_installed", "stopped", 8, 24, 12, 72, true, "SAM desktop", "main", 8224, "28 masks/s", "batch 16", 28, undefined, 10, "2026-05-05T18:04:00.000Z"],
+  ["spark-rag-indexer", "Spark RAG Indexer", "spark-llm", "spark-llm", "Build vector indexes from large folders with Spark executors.", ["spark", "rag", "index"], "#8b5cf6", "installed", "stopped", 12, 48, 12, 160, true, "Index workers", "main", 8231, "5.8k docs/min", "8 workers", 5800, undefined, 11, "2026-05-09T19:32:00.000Z"],
+  ["batch-eval-orchestrator", "Batch Eval Orchestrator", "spark-llm", "spark-llm", "Queue prompt eval jobs and compare model output drift.", ["eval", "spark", "queue"], "#a78bfa", "not_installed", "stopped", 12, 48, 16, 140, true, "Eval queue", "main", 8232, "2.4k rows/min", "p95 7.1s", 2400, 7100, 15, "2026-05-03T12:20:00.000Z"],
+  ["dataset-distill-runner", "Dataset Distill Runner", "spark-llm", "spark-llm", "Distill raw corpora into instruction datasets with GPU batches.", ["distill", "dataset", "etl"], "#c084fc", "installed", "running", 16, 64, 20, 220, true, "Distill pass", "stable", 8233, "820 pairs/min", "job p95 11s", 820, 11000, 19, "2026-05-10T07:44:00.000Z"],
+  ["triton-blueprint-serve", "Triton Blueprint Serve", "nvidia-blueprint", "nvidia-blueprint", "Serve TensorRT engines through a Triton blueprint stack.", ["triton", "tensorrt", "serve"], "#84cc16", "not_installed", "stopped", 16, 64, 18, 180, true, "Triton single GPU", "release/1.x", 8241, "710 infer/s", "p95 24 ms", 710, 24, 17, "2026-05-06T20:36:00.000Z"],
+  ["cuda-agent-workshop", "CUDA Agent Workshop", "nvidia-blueprint", "nvidia-blueprint", "Prototype GPU agent tools with CUDA telemetry and queues.", ["cuda", "agent", "telemetry"], "#65a30d", "installed", "stopped", 12, 48, 14, 120, true, "Agent lab", "main", 8242, "94 tasks/min", "VRAM 12 GB", 94, undefined, 12, "2026-05-08T08:45:00.000Z"],
+  ["nemo-guardrail-stack", "NeMo Guardrail Stack", "nvidia-blueprint", "nvidia-blueprint", "Run local guardrail services for LLM policy tests.", ["nemo", "guardrail", "policy"], "#a3e635", "not_installed", "stopped", 10, 32, 10, 96, true, "Policy suite", "main", 8243, "390 checks/min", "p95 180 ms", 390, 180, 9, "2026-05-01T14:08:00.000Z"],
+  ["vector-recall-bench", "Vector Recall Bench", "embedding", "embedding", "Measure recall and latency across local vector stores.", ["vector", "recall", "bench"], "#38bdf8", "installed", "stopped", 6, 16, 4, 44, false, "Recall sweep", "main", 8251, "14k q/min", "recall 0.91", 14000, undefined, 3, "2026-05-07T17:16:00.000Z"],
+  ["reranker-arena", "Reranker Arena", "embedding", "embedding", "Compare local rerankers for RAG answer quality.", ["rerank", "rag", "score"], "#0ea5e9", "not_installed", "stopped", 8, 24, 8, 58, true, "Rerank suite", "main", 8252, "1.1k pairs/s", "nDCG 0.84", 1100, undefined, 7, "2026-05-02T10:05:00.000Z"],
+  ["multilingual-speech-lab", "Multilingual Speech Lab", "speech", "speech", "Transcribe and align multilingual audio batches locally.", ["whisper", "speech", "align"], "#d946ef", "installed", "stopped", 8, 24, 8, 80, true, "Whisper large", "main", 8261, "18x realtime", "WER 7.4", 18, undefined, 7, "2026-05-09T22:10:00.000Z"],
+  ["voice-clone-sandbox", "Voice Clone Sandbox", "speech", "speech", "Experiment with local voice profiles and safety gated export.", ["voice", "tts", "sandbox"], "#e879f9", "not_installed", "stopped", 10, 32, 12, 110, true, "TTS lab", "main", 8262, "31 clips/min", "p95 2.2s", 31, 2200, 11, "2026-05-04T21:34:00.000Z"],
+  ["promptops-control-plane", "PromptOps Control Plane", "tooling", "tooling", "Track prompts, model configs, and local endpoint health.", ["promptops", "config", "health"], "#64748b", "installed", "running", 4, 8, 0, 16, false, "Control plane", "main", 8271, "12 endpoints", "live sync", 12, undefined, 1, "2026-05-10T06:28:00.000Z"],
+  ["model-cache-manager", "Model Cache Manager", "tooling", "tooling", "Clean, pin, and move model caches across fast disks.", ["cache", "models", "disk"], "#94a3b8", "installed", "stopped", 4, 8, 0, 20, false, "Cache audit", "main", 8272, "318 GB free", "scan 9s", 318, 9000, 1, "2026-05-10T05:50:00.000Z"],
+] satisfies GeneratedProjectTuple[]).map(
+  ([
+    id,
+    name,
+    type,
+    visualType,
+    description,
+    tags,
+    accentColor,
+    installStatus,
+    runStatus,
+    cpuCores,
+    ramGb,
+    vramGb,
+    diskGb,
+    gpuRequired,
+    profile,
+    branch,
+    port,
+    headlineMetric,
+    secondaryMetric,
+    throughput,
+    latencyMs,
+    vramPeakGb,
+    lastRunAt,
+  ]) => ({
+    id,
+    name,
+    type,
+    visualType,
+    description,
+    tags,
+    accentColor,
+    installStatus,
+    runStatus,
+    cpuCores,
+    ramGb,
+    vramGb,
+    diskGb,
+    gpuRequired,
+    profile,
+    branch,
+    port,
+    headlineMetric,
+    secondaryMetric,
+    throughput,
+    latencyMs,
+    vramPeakGb,
+    lastRunAt,
+  }),
+) satisfies GeneratedProjectDefinition[];
+
+const generatedProjects: Omit<HubProject, "compatibility">[] = generatedProjectDefinitions.map((project) => ({
+  id: project.id,
+  name: project.name,
+  type: project.type,
+  repoUrl: `https://github.com/ntc-ai/${project.id}`,
+  description: project.description,
+  tags: project.tags,
+  accentColor: project.accentColor,
+  visual: visualPresets[project.visualType],
+  installStatus: project.installStatus,
+  runStatus: project.runStatus,
+  requirements: {
+    minimum: {
+      cpuCores: project.cpuCores,
+      ramMb: project.ramGb * 1024,
+      vramMb: project.vramGb * 1024,
+      diskGb: project.diskGb,
+      gpuRequired: project.gpuRequired ?? true,
+    },
+    recommended: {
+      cpuCores: project.cpuCores + 4,
+      ramMb: project.ramGb * 2048,
+      vramMb: project.vramGb * 2048,
+      diskGb: Math.ceil(project.diskGb * 1.8),
+      gpuRequired: project.gpuRequired ?? true,
+    },
+  },
+  editableConfig: {
+    profile: project.profile,
+    branch: project.branch ?? "main",
+    port: project.port,
+    installDirectory: `D:/AIHub/providers/${project.id}`,
+  },
+  lastBenchmark: {
+    headlineMetric: project.headlineMetric,
+    secondaryMetric: project.secondaryMetric,
+    latencyMs: project.latencyMs,
+    throughput: project.throughput,
+    vramPeakMb: project.vramPeakGb * 1024,
+    measuredAt: project.lastRunAt,
+  },
+  lastRunAt: project.lastRunAt,
+}));
+
+export const hubProjects: HubProject[] = [...projectsSeed, ...generatedProjects].map((project) => ({
   ...project,
   compatibility: evaluateCompatibility(
     hardwareSnapshot,

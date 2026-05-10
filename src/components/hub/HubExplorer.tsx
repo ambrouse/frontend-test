@@ -15,20 +15,28 @@ const projectTypes: Array<ProjectType | "all"> = [
   "spark-llm",
   "nvidia-blueprint",
   "embedding",
+  "speech",
+  "tooling",
 ];
+const featuredProjectCount = 20;
 
 export function HubExplorer() {
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
   const [query, setQuery] = useState("");
-  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(hubProjects.slice(0, 4));
+  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(hubProjects.slice(0, featuredProjectCount));
   const [activeSlide, setActiveSlide] = useState(0);
   const [previousProject, setPreviousProject] = useState<HubProject | null>(null);
 
   useEffect(() => {
-    setFeaturedProjects(shuffleProjects(hubProjects).slice(0, 4));
+    setFeaturedProjects(shuffleProjects(hubProjects).slice(0, featuredProjectCount));
+    setActiveSlide(0);
   }, []);
 
   useEffect(() => {
+    if (featuredProjects.length === 0) {
+      return;
+    }
+
     const timer = window.setInterval(() => {
       setActiveSlide((currentSlide) => {
         setPreviousProject(featuredProjects[currentSlide] ?? null);
@@ -37,7 +45,7 @@ export function HubExplorer() {
     }, 5400);
 
     return () => window.clearInterval(timer);
-  }, [featuredProjects.length]);
+  }, [featuredProjects]);
 
   const visibleProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -74,6 +82,7 @@ export function HubExplorer() {
     <div className="page-flow">
       <section
         className="hub-carousel"
+        data-project-type={featuredProject.type}
         style={
           {
             "--project-accent": featuredProject.accentColor,
