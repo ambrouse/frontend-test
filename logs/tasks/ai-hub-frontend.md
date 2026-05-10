@@ -1,5 +1,12 @@
 # AI Hub Frontend Work Log
 
+## Update 2026-05-10 - Backend provider runtime plan
+
+- Read the requested `plan-skill` from `.codex/skills/project-workflow/references/github-skills/plan-skill/SKILL.md`.
+- Added `plans/plan-backend-provider-runtime.md` with FastAPI backend, root `providers/` layout, frontend API needs, low-latency cache/watch/SSE pipeline, phases, testing, and CI/CD notes.
+- Removed the side-dock Live/provider shortcut button from `AppShell`.
+- Verified: frontend typecheck pass, frontend test pass.
+
 ## Update 2026-05-10 - Hub performance pass
 
 - Removed heavy per-card theme bloom and the delayed theme toggle lock.

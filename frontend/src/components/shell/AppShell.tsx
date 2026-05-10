@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Boxes, Cpu, Moon, Settings, Sun, Workflow } from "lucide-react";
+import { Boxes, Cpu, Moon, Settings, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { runningTasks } from "@/services/mockData";
 
@@ -21,12 +21,6 @@ const navigationItems = [
     label: "Hub",
     icon: Boxes,
     match: "exact",
-  },
-  {
-    href: "/hub/local-llm-studio",
-    label: "Live",
-    icon: Workflow,
-    match: "section",
   },
 ];
 
