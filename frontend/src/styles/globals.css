@@ -23,7 +23,7 @@
   --dock-width: 78px;
   --page-accent: #2fbf71;
   --page-accent-soft: #062416;
-  --hub-banner-bleed: clamp(125px, 12vw, 185px);
+  --hub-banner-bleed: clamp(28px, 3vw, 54px);
   --theme-wash-center: rgba(245, 247, 251, 0.54);
   --theme-wash-edge: rgba(94, 234, 212, 0.26);
 }
@@ -500,7 +500,7 @@ button {
 
 .hub-header h1,
 .detail-hero h1 {
-  font-size: clamp(2.25rem, 4.3vw, 4.7rem);
+  font-size: clamp(2rem, 3.7vw, 4.15rem);
 }
 
 .hero-copy p,
@@ -1021,29 +1021,29 @@ button {
   display: grid;
   justify-self: end;
   width: 100%;
-  height: clamp(250px, 24vw, 370px);
+  height: clamp(235px, 20vw, 330px);
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: end;
   overflow: hidden;
-  padding: clamp(22px, 3.4vw, 48px);
+  padding: clamp(22px, 3vw, 42px);
   border-color: color-mix(in srgb, var(--project-accent) 28%, var(--border));
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--project-accent) 9%, var(--surface)), var(--surface));
   box-shadow: var(--shadow);
-  margin-bottom: calc(var(--hub-banner-bleed) * -0.16);
+  margin-bottom: 0;
 }
 
 .hub-carousel-bg {
   position: absolute;
-  inset: 0 0 calc(var(--hub-banner-bleed) * -1);
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   border-radius: inherit;
   background:
-    linear-gradient(90deg, rgba(3, 8, 10, 0.94), rgba(3, 12, 15, 0.72) 42%, rgba(5, 20, 24, 0.58) 70%, rgba(2, 7, 9, 0.86)),
-    radial-gradient(circle at 72% 44%, color-mix(in srgb, var(--project-accent) 28%, transparent), transparent 44%),
-    linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(56, 189, 248, 0.16)),
+    linear-gradient(90deg, rgba(3, 8, 10, 0.96), rgba(3, 12, 15, 0.8) 42%, rgba(5, 20, 24, 0.66) 70%, rgba(2, 7, 9, 0.9)),
+    radial-gradient(circle at 76% 40%, color-mix(in srgb, var(--project-accent) 18%, transparent), transparent 42%),
+    linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(56, 189, 248, 0.2)),
     var(--project-image);
   background-position:
     center,
@@ -1056,18 +1056,21 @@ button {
     cover,
     cover;
   background-blend-mode: normal, color, color, normal;
-  filter: saturate(0.82) contrast(1.04) brightness(0.78);
+  filter: saturate(0.74) contrast(1.04) brightness(0.66);
 }
 
 .hub-carousel-bg::after {
   position: absolute;
-  inset: auto 0 0;
-  height: calc(var(--hub-banner-bleed) + 34%);
+  inset: 0;
+  height: auto;
   pointer-events: none;
   content: "";
   background:
-    linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 82%, transparent) 58%, var(--bg)),
-    radial-gradient(ellipse at 50% 0, color-mix(in srgb, var(--project-accent) 18%, transparent), transparent 64%);
+    radial-gradient(ellipse at 82% 50%, transparent 0 29%, color-mix(in srgb, var(--project-accent) 18%, transparent) 29.4% 29.8%, transparent 30.4%),
+    repeating-linear-gradient(90deg, rgba(148, 232, 255, 0.06) 0 1px, transparent 1px 78px),
+    repeating-linear-gradient(0deg, rgba(148, 232, 255, 0.035) 0 1px, transparent 1px 64px),
+    linear-gradient(180deg, rgba(2, 7, 9, 0.12), color-mix(in srgb, var(--bg) 72%, transparent) 82%);
+  mix-blend-mode: screen;
 }
 
 .hub-carousel-bg.is-current {
@@ -1143,25 +1146,25 @@ button {
 
 :root[data-theme="light"] .hub-carousel-bg {
   background:
-    linear-gradient(90deg, rgba(3, 8, 10, 0.9), rgba(5, 16, 20, 0.66) 42%, rgba(7, 30, 38, 0.44) 70%, rgba(3, 9, 12, 0.72)),
-    radial-gradient(circle at 70% 42%, color-mix(in srgb, var(--project-accent) 20%, transparent), transparent 46%),
-    linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(14, 165, 233, 0.22)),
+    linear-gradient(90deg, rgba(3, 8, 10, 0.92), rgba(5, 16, 20, 0.74) 42%, rgba(7, 30, 38, 0.54) 70%, rgba(3, 9, 12, 0.78)),
+    radial-gradient(circle at 70% 42%, color-mix(in srgb, var(--project-accent) 16%, transparent), transparent 46%),
+    linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(14, 165, 233, 0.24)),
     var(--project-image);
-  filter: saturate(0.82) contrast(1.02) brightness(0.86);
+  filter: saturate(0.72) contrast(1.02) brightness(0.72);
 }
 
 :root[data-theme="light"] .hub-carousel[data-project-type="vision"] .hub-carousel-bg {
   background:
-    linear-gradient(90deg, rgba(3, 8, 10, 0.9), rgba(5, 16, 20, 0.62) 42%, rgba(7, 30, 38, 0.3) 70%, rgba(3, 9, 12, 0.56)),
-    radial-gradient(circle at 76% 78%, color-mix(in srgb, var(--project-accent) 14%, transparent), transparent 38%),
-    linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(14, 165, 233, 0.2)),
+    linear-gradient(90deg, rgba(3, 8, 10, 0.94), rgba(5, 16, 20, 0.76) 42%, rgba(7, 30, 38, 0.54) 70%, rgba(3, 9, 12, 0.78)),
+    radial-gradient(circle at 76% 78%, color-mix(in srgb, var(--project-accent) 12%, transparent), transparent 38%),
+    linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(14, 165, 233, 0.24)),
     var(--project-image);
   background-position:
     center,
     center,
     center,
-    62% 88%;
-  filter: saturate(0.86) contrast(1) brightness(0.92);
+    62% 82%;
+  filter: saturate(0.72) contrast(1.02) brightness(0.72);
 }
 
 :root[data-theme="light"] .hub-carousel::before {
@@ -1208,9 +1211,9 @@ button {
 
 .hub-carousel-copy h1 {
   max-width: 820px;
-  margin: 12px 0 0;
-  font-size: clamp(2.2rem, 4.8vw, 4.9rem);
-  line-height: 0.94;
+  margin: 10px 0 0;
+  font-size: clamp(2rem, 3.8vw, 4.2rem);
+  line-height: 0.98;
   text-wrap: balance;
 }
 
@@ -1219,8 +1222,8 @@ button {
 .detail-meta-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 18px;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .hub-tools {
@@ -1233,18 +1236,19 @@ button {
   gap: 14px;
   align-items: center;
   padding: 0;
+  margin-top: 2px;
   overflow: hidden;
 }
 
 .hub-status-strip > span,
 .detail-meta-strip > span {
-  min-height: 34px;
-  padding: 8px 12px;
+  min-height: 30px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--muted);
   background: var(--surface-soft);
-  font-size: 0.85rem;
+  font-size: clamp(0.72rem, 1vw, 0.82rem);
   font-weight: 750;
   text-transform: capitalize;
 }
@@ -1368,26 +1372,27 @@ button {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   justify-self: end;
   width: 100%;
-  gap: 12px;
+  gap: clamp(9px, 0.8vw, 12px);
   align-items: stretch;
   overflow: visible;
   padding: 2px;
-  margin-top: calc(var(--hub-banner-bleed) * -0.06);
+  margin-top: 6px;
 }
 
 .project-card {
   position: relative;
   container-type: inline-size;
   display: grid;
-  height: clamp(236px, 15vw, 268px);
+  aspect-ratio: 16 / 9;
+  height: auto;
   min-height: 0;
   grid-column: auto;
-  gap: 6px;
+  gap: clamp(3px, 1.2cqw, 6px);
   align-content: space-between;
   overflow: hidden;
-  padding: 14px;
+  padding: clamp(10px, 3cqw, 14px);
   border: 1px solid color-mix(in srgb, var(--project-accent) 42%, var(--border));
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--project-accent) 14%, transparent), transparent 44%),
     var(--surface);
@@ -1447,20 +1452,20 @@ button {
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(9, 11, 14, 0.9), rgba(9, 11, 14, 0.62) 48%, rgba(9, 11, 14, 0.24)),
-    radial-gradient(circle at 24% 16%, color-mix(in srgb, var(--project-accent) 28%, transparent), transparent 36%),
+    linear-gradient(90deg, rgba(9, 11, 14, 0.94), rgba(9, 11, 14, 0.72) 48%, rgba(9, 11, 14, 0.36)),
+    radial-gradient(circle at 24% 16%, color-mix(in srgb, var(--project-accent) 22%, transparent), transparent 36%),
     var(--project-image);
   background-position: center, center, var(--project-focus);
   background-size: cover, cover, cover;
-  opacity: 0.38;
-  filter: saturate(0.92) contrast(1.05);
+  opacity: 0.42;
+  filter: saturate(0.78) contrast(1.05) brightness(0.86);
   transition:
     opacity 180ms ease,
     transform 220ms ease;
 }
 
 .project-card:hover .project-card-image {
-  opacity: 0.48;
+  opacity: 0.52;
   transform: scale(1.025);
 }
 
@@ -1496,13 +1501,13 @@ button {
     linear-gradient(90deg, rgba(239, 249, 255, 0.98), rgba(239, 249, 255, 0.42) 32%, rgba(239, 249, 255, 0.04)),
     radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--project-accent) 20%, transparent), transparent 38%),
     var(--project-image);
-  opacity: 0.78;
-  filter: saturate(1.06) contrast(1.04) brightness(1.02);
+  opacity: 0.7;
+  filter: saturate(0.86) contrast(1.02) brightness(0.92);
   mask-image: linear-gradient(90deg, transparent 0, black 28%, black 100%);
 }
 
 :root[data-theme="light"] .project-card:hover .project-card-image {
-  opacity: 0.9;
+  opacity: 0.82;
 }
 
 :root[data-theme="light"] .project-card[data-project-type="vision"] .project-card-image {
@@ -1514,12 +1519,12 @@ button {
     center,
     center,
     62% 72%;
-  opacity: 0.9;
-  filter: saturate(1.08) contrast(1.02) brightness(1.08);
+  opacity: 0.76;
+  filter: saturate(0.84) contrast(1.02) brightness(0.92);
 }
 
 :root[data-theme="light"] .project-card[data-project-type="vision"]:hover .project-card-image {
-  opacity: 0.94;
+  opacity: 0.86;
 }
 
 :root[data-theme="light"] .project-card h2,
@@ -1575,15 +1580,15 @@ button {
 }
 
 .project-title-row {
-  gap: 10px;
+  gap: clamp(7px, 2cqw, 10px);
   align-items: center;
 }
 
 .project-glyph {
   display: grid;
-  flex: 0 0 34px;
-  width: 34px;
-  height: 34px;
+  flex: 0 0 clamp(28px, 8cqw, 34px);
+  width: clamp(28px, 8cqw, 34px);
+  height: clamp(28px, 8cqw, 34px);
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--project-accent) 34%, transparent);
   border-radius: 14px;
@@ -1595,20 +1600,20 @@ button {
 
 .project-card h2 {
   margin: 0;
-  font-size: clamp(1rem, 6cqw, 1.34rem);
-  line-height: 1.12;
+  font-size: clamp(0.92rem, 4.5cqw, 1.18rem);
+  line-height: 1.14;
 }
 
 .project-card .project-type {
-  font-size: clamp(0.64rem, 2.6cqw, 0.74rem);
+  font-size: clamp(0.58rem, 2.1cqw, 0.68rem);
 }
 
 .project-card p {
   display: -webkit-box;
   overflow: hidden;
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
-  font-size: clamp(0.76rem, 3.4cqw, 0.9rem);
+  font-size: clamp(0.68rem, 2.9cqw, 0.82rem);
   line-height: 1.35;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
@@ -1619,33 +1624,34 @@ button {
 .requirement-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: clamp(4px, 1.5cqw, 6px);
 }
 
 .tag-row span,
 .requirement-row span {
-  padding: 4px 7px;
+  padding: clamp(3px, 1cqw, 4px) clamp(5px, 1.8cqw, 7px);
   color: var(--muted);
-  font-size: clamp(0.66rem, 2.6cqw, 0.76rem);
+  font-size: clamp(0.58rem, 2.1cqw, 0.7rem);
+  line-height: 1.1;
 }
 
 .requirement-row span {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: clamp(0.7rem, 2.8cqw, 0.78rem);
+  font-size: clamp(0.62rem, 2.2cqw, 0.72rem);
 }
 
 .project-card-bottom strong {
   display: block;
-  margin-top: 3px;
-  font-size: clamp(0.9rem, 3.8cqw, 1.05rem);
+  margin-top: 2px;
+  font-size: clamp(0.78rem, 3cqw, 0.96rem);
 }
 
 .open-link {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: clamp(28px, 8cqw, 34px);
+  height: clamp(28px, 8cqw, 34px);
   place-items: center;
   border: 1px solid var(--border);
   border-radius: 50%;
@@ -1656,8 +1662,8 @@ button {
 .compatibility-ping {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 5px;
+  padding: 5px 7px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.12);
@@ -1672,7 +1678,7 @@ button {
 }
 
 .compatibility-ping strong {
-  font-size: 0.7rem;
+  font-size: clamp(0.58rem, 2cqw, 0.68rem);
   text-transform: uppercase;
 }
 
@@ -1700,11 +1706,13 @@ button {
   padding: clamp(26px, 4vw, 56px);
   border-color: color-mix(in srgb, var(--project-accent) 38%, var(--border));
   background:
-    linear-gradient(90deg, rgba(3, 8, 10, 0.94), rgba(3, 12, 15, 0.7) 52%, rgba(5, 20, 24, 0.56) 72%, rgba(2, 7, 9, 0.86)),
-    radial-gradient(circle at 76% 40%, color-mix(in srgb, var(--project-accent) 24%, transparent), transparent 44%),
-    linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(56, 189, 248, 0.14)),
+    linear-gradient(90deg, rgba(3, 8, 10, 0.96), rgba(3, 12, 15, 0.78) 52%, rgba(5, 20, 24, 0.64) 72%, rgba(2, 7, 9, 0.9)),
+    radial-gradient(circle at 76% 40%, color-mix(in srgb, var(--project-accent) 18%, transparent), transparent 44%),
+    repeating-linear-gradient(90deg, rgba(148, 232, 255, 0.055) 0 1px, transparent 1px 84px),
+    linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(56, 189, 248, 0.18)),
     var(--project-image);
   background-position:
+    center,
     center,
     center,
     center,
@@ -1712,19 +1720,22 @@ button {
   background-size:
     cover,
     cover,
+    auto,
     cover,
     cover;
-  background-blend-mode: normal, color, color, normal;
+  background-blend-mode: normal, color, screen, color, normal;
 }
 
 :root[data-theme="light"] .detail-hero {
   color: #f8fbff;
   background:
-    linear-gradient(90deg, rgba(3, 8, 10, 0.88), rgba(5, 16, 20, 0.62) 46%, rgba(7, 30, 38, 0.42) 72%, rgba(3, 9, 12, 0.66)),
-    radial-gradient(circle at 76% 40%, color-mix(in srgb, var(--project-accent) 16%, transparent), transparent 44%),
-    linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(14, 165, 233, 0.2)),
+    linear-gradient(90deg, rgba(3, 8, 10, 0.92), rgba(5, 16, 20, 0.72) 46%, rgba(7, 30, 38, 0.54) 72%, rgba(3, 9, 12, 0.76)),
+    radial-gradient(circle at 76% 40%, color-mix(in srgb, var(--project-accent) 12%, transparent), transparent 44%),
+    repeating-linear-gradient(90deg, rgba(148, 232, 255, 0.055) 0 1px, transparent 1px 84px),
+    linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(14, 165, 233, 0.22)),
     var(--project-image);
   background-position:
+    center,
     center,
     center,
     center,
@@ -1732,9 +1743,10 @@ button {
   background-size:
     cover,
     cover,
+    auto,
     cover,
     cover;
-  background-blend-mode: normal, color, color, normal;
+  background-blend-mode: normal, color, screen, color, normal;
 }
 
 :root[data-theme="light"] .detail-hero h1 {
