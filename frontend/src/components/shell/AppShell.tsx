@@ -4,9 +4,8 @@ import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Boxes, Cpu, Moon, Settings, Sun } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchActiveTasks } from "@/services/apiClient";
-import { runningTasks } from "@/services/mockData";
 
 type ThemeMode = "dark" | "light";
 
@@ -29,11 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const currentPathname = pathname ?? "/";
   const [theme, setTheme] = useState<ThemeMode>("dark");
-  const fallbackActiveTasks = useMemo(
-    () => runningTasks.filter((task) => task.status === "running" || task.status === "installing"),
-    [],
-  );
-  const [activeTaskCount, setActiveTaskCount] = useState(fallbackActiveTasks.length);
+  const [activeTaskCount, setActiveTaskCount] = useState(0);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("ai-hub-theme") as ThemeMode | null;
@@ -47,15 +42,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    void fetchActiveTasks({ signal: controller.signal })
-      .then((response) => setActiveTaskCount(response.count))
-      .catch(() => {
-        setActiveTaskCount(fallbackActiveTasks.length);
-      });
+    let isMounted = true;
+    const load = () => {
+      const controller = new AbortController();
+      void fetchActiveTasks({ signal: controller.signal, timeoutMs: 900 })
+        .then((response) => {
+          if (isMounted) setActiveTaskCount(response.count);
+        })
+        .catch(() => {
+          if (isMounted) setActiveTaskCount(0);
+        });
+      return controller;
+    };
+    let controller = load();
+    const interval = window.setInterval(() => {
+      controller.abort();
+      controller = load();
+    }, 2000);
 
-    return () => controller.abort();
-  }, [fallbackActiveTasks.length]);
+    return () => {
+      isMounted = false;
+      controller.abort();
+      window.clearInterval(interval);
+    };
+  }, []);
 
   const handleToggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));

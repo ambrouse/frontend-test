@@ -12,8 +12,15 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   $ErrorActionPreference = "Continue"
   try {
     $env:HTTP_HOST_PORT = $Port
-    bash runall.sh *>> "$Root\logs\runtime.log"
-    if ($LASTEXITCODE -ne 0) { throw "runall.sh failed with exit code $LASTEXITCODE" }
+    docker network inspect acp-infra-network *> $null
+    if ($LASTEXITCODE -ne 0) {
+      docker network create acp-infra-network
+      if ($LASTEXITCODE -ne 0) { throw "docker network create acp-infra-network failed with exit code $LASTEXITCODE" }
+    }
+    docker compose -f docker-compose.infra.yml -f docker-compose.yml build promotion-agent
+    if ($LASTEXITCODE -ne 0) { throw "docker compose build promotion-agent failed with exit code $LASTEXITCODE" }
+    docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d --wait --wait-timeout 600
+    if ($LASTEXITCODE -ne 0) { throw "docker compose up failed with exit code $LASTEXITCODE" }
   } finally {
     $ErrorActionPreference = $PreviousErrorActionPreference
     Pop-Location
@@ -21,4 +28,4 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
 }
 $Status = @{ projectId=$Id; state="running"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Running commerce stack"; progressPercent=100; health=@{ level="ok"; message="Started" } }
 $Status | ConvertTo-Json -Depth 5 | Set-Content "$Root\runtime\status.json" -Encoding utf8
-Write-Output (@{ state="running"; port=[int]$Port } | ConvertTo-Json)
+Write-Output (@{ state="running"; port=[int]$Port } | ConvertTo-Json -Compress)

@@ -9,7 +9,7 @@ if ($env:AIHUB_DRY_RUN -ne "1" -and (Test-Path $DeployDir)) {
   $PreviousErrorActionPreference = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
   try {
-    docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml down *>> "$Root\logs\runtime.log"
+    docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml down
     if ($LASTEXITCODE -ne 0) { throw "docker compose down failed with exit code $LASTEXITCODE" }
   } finally {
     $ErrorActionPreference = $PreviousErrorActionPreference
@@ -18,4 +18,4 @@ if ($env:AIHUB_DRY_RUN -ne "1" -and (Test-Path $DeployDir)) {
 }
 $Status = @{ projectId=$Id; state="stopped"; pid=$null; port=[int]$Port; platform="windows"; startedAt=$null; uptimeSec=0; currentStep="Stopped"; progressPercent=100; health=@{ level="ok"; message="Stopped" } }
 $Status | ConvertTo-Json -Depth 5 | Set-Content "$Root\runtime\status.json" -Encoding utf8
-Write-Output (@{ state="stopped" } | ConvertTo-Json)
+Write-Output (@{ state="stopped" } | ConvertTo-Json -Compress)

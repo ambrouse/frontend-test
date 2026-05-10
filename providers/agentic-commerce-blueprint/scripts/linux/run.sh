@@ -16,7 +16,13 @@ print(json.dumps({"source":"runtime","level":"info","timestamp":datetime.now(tim
 PY
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   [[ -d "$DEPLOY_DIR" ]] || { echo "deploy directory missing; install first" >&2; exit 2; }
-  (cd "$DEPLOY_DIR" && HTTP_HOST_PORT="$PORT" bash runall.sh >> "$LOG" 2>&1)
+  (
+    cd "$DEPLOY_DIR"
+    export HTTP_HOST_PORT="$PORT"
+    docker network inspect acp-infra-network >/dev/null 2>&1 || docker network create acp-infra-network
+    docker compose -f docker-compose.infra.yml -f docker-compose.yml build promotion-agent
+    docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d --wait --wait-timeout 600
+  )
 fi
 python - "$STATUS" "$ID" "$PORT" <<'PY'
 import json, sys

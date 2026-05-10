@@ -6,6 +6,7 @@ import platform
 import shutil
 import socket
 import subprocess
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -22,6 +23,13 @@ from app.schemas.models import (
 )
 from app.services.provider_registry import provider_registry
 from app.services.task_store import task_store
+
+
+@dataclass
+class ScriptResult:
+    returncode: int
+    stdout: str
+    stderr: str = ""
 
 
 def provider_status(provider_id: str) -> ProviderStatus:
@@ -168,17 +176,18 @@ def _run_action(task_id: str, provider: HubProject, command_name: str, request: 
         raise RuntimeError(f"Provider {provider.id} does not define command {command_name}")
 
     task_store.update(task_id, current_step=f"Executing {command_name} script", progress_percent=35)
-    result = _run_script(provider, command, request)
+    try:
+        result = _run_script(provider, command, request, task_id=task_id, command_name=command_name)
+    except Exception as exc:
+        result = ScriptResult(returncode=1, stdout="", stderr=str(exc))
     if result.returncode != 0:
-        message = result.stderr.strip() or result.stdout.strip() or f"{command_name} failed"
+        message = _tail_message(result.stderr.strip() or result.stdout.strip() or f"{command_name} failed")
         _append_log(provider, "system", "error", message)
-        _write_status(provider, state="failed", current_step=message[:240], progress=100)
-        task_store.update(task_id, status="failed", current_step=message[:240], progress_percent=100)
+        _write_status(provider, state="failed", current_step=message, progress=100)
+        task_store.update(task_id, status="failed", current_step=message, progress_percent=100)
         provider_registry.refresh()
         return
 
-    if result.stdout.strip():
-        _append_log(provider, "system", "info", result.stdout.strip()[-2000:])
     state = {"setup": "installed", "run": "running", "stop": "stopped", "delete": "not_installed"}.get(
         command_name, "completed"
     )
@@ -189,13 +198,22 @@ def _run_action(task_id: str, provider: HubProject, command_name: str, request: 
     provider_registry.refresh()
 
 
-def _run_script(provider: HubProject, command: str, request: ProviderActionRequest) -> subprocess.CompletedProcess[str]:
+def _run_script(
+    provider: HubProject,
+    command: str,
+    request: ProviderActionRequest,
+    *,
+    task_id: str,
+    command_name: str,
+) -> ScriptResult:
     provider_root = _provider_file(provider, ".")
     env = os.environ.copy()
     env["AIHUB_PROVIDER_ID"] = provider.id
     env["AIHUB_PROVIDER_ROOT"] = str(provider_root)
     env["AIHUB_DEPLOY_ROOT"] = str(deploy_root())
-    env["AIHUB_PORT"] = str(provider_config(provider.id).port)
+    config = provider_config(provider.id)
+    env["AIHUB_PORT"] = str(config.port)
+    env["AIHUB_BRANCH"] = config.branch
     if request.nvidiaApiKey:
         env["NVIDIA_API_KEY"] = request.nvidiaApiKey
     if request.dryRun or os.environ.get("AIHUB_DRY_RUN") == "1":
@@ -205,7 +223,32 @@ def _run_script(provider: HubProject, command: str, request: ProviderActionReque
         executable = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", command]
     else:
         executable = ["bash", command]
-    return subprocess.run(executable, cwd=provider_root, env=env, capture_output=True, text=True, timeout=60 * 60)
+    output: list[str] = []
+    process = subprocess.Popen(
+        executable,
+        cwd=provider_root,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        bufsize=1,
+    )
+    assert process.stdout is not None
+    try:
+        for raw_line in process.stdout:
+            line = raw_line.rstrip()
+            if not line:
+                continue
+            output.append(line)
+            _append_log(provider, _log_source(command_name), "info", line[-2000:])
+            task_store.update(task_id, current_step=line[-160:], progress_percent=60)
+        returncode = process.wait(timeout=60 * 60)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        return ScriptResult(returncode=124, stdout="\n".join(output), stderr=f"{command_name} timed out")
+    return ScriptResult(returncode=returncode, stdout="\n".join(output))
 
 
 def _script_for(provider: HubProject, command_name: str) -> str | None:
@@ -214,6 +257,18 @@ def _script_for(provider: HubProject, command_name: str) -> str | None:
         return None
     command_set = commands.windows if _platform_name() == "windows" else commands.linux
     return command_set.get(command_name)
+
+
+def _log_source(command_name: str) -> str:
+    return {"setup": "install", "run": "runtime", "stop": "system", "delete": "system"}.get(command_name, "system")
+
+
+def _tail_message(message: str, *, max_chars: int = 240) -> str:
+    lines = [line.strip() for line in message.splitlines() if line.strip()]
+    if not lines:
+        return message[:max_chars] or "Provider command failed"
+    tail = "\n".join(lines[-8:])
+    return tail[-max_chars:]
 
 
 def _require_provider(provider_id: str) -> HubProject:
@@ -301,7 +356,12 @@ def _delete_deploy(provider: HubProject) -> None:
     if deploy_base not in deploy_path.parents and deploy_path != deploy_base:
         raise RuntimeError("Refusing to delete outside deploy root")
     if deploy_path.exists():
-        shutil.rmtree(deploy_path)
+        shutil.rmtree(deploy_path, onerror=_handle_remove_readonly)
+
+
+def _handle_remove_readonly(function, path, _exc_info) -> None:
+    os.chmod(path, 0o700)
+    function(path)
 
 
 def _is_port_in_use(port: int) -> bool:

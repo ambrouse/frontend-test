@@ -40,12 +40,21 @@ mkdir -p "$(dirname "$ENV_FILE")"
 if [[ ! -f "$ENV_FILE" ]]; then
   cp "$ROOT/.env.example" "$ENV_FILE"
 fi
-python - "$ENV_FILE" "$PORT" <<'PY'
+python - "$ENV_FILE" "$PORT" "$ROOT/.env.example" <<'PY'
 import os, sys
-path, port = sys.argv[1], sys.argv[2]
+path, port, defaults_path = sys.argv[1], sys.argv[2], sys.argv[3]
 text = open(path, encoding="utf-8").read()
+defaults = open(defaults_path, encoding="utf-8").read().splitlines()
+existing = {line.split("=", 1)[0] for line in text.splitlines() if "=" in line}
+for line in defaults:
+    if "=" in line and not line.lstrip().startswith("#"):
+        key = line.split("=", 1)[0]
+        if key and key not in existing:
+            text += "\n" + line
+            existing.add(key)
 updates = {
     "BACKEND_PORT": port,
+    "HOST_BACKEND_PORT": port,
     "NVIDIA_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
     "EMBEDDING_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
     "RAIL_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
@@ -56,8 +65,11 @@ for line in text.splitlines():
     if key in updates and updates[key]:
         lines.append(f"{key}={updates[key]}")
         seen.add(key)
-    elif key == "BACKEND_PORT":
-        lines.append(f"BACKEND_PORT={port}")
+    elif key in {"BACKEND_PORT", "HOST_BACKEND_PORT"}:
+        lines.append(f"{key}={port}")
+        seen.add(key)
+    elif key == "LLM_MODEL" and line.endswith("meta/llama-3.1-70b-instruct"):
+        lines.append("LLM_MODEL=nvidia/llama-3.3-nemotron-super-49b-v1.5")
         seen.add(key)
     else:
         lines.append(line)

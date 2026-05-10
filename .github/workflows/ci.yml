@@ -147,6 +147,12 @@ jobs:
       - name: Run backend tests
         run: pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=70
 
+      - name: Provider dry-run lifecycle
+        run: python scripts/provider_dry_run_lifecycle.py
+
+      - name: Warm latency benchmark
+        run: python scripts/benchmark_latency.py --iterations 80 --warmup 10 --threshold-ms 100
+
       - name: Generate OpenAPI schema
         run: python -c "from app.main import app; import json; print(json.dumps(app.openapi())[:200])"
 

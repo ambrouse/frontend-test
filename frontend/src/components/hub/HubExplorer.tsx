@@ -3,7 +3,6 @@
 import { Search } from "lucide-react";
 import { memo, startTransition, useEffect, useMemo, useState } from "react";
 import { fetchFeaturedProviders, fetchProviders } from "@/services/apiClient";
-import { hubProjects } from "@/services/mockData";
 import type { HubProject, ProjectType } from "@/services/types";
 import { formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
@@ -20,15 +19,14 @@ const projectTypes: Array<ProjectType | "all"> = [
   "tooling",
 ];
 
-const initialFeaturedProjects = getFeaturedProjects(hubProjects).slice(0, 30);
-
 export function HubExplorer() {
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
   const [query, setQuery] = useState("");
-  const [projects, setProjects] = useState<HubProject[]>(hubProjects);
-  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(initialFeaturedProjects);
+  const [projects, setProjects] = useState<HubProject[]>([]);
+  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>([]);
   const [activeSlide, setActiveSlide] = useState(0);
   const [previousProject, setPreviousProject] = useState<HubProject | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--page-accent", "#0ea5b7");
@@ -60,21 +58,24 @@ export function HubExplorer() {
 
     void fetchProviders({ signal: controller.signal })
       .then((response) => {
-        startTransition(() => setProjects(response.providers));
+        startTransition(() => {
+          setProjects(response.providers);
+          setIsOffline(false);
+        });
       })
       .catch(() => {
-        // Keep static fallback; the UI must never wait for backend availability.
+        setIsOffline(true);
       });
 
     void fetchFeaturedProviders({ signal: controller.signal })
       .then((response) => {
         startTransition(() => {
-          setFeaturedProjects(response.providers.length > 0 ? response.providers : initialFeaturedProjects);
+          setFeaturedProjects(response.providers);
           setActiveSlide(0);
         });
       })
       .catch(() => {
-        // Static featured providers are already rendered.
+        setIsOffline(true);
       });
 
     return () => controller.abort();
@@ -119,11 +120,23 @@ export function HubExplorer() {
     });
   }, [activeType, projects, query]);
 
-  const featuredProject = featuredProjects[activeSlide] ?? projects[0] ?? hubProjects[0];
+  const featuredProject = featuredProjects[activeSlide] ?? projects[0] ?? null;
 
   return (
     <div className="page-flow">
-      <HubCarousel featuredProject={featuredProject} previousProject={previousProject} />
+      {featuredProject ? (
+        <HubCarousel featuredProject={featuredProject} previousProject={previousProject} />
+      ) : (
+        <section className="hub-carousel hub-carousel-empty">
+          <div className="hub-carousel-copy">
+            <span className="project-type">{isOffline ? "offline" : "loading"}</span>
+            <h1>{isOffline ? "Backend unavailable" : "Loading providers"}</h1>
+            <div className="hub-status-strip" aria-label="Provider loading status">
+              <span>{isOffline ? "Check backend API" : "Real backend data"}</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="hub-tools">
         <div className="filter-dock" aria-label="Loc provider">
@@ -200,22 +213,10 @@ const HubCarousel = memo(function HubCarousel({
 const ProjectGrid = memo(function ProjectGrid({ projects }: { projects: HubProject[] }) {
   return (
     <section className="project-bento" aria-label="Danh sach project">
+      {projects.length === 0 ? <p className="empty-log">No backend providers loaded.</p> : null}
       {projects.map((project) => (
         <ProjectCard key={project.id} project={project} />
       ))}
     </section>
   );
 });
-
-function getFeaturedProjects(projects: HubProject[]) {
-  return [...projects].sort((left, right) => hashProjectId(left.id) - hashProjectId(right.id));
-}
-
-function hashProjectId(id: string) {
-  let hash = 0;
-  for (let index = 0; index < id.length; index += 1) {
-    hash = (hash * 31 + id.charCodeAt(index)) % 997;
-  }
-
-  return hash;
-}

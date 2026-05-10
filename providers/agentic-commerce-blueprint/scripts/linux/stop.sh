@@ -7,7 +7,7 @@ DEPLOY_DIR="$DEPLOY_ROOT/$ID"
 PORT="${AIHUB_PORT:-8088}"
 mkdir -p "$ROOT/runtime" "$ROOT/logs"
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" && -d "$DEPLOY_DIR" ]]; then
-  (cd "$DEPLOY_DIR" && bash stop.sh >> "$ROOT/logs/runtime.log" 2>&1 || true)
+  (cd "$DEPLOY_DIR" && docker compose -f docker-compose.infra.yml -f docker-compose.yml down >> "$ROOT/logs/runtime.log" 2>&1 || true)
 fi
 python - "$ROOT/runtime/status.json" "$ID" "$PORT" <<'PY'
 import json, sys

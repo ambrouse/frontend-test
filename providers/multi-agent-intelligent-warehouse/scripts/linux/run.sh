@@ -10,7 +10,7 @@ STATUS="$ROOT/runtime/status.json"
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   [[ -d "$DEPLOY_DIR" ]] || { echo "deploy directory missing; install first" >&2; exit 2; }
-  (cd "$DEPLOY_DIR" && BACKEND_PORT="$PORT" docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml up -d >> "$LOG" 2>&1)
+  (cd "$DEPLOY_DIR" && BACKEND_PORT="$PORT" HOST_BACKEND_PORT="$PORT" docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml up -d --wait --wait-timeout 600)
 fi
 python - "$STATUS" "$ID" "$PORT" <<'PY'
 import json, sys

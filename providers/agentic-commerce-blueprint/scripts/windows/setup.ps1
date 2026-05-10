@@ -21,4 +21,4 @@ if ($env:NVIDIA_API_KEY) { $Text = $Text -replace '(?m)^NVIDIA_API_KEY=.*$', "NV
 Set-Content -Path $EnvFile -Value $Text -Encoding utf8
 $Status = @{ projectId=$Id; state="installed"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Installed"; progressPercent=100; health=@{ level="ok"; message="Installed" } }
 $Status | ConvertTo-Json -Depth 5 | Set-Content "$Root\runtime\status.json" -Encoding utf8
-Write-Output (@{ state="installed"; port=[int]$Port } | ConvertTo-Json)
+Write-Output (@{ state="installed"; port=[int]$Port } | ConvertTo-Json -Compress)

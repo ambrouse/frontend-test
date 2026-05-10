@@ -3,34 +3,32 @@
 import { Activity, Cpu, Database, Gauge, HardDrive, Layers3, Server, Thermometer, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchHardwareSnapshot, fetchProviderSummary, fetchTasks } from "@/services/apiClient";
-import { hardwareSnapshot, hubProjects, runningTasks } from "@/services/mockData";
+import { emptyHardwareSnapshot, emptyProviderSummary } from "@/services/emptyState";
 import type { HardwareSnapshot, ProviderSummary, RunningTask } from "@/services/types";
 import { formatMemory } from "@/utils/format";
 import { MetricGauge } from "./MetricGauge";
 import { RunningTaskRail } from "./RunningTaskRail";
 
-const fallbackSummary: ProviderSummary = {
-  total: hubProjects.length,
-  ready: hubProjects.filter((project) => project.compatibility.level !== "red").length,
-  blocked: hubProjects.filter((project) => project.compatibility.level === "red").length,
-  installed: hubProjects.filter((project) => project.installStatus === "installed").length,
-  running: hubProjects.filter((project) => project.runStatus === "running").length,
-};
-
 export function HomeDashboard() {
-  const [hardware, setHardware] = useState<HardwareSnapshot>(hardwareSnapshot);
-  const [summary, setSummary] = useState<ProviderSummary>(fallbackSummary);
-  const [tasks, setTasks] = useState<RunningTask[]>(runningTasks);
-  const freeVramMb = hardware.gpu.vramTotalMb - hardware.gpu.vramUsedMb;
-  const freeRamMb = hardware.ram.totalMb - hardware.ram.usedMb;
-  const activeVramPercent = (hardware.gpu.vramUsedMb / hardware.gpu.vramTotalMb) * 100;
-  const activeRamPercent = (hardware.ram.usedMb / hardware.ram.totalMb) * 100;
+  const [hardware, setHardware] = useState<HardwareSnapshot>(emptyHardwareSnapshot);
+  const [summary, setSummary] = useState<ProviderSummary>(emptyProviderSummary);
+  const [tasks, setTasks] = useState<RunningTask[]>([]);
+  const [isBackendOnline, setIsBackendOnline] = useState(false);
+  const freeVramMb = Math.max(0, hardware.gpu.vramTotalMb - hardware.gpu.vramUsedMb);
+  const freeRamMb = Math.max(0, hardware.ram.totalMb - hardware.ram.usedMb);
+  const activeVramPercent = safePercent(hardware.gpu.vramUsedMb, hardware.gpu.vramTotalMb);
+  const activeRamPercent = safePercent(hardware.ram.usedMb, hardware.ram.totalMb);
 
   useEffect(() => {
     const controller = new AbortController();
-    void fetchHardwareSnapshot({ signal: controller.signal }).then(setHardware).catch(() => {});
+    void fetchHardwareSnapshot({ signal: controller.signal })
+      .then((snapshot) => {
+        setHardware(snapshot);
+        setIsBackendOnline(true);
+      })
+      .catch(() => setIsBackendOnline(false));
     void fetchProviderSummary({ signal: controller.signal }).then(setSummary).catch(() => {});
-    void fetchTasks({ signal: controller.signal }).then((response) => setTasks(response.tasks)).catch(() => {});
+    void fetchTasks({ signal: controller.signal }).then((response) => setTasks(response.tasks)).catch(() => setTasks([]));
     return () => controller.abort();
   }, []);
 
@@ -41,6 +39,7 @@ export function HomeDashboard() {
           <div className="section-kicker">
             <Zap size={16} aria-hidden="true" />
             <span>Local AI command center</span>
+            <em>{isBackendOnline ? "live backend" : "connecting"}</em>
           </div>
 
           <div className="readiness-console" aria-label="Readiness status">
@@ -79,7 +78,7 @@ export function HomeDashboard() {
           </div>
           <MetricGauge label="GPU Load" value={hardware.gpu.usagePercent} detail="Compute active" />
           <MetricGauge label="VRAM" value={activeVramPercent} detail={`${formatMemory(hardware.gpu.vramUsedMb)} used`} tone="amber" />
-          <MetricGauge label="Temp" value={hardware.gpu.temperatureC ?? 0} detail={`${hardware.gpu.temperatureC ?? 0}°C`} tone="green" />
+          <MetricGauge label="Temp" value={hardware.gpu.temperatureC ?? 0} detail={formatTemperature(hardware.gpu.temperatureC)} tone="green" />
           <MetricGauge label="Driver" value={82} detail={hardware.gpu.driverVersion} tone="cyan" />
         </div>
       </section>
@@ -106,8 +105,8 @@ export function HomeDashboard() {
         <MetricCard
           icon={<Thermometer size={18} />}
           label="Thermal"
-          value={`${hardware.cpu.temperatureC ?? 0}°C CPU / ${hardware.gpu.temperatureC ?? 0}°C GPU`}
-          meta="Stable for long session"
+          value={`${formatTemperature(hardware.cpu.temperatureC)} CPU / ${formatTemperature(hardware.gpu.temperatureC)} GPU`}
+          meta={hardware.gpu.vendor === "unknown" ? "GPU probe unavailable" : "Live hardware probe"}
         />
       </section>
 
@@ -189,6 +188,15 @@ function SignalTile({
       </div>
     </article>
   );
+}
+
+function safePercent(used: number, total: number) {
+  if (total <= 0) return 0;
+  return Math.min(100, Math.max(0, (used / total) * 100));
+}
+
+function formatTemperature(value: number | null) {
+  return value === null ? "unknown" : `${value}C`;
 }
 
 function MetricCard({

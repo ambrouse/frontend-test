@@ -12,21 +12,21 @@ import {
   fetchProviderStatus,
   providerAction,
 } from "@/services/apiClient";
-import { getProjectLogs, hardwareSnapshot } from "@/services/mockData";
+import { emptyHardwareSnapshot } from "@/services/emptyState";
 import type { HardwareSnapshot, HubProject, LogLevel, ProjectLog, ProviderConfig, ProviderMetrics, ProviderStatus } from "@/services/types";
 import { formatMemory, formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
 
 const logLevels: Array<LogLevel | "all"> = ["all", "info", "warn", "error", "debug"];
 
-export function ProjectDetailView({ project }: { project: HubProject }) {
+export function ProjectDetailView({ projectId, project }: { projectId: string; project?: HubProject }) {
   const [activeLogLevel, setActiveLogLevel] = useState<LogLevel | "all">("all");
-  const [projectData, setProjectData] = useState(project);
-  const [hardware, setHardware] = useState<HardwareSnapshot>(hardwareSnapshot);
+  const [projectData, setProjectData] = useState<HubProject | null>(project ?? null);
+  const [hardware, setHardware] = useState<HardwareSnapshot>(emptyHardwareSnapshot);
   const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [metrics, setMetrics] = useState<ProviderMetrics | null>(null);
   const [config, setConfig] = useState<ProviderConfig | null>(null);
-  const [logs, setLogs] = useState<ProjectLog[]>(getProjectLogs(project.id));
+  const [logs, setLogs] = useState<ProjectLog[]>([]);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState("");
 
@@ -34,18 +34,15 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
     return activeLogLevel === "all" ? logs : logs.filter((log) => log.level === activeLogLevel);
   }, [activeLogLevel, logs]);
 
-  const availableRamMb = hardware.ram.totalMb - hardware.ram.usedMb;
-  const availableVramMb = hardware.gpu.vramTotalMb - hardware.gpu.vramUsedMb;
-  const effectiveConfig = config ?? {
-    ...projectData.editableConfig,
-    env: {},
-    warnings: [],
-  };
-  const headlineMetric = metrics?.benchmark?.headlineMetric?.toString() ?? projectData.lastBenchmark.headlineMetric;
-  const secondaryMetric = metrics?.benchmark?.secondaryMetric?.toString() ?? projectData.lastBenchmark.secondaryMetric;
-  const runState = status?.state ?? projectData.runStatus;
+  const availableRamMb = Math.max(0, hardware.ram.totalMb - hardware.ram.usedMb);
+  const availableVramMb = Math.max(0, hardware.gpu.vramTotalMb - hardware.gpu.vramUsedMb);
+  const effectiveConfig = config ?? (projectData ? { ...projectData.editableConfig, env: {}, warnings: [] } : null);
+  const headlineMetric = metrics?.benchmark?.headlineMetric?.toString() ?? projectData?.lastBenchmark.headlineMetric ?? "loading";
+  const secondaryMetric = metrics?.benchmark?.secondaryMetric?.toString() ?? projectData?.lastBenchmark.secondaryMetric ?? "waiting for backend";
+  const runState = status?.state ?? projectData?.runStatus ?? "unknown";
 
   useEffect(() => {
+    if (!projectData) return;
     document.documentElement.style.setProperty("--page-accent", projectData.visual.ambient);
     document.documentElement.style.setProperty("--page-accent-soft", projectData.visual.ambientSoft);
   }, [projectData]);
@@ -53,12 +50,12 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
   useEffect(() => {
     const controller = new AbortController();
     const load = () => {
-      void fetchProviderDetail(project.id, { signal: controller.signal }).then(setProjectData).catch(() => {});
+      void fetchProviderDetail(projectId, { signal: controller.signal }).then(setProjectData).catch(() => {});
       void fetchHardwareSnapshot({ signal: controller.signal }).then(setHardware).catch(() => {});
-      void fetchProviderStatus(project.id, { signal: controller.signal }).then(setStatus).catch(() => {});
-      void fetchProviderMetrics(project.id, { signal: controller.signal }).then(setMetrics).catch(() => {});
-      void fetchProviderConfig(project.id, { signal: controller.signal }).then(setConfig).catch(() => {});
-      void fetchProviderLogs(project.id, { signal: controller.signal, level: activeLogLevel }).then((response) => setLogs(response.logs)).catch(() => {});
+      void fetchProviderStatus(projectId, { signal: controller.signal }).then(setStatus).catch(() => {});
+      void fetchProviderMetrics(projectId, { signal: controller.signal }).then(setMetrics).catch(() => {});
+      void fetchProviderConfig(projectId, { signal: controller.signal }).then(setConfig).catch(() => {});
+      void fetchProviderLogs(projectId, { signal: controller.signal, level: activeLogLevel }).then((response) => setLogs(response.logs)).catch(() => {});
     };
     load();
     const interval = window.setInterval(load, 3000);
@@ -66,17 +63,17 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
       controller.abort();
       window.clearInterval(interval);
     };
-  }, [activeLogLevel, project.id]);
+  }, [activeLogLevel, projectId]);
 
   const handleAction = async (action: "install" | "run" | "stop" | "delete") => {
     setPendingAction(action);
     setActionMessage("");
     try {
-      const response = await providerAction(project.id, action, { force: true });
+      const response = await providerAction(projectId, action, { force: true });
       setActionMessage(`Task ${response.taskId} queued`);
       const [nextStatus, nextLogs] = await Promise.all([
-        fetchProviderStatus(project.id, { timeoutMs: 1500 }).catch(() => null),
-        fetchProviderLogs(project.id, { timeoutMs: 1500, level: activeLogLevel }).catch(() => null),
+        fetchProviderStatus(projectId, { timeoutMs: 1500 }).catch(() => null),
+        fetchProviderLogs(projectId, { timeoutMs: 1500, level: activeLogLevel }).catch(() => null),
       ]);
       if (nextStatus) setStatus(nextStatus);
       if (nextLogs) setLogs(nextLogs.logs);
@@ -86,6 +83,23 @@ export function ProjectDetailView({ project }: { project: HubProject }) {
       setPendingAction(null);
     }
   };
+
+  if (!projectData || !effectiveConfig) {
+    return (
+      <div className="page-flow detail-flow">
+        <section className="detail-hero detail-hero-loading">
+          <div>
+            <h1>Loading provider</h1>
+            <div className="detail-meta-strip" aria-label="Project information">
+              <span>{projectId}</span>
+              <span>backend</span>
+              <span>{runState}</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="page-flow detail-flow">
