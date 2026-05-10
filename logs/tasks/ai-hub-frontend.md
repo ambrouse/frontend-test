@@ -1,5 +1,12 @@
 # AI Hub Frontend Work Log
 
+## Update 2026-05-10 - Real provider integration plan
+
+- Read requested `plan-skill` from `.codex/skills/project-workflow/references/github-skills/plan-skill/SKILL.md`.
+- Verified both requested provider repos are reachable with `git ls-remote`.
+- Added `plans/plan-real-provider-integration.md` covering upstream clone/test/fix, secure env handling, deploy-on-install, lifecycle backend APIs, frontend action wiring, smoke tests, docs/logs, CI, and push gates.
+- Security note: NVIDIA API key must be written only to local ignored `.env` files during implementation, never committed.
+
 ## Update 2026-05-10 - Backend implementation phase 1-3
 
 - Added `backend/` FastAPI app with cache-first hardware, provider, task, and health APIs.
