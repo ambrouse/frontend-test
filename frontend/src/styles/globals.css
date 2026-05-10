@@ -2028,6 +2028,102 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .home-hero {
+    min-height: auto;
+    gap: 18px;
+    padding: clamp(18px, 3vw, 30px);
+  }
+
+  .hero-console {
+    gap: 16px;
+  }
+
+  .readiness-console {
+    grid-template-columns: minmax(96px, 0.28fr) minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .readiness-console::before {
+    inset: 9px;
+  }
+
+  .readiness-number {
+    min-height: 118px;
+  }
+
+  .readiness-number strong {
+    font-size: clamp(3.1rem, 7vw, 4.6rem);
+  }
+
+  .readiness-copy {
+    gap: 12px;
+    padding: 8px 4px;
+  }
+
+  .readiness-copy strong {
+    max-width: 18ch;
+    font-size: clamp(1.2rem, 3.4vw, 2rem);
+  }
+
+  .readiness-bars {
+    gap: 7px;
+  }
+
+  .readiness-bars span {
+    height: 25px;
+  }
+
+  .hero-signal-grid {
+    gap: 8px;
+  }
+
+  .signal-tile {
+    min-height: 92px;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .hardware-orbit {
+    min-height: 0;
+    gap: 10px;
+  }
+
+  .hardware-orbit::before {
+    inset: -20px -18px -18px auto;
+    width: min(62%, 380px);
+  }
+
+  .gpu-core {
+    min-height: 145px;
+    padding: 22px;
+    border-radius: 180px 180px var(--radius-md) var(--radius-md);
+  }
+
+  .metric-gauge {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .metric-ring {
+    flex-basis: 58px;
+    width: 58px;
+    height: 58px;
+  }
+
+  .metric-card {
+    min-height: 138px;
+    padding: 14px;
+  }
+
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-rail {
+    grid-row: auto;
+  }
+
   .project-card,
   .project-card:nth-child(1),
   .project-card:nth-child(3),
@@ -2037,6 +2133,21 @@ button {
 }
 
 @media (max-width: 900px) {
+  .project-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hub-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hub-search-inline {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 1180px) {
   .project-bento {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2108,7 +2219,38 @@ button {
 
   .home-hero {
     min-height: auto;
-    padding: 24px;
+    padding: 16px;
+  }
+
+  .readiness-console {
+    grid-template-columns: 1fr;
+  }
+
+  .readiness-number {
+    min-height: 92px;
+    grid-template-columns: auto 1fr;
+    justify-content: start;
+    gap: 12px;
+    padding: 14px;
+    place-items: center start;
+    border-radius: var(--radius-md);
+  }
+
+  .readiness-number span,
+  .readiness-number strong {
+    align-self: center;
+  }
+
+  .readiness-number strong {
+    margin-top: 0;
+  }
+
+  .hero-signal-grid,
+  .hardware-orbit,
+  .metric-strip,
+  .home-grid,
+  .benchmark-grid {
+    grid-template-columns: 1fr;
   }
 
   .hub-carousel {
@@ -2134,14 +2276,6 @@ button {
 
   .hub-search {
     height: 42px;
-  }
-
-  .hardware-orbit,
-  .metric-strip,
-  .hero-signal-grid,
-  .readiness-console,
-  .benchmark-grid {
-    grid-template-columns: 1fr;
   }
 
   .project-bento {

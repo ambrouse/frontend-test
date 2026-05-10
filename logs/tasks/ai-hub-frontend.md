@@ -1,5 +1,13 @@
 # AI Hub Frontend Work Log
 
+## Update 2026-05-10 - Codex skill wrapper and responsive polish
+
+- Added `.codex/skills/project-workflow` as a Codex-compatible wrapper.
+- Preserved the original `.github/skills` content unchanged under `references/github-skills`.
+- Tuned Home responsive density for smaller screens: reduced hero padding, readiness console height, metric card height, GPU panel sizing, and one-column home grid behavior.
+- Tuned Hub responsive layout: provider cards switch to 2 columns earlier and filter/search stack earlier to avoid cramped cards.
+- Verified: skill validation pass, typecheck pass, test pass, build pass.
+
 Ngày: 2026-05-10
 
 ## Tóm tắt phiên làm việc
