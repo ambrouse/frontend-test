@@ -63,6 +63,40 @@ export type Benchmark = {
   measuredAt: string;
 };
 
+export type ToolRequirement = {
+  id: string;
+  label: string;
+  command: string;
+  required: boolean;
+  minimumVersion?: string | null;
+  installHint?: string | null;
+  available?: boolean | null;
+  version?: string | null;
+};
+
+export type RuntimeMode = {
+  id: string;
+  label: string;
+  description: string;
+  requiresGpu: boolean;
+  requiresNvidiaKey: boolean;
+};
+
+export type ProviderEnvironment = {
+  supportedOs: string[];
+  architectures: string[];
+  frameworks: string[];
+  requiredTools: ToolRequirement[];
+  runtimeModes: RuntimeMode[];
+  setupNotes: string[];
+  readiness?: {
+    level: CompatibilityLevel;
+    os: string;
+    architecture: string;
+    reasons: string[];
+  } | null;
+};
+
 export type HubProject = {
   id: string;
   name: string;
@@ -104,6 +138,7 @@ export type HubProject = {
     pidFile: string;
     logFile: string;
   };
+  environment?: ProviderEnvironment | null;
 };
 
 export type RunningTask = {

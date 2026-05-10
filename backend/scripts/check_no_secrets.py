@@ -8,7 +8,16 @@ SECRET_PATTERNS = [
     re.compile(r"nvapi-[A-Za-z0-9_-]{20,}"),
 ]
 
-SKIP_PARTS = {".git", "node_modules", ".next", ".pytest_cache", "__pycache__", "sua-loi-provider", "deploy"}
+SKIP_PARTS = {
+    ".git",
+    "node_modules",
+    ".next",
+    ".pytest_cache",
+    "__pycache__",
+    "sua-loi-provider",
+    "source-github-provider",
+    "deploy",
+}
 
 
 def main() -> int:

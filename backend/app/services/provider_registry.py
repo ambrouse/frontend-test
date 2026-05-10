@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import platform
+import shutil
+import subprocess
 from pathlib import Path
 from threading import Lock
 from time import monotonic
 
 from app.core.paths import providers_root
-from app.schemas.models import HubProject, ProviderListResponse
+from app.schemas.models import HubProject, ProviderListResponse, ToolRequirement
 from app.services.compatibility import evaluate_compatibility
 from app.services.hardware import hardware_service
 from app.services.provider_seed import provider_seed
@@ -72,8 +75,48 @@ class ProviderRegistry:
                 hardware, data["requirements"]["minimum"], data["requirements"]["recommended"]
             )
             data = self._apply_runtime_overlay(manifest_path.parent, data)
+            data = self._apply_environment_overlay(data)
             providers.append(HubProject.model_validate(data))
         return providers
+
+    def _apply_environment_overlay(self, data: dict) -> dict:
+        environment = data.get("environment")
+        if not environment:
+            return data
+        current_os = _current_os()
+        current_arch = _current_arch()
+        supported_os = {item.lower() for item in environment.get("supportedOs", [])}
+        supported_arch = {item.lower() for item in environment.get("architectures", [])}
+
+        reasons: list[str] = []
+        if supported_os and current_os not in supported_os:
+            reasons.append(f"OS {current_os} is not listed for this provider")
+        if supported_arch and current_arch not in supported_arch:
+            reasons.append(f"Architecture {current_arch} is not listed for this provider")
+
+        enriched_tools: list[dict] = []
+        for tool_data in environment.get("requiredTools", []):
+            tool = ToolRequirement.model_validate(tool_data)
+            detected = _detect_tool(tool.command)
+            enriched = tool.model_dump()
+            enriched["available"] = detected["available"]
+            enriched["version"] = detected["version"]
+            if tool.required and not detected["available"]:
+                reasons.append(f"Missing required tool: {tool.label}")
+            enriched_tools.append(enriched)
+
+        environment["requiredTools"] = enriched_tools
+        level = "red" if any(reason.startswith("Missing required") for reason in reasons) else "green"
+        if reasons and level != "red":
+            level = "yellow"
+        environment["readiness"] = {
+            "level": level,
+            "os": current_os,
+            "architecture": current_arch,
+            "reasons": reasons or ["Required local toolchain detected"],
+        }
+        data["environment"] = environment
+        return data
 
     def _apply_runtime_overlay(self, provider_root: Path, data: dict) -> dict:
         status_path = provider_root / data.get("runtime", {}).get("statusFile", "runtime/status.json")
@@ -104,6 +147,56 @@ def _hash_id(provider_id: str) -> int:
     for char in provider_id:
         value = (value * 31 + ord(char)) % 997
     return value
+
+
+_TOOL_CACHE: dict[str, tuple[float, dict[str, str | bool | None]]] = {}
+
+
+def _detect_tool(command: str) -> dict[str, str | bool | None]:
+    now = monotonic()
+    cached = _TOOL_CACHE.get(command)
+    if cached and now - cached[0] < 15:
+        return cached[1]
+    executable = command.split()[0]
+    if shutil.which(executable) is None:
+        result: dict[str, str | bool | None] = {"available": False, "version": None}
+    else:
+        result = {"available": True, "version": _tool_version(command)}
+    _TOOL_CACHE[command] = (now, result)
+    return result
+
+
+def _tool_version(command: str) -> str | None:
+    try:
+        completed = subprocess.run(
+            command.split(),
+            capture_output=True,
+            text=True,
+            timeout=0.7,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    output = (completed.stdout or completed.stderr).strip().splitlines()
+    return output[0][:120] if output else None
+
+
+def _current_os() -> str:
+    system = platform.system().lower()
+    if system.startswith("win"):
+        return "windows"
+    if system == "darwin":
+        return "macos"
+    return "linux"
+
+
+def _current_arch() -> str:
+    machine = platform.machine().lower()
+    if machine in {"amd64", "x86_64"}:
+        return "x64"
+    if machine in {"arm64", "aarch64"}:
+        return "arm64"
+    return machine
 
 
 provider_registry = ProviderRegistry()

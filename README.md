@@ -1,20 +1,24 @@
 # AI Hub
 
-Monorepo for the local AI Hub frontend, FastAPI runtime backend, and provider wrappers.
+AI Hub is a local control center for installing and running provider projects from GitHub. The web UI is Next.js, the runtime API is FastAPI, and provider source is cloned only when a user clicks Install.
 
-## Structure
+## What It Runs
 
-- `frontend/`: Next.js frontend application.
-- `backend/`: FastAPI API, hardware snapshot, provider runtime, task queue.
-- `providers/`: provider manifests and cross-platform lifecycle wrappers.
-- `deploy/`: ignored runtime clone target for provider source repos.
-- `docs/`: provider contract and architecture notes.
-- `plans/`: implementation plans.
-- `logs/`: work logs.
+- Frontend: `frontend/`, Next.js 16 app with production build checks.
+- Backend: `backend/`, FastAPI provider registry, hardware probe, task queue, lifecycle API, logs and metrics.
+- Providers: `providers/`, small wrapper contracts that know how to install/run/stop/delete real GitHub projects.
+- Deploy target: `deploy/`, ignored runtime clone directory.
 
-## Setup
+Current real provider integrations:
 
-Windows:
+| Provider | Source | Default port | Runtime |
+| --- | --- | ---: | --- |
+| Agentic Commerce Blueprint | `baolnq-ai/Agentic-Commerce-blueprint-provider-` | `8088` | Docker Compose, NVIDIA API mode |
+| Multi-Agent Intelligent Warehouse | `baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia` | `8091` | Docker Compose, NVIDIA API mode |
+
+## Quick Start
+
+Windows PowerShell:
 
 ```powershell
 .\setup.ps1
@@ -23,7 +27,7 @@ cd frontend
 npm run dev
 ```
 
-Linux/macOS/Git Bash:
+Linux or Git Bash:
 
 ```bash
 ./setup.sh
@@ -32,28 +36,65 @@ cd frontend
 npm run dev
 ```
 
-The setup scripts create `.venv`, install backend dev dependencies, install frontend dependencies, seed provider manifests, and optionally write `.env.local` with the NVIDIA key. Provider install clones source repos into `deploy/{provider_id}` only when the web/API install action is called.
+The setup scripts check Git, Node/npm, Python 3.11+, and Docker. If a required tool is missing, the script asks before installing with `winget`, `apt`, `dnf`, `pacman`, or `brew` when available. Docker is required for real provider install/run.
+
+## Provider Lifecycle
+
+The frontend calls the backend API; the backend runs provider wrapper scripts:
+
+- `POST /api/providers/{id}/install`: clone source from GitHub into `deploy/{id}` and write provider `.env`.
+- `POST /api/providers/{id}/run`: start Docker Compose or the provider runtime.
+- `POST /api/providers/{id}/stop`: stop runtime services.
+- `DELETE /api/providers/{id}`: stop and remove the deployed source directory.
+- `GET /api/providers/{id}/logs|status|metrics|config`: feed the detail page.
+
+Provider wrappers expose OS, architecture, framework and tool requirements through `environment` metadata so the frontend can show what the current machine has before install.
 
 ## Verification
 
-```bash
-cd frontend
-npm ci
-npm run typecheck
-npm run test
-npm run build
+Backend:
 
-cd ../backend
-ruff check .
-ruff format --check .
-mypy app
-pytest
-python scripts/provider_dry_run_lifecycle.py
-python scripts/benchmark_latency.py --threshold-ms 100
+```powershell
+.\.venv\Scripts\python -m ruff check backend
+.\.venv\Scripts\python -m ruff format --check backend
+.\.venv\Scripts\python -m mypy backend\app
+.\.venv\Scripts\python -m pytest backend
+.\.venv\Scripts\python backend\scripts\validate_providers.py
+.\.venv\Scripts\python backend\scripts\provider_dry_run_lifecycle.py
+.\.venv\Scripts\python backend\scripts\benchmark_latency.py --threshold-ms 100
+.\.venv\Scripts\python backend\scripts\check_no_secrets.py
 ```
 
-PowerShell note: if `npm.ps1` is blocked by execution policy, use `npm.cmd`.
+Frontend:
+
+```powershell
+npm.cmd run typecheck --prefix frontend
+npm.cmd run test --prefix frontend
+npm.cmd run build --prefix frontend
+```
+
+Script syntax:
+
+```powershell
+# PowerShell parser
+Get-ChildItem providers -Recurse -Filter *.ps1 | % {
+  $e=$null; [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName,[ref]$null,[ref]$e); if($e){throw $e}
+}
+
+# Bash parser
+bash -lc "bash -n setup.sh && find providers -path '*/scripts/linux/*.sh' -print0 | xargs -0 -n1 bash -n"
+```
 
 ## CI/CD
 
-GitHub Actions runs frontend checks, backend lint/type/test/coverage gates, provider manifest validation, secret scan, dry-run provider lifecycle, and warm latency benchmark on Linux/Windows where appropriate.
+GitHub Actions runs:
+
+- frontend install, typecheck, unit tests and production build;
+- backend lint, format, mypy, pytest, provider manifest validation, dry-run lifecycle, latency benchmark and secret scan;
+- setup script syntax checks for Windows/Linux paths.
+
+## Notes
+
+- Do not commit `.env`, `.env.local`, provider runtime logs, or `deploy/`.
+- NVIDIA keys are accepted by setup/lifecycle requests and written only to ignored local env files.
+- Hardware shortages are warnings; required missing tools are shown clearly and provider scripts return a hard error.

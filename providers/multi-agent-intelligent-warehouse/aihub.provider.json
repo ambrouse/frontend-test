@@ -37,6 +37,55 @@
     "port": 8091,
     "installDirectory": "deploy/multi-agent-intelligent-warehouse"
   },
+  "environment": {
+    "supportedOs": ["windows", "linux"],
+    "architectures": ["x64", "arm64"],
+    "frameworks": ["Docker Compose", "Python 3.11 containers", "Node 20 containers", "FastAPI", "React", "LangGraph", "Milvus", "TimescaleDB", "Redis", "Kafka"],
+    "requiredTools": [
+      {
+        "id": "git",
+        "label": "Git",
+        "command": "git --version",
+        "required": true,
+        "installHint": "Windows: winget install Git.Git. Linux: install git from your package manager."
+      },
+      {
+        "id": "docker",
+        "label": "Docker",
+        "command": "docker --version",
+        "required": true,
+        "installHint": "Install Docker Desktop on Windows/macOS or Docker Engine on Linux."
+      },
+      {
+        "id": "docker-compose",
+        "label": "Docker Compose v2",
+        "command": "docker compose version",
+        "required": true,
+        "installHint": "Install Docker Compose v2 plugin or Docker Desktop."
+      }
+    ],
+    "runtimeModes": [
+      {
+        "id": "api",
+        "label": "NVIDIA API mode",
+        "description": "Uses NVIDIA hosted LLM/embedding endpoints and does not start local NIM by default.",
+        "requiresGpu": false,
+        "requiresNvidiaKey": true
+      },
+      {
+        "id": "local-nim",
+        "label": "Local NIM profile",
+        "description": "Optional compose profile for local NIM. Requires NVIDIA GPU, NVIDIA runtime and enough VRAM.",
+        "requiresGpu": true,
+        "requiresNvidiaKey": true
+      }
+    ],
+    "setupNotes": [
+      "Install clones the source into deploy/multi-agent-intelligent-warehouse.",
+      "Default Hub run path uses Docker Compose API mode and fixed backend port 8091.",
+      "Frontend provider UI is exposed by the source stack on port 3001 and nginx on 3002 when running standalone."
+    ]
+  },
   "lastBenchmark": {
     "headlineMetric": "0 q/min",
     "secondaryMetric": "not started",

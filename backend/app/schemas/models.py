@@ -103,6 +103,42 @@ class ProviderCommands(BaseModel):
     linux: dict[str, str] = Field(default_factory=dict)
 
 
+class ToolRequirement(BaseModel):
+    id: str
+    label: str
+    command: str
+    required: bool = True
+    minimumVersion: str | None = None
+    installHint: str | None = None
+    available: bool | None = None
+    version: str | None = None
+
+
+class RuntimeMode(BaseModel):
+    id: str
+    label: str
+    description: str
+    requiresGpu: bool = False
+    requiresNvidiaKey: bool = False
+
+
+class EnvironmentReadiness(BaseModel):
+    level: CompatibilityLevel
+    os: str
+    architecture: str
+    reasons: list[str] = Field(default_factory=list)
+
+
+class ProviderEnvironment(BaseModel):
+    supportedOs: list[str] = Field(default_factory=list)
+    architectures: list[str] = Field(default_factory=list)
+    frameworks: list[str] = Field(default_factory=list)
+    requiredTools: list[ToolRequirement] = Field(default_factory=list)
+    runtimeModes: list[RuntimeMode] = Field(default_factory=list)
+    setupNotes: list[str] = Field(default_factory=list)
+    readiness: EnvironmentReadiness | None = None
+
+
 class HubProject(BaseModel):
     id: str
     name: str
@@ -121,6 +157,7 @@ class HubProject(BaseModel):
     lastRunAt: str
     runtime: ProviderRuntime | None = None
     commands: ProviderCommands | None = None
+    environment: ProviderEnvironment | None = None
 
 
 class ProviderListResponse(BaseModel):

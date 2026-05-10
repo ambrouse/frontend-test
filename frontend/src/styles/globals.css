@@ -111,6 +111,7 @@ body::before {
   .fit-panel,
   .benchmark-panel,
   .config-panel,
+  .environment-panel,
   .logs-panel
 ) {
   position: relative;
@@ -126,6 +127,7 @@ body::before {
   .fit-panel,
   .benchmark-panel,
   .config-panel,
+  .environment-panel,
   .logs-panel
 ) > * {
   position: relative;
@@ -707,6 +709,7 @@ button {
 .fit-panel,
 .benchmark-panel,
 .config-panel,
+.environment-panel,
 .logs-panel {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -752,6 +755,7 @@ button {
 .fit-panel,
 .benchmark-panel,
 .config-panel,
+.environment-panel,
 .logs-panel {
   padding: clamp(18px, 2.4vw, 28px);
 }
@@ -766,6 +770,7 @@ button {
 .fit-panel h2,
 .benchmark-panel h2,
 .config-panel h2,
+.environment-panel h2,
 .logs-panel h2 {
   margin: 12px 0 18px;
   font-size: clamp(1.25rem, 2vw, 1.8rem);
@@ -1682,6 +1687,115 @@ button {
   gap: 16px;
 }
 
+.environment-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 14px;
+}
+
+.environment-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.environment-heading h2 {
+  margin-bottom: 0;
+}
+
+.environment-summary,
+.runtime-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tool-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tool-row,
+.runtime-mode-grid article {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+
+.tool-row {
+  display: grid;
+  gap: 5px;
+}
+
+.tool-row span {
+  width: fit-content;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tool-ready span {
+  background: color-mix(in srgb, var(--success) 26%, transparent);
+}
+
+.tool-missing span {
+  background: color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
+.tool-row strong,
+.runtime-mode-grid strong {
+  overflow-wrap: anywhere;
+}
+
+.tool-row p,
+.runtime-mode-grid p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.environment-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.environment-chip-row span,
+.runtime-mode-grid span {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.runtime-mode-grid article {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: start;
+}
+
+.runtime-mode-grid article p {
+  flex-basis: 100%;
+}
+
 .requirement-fit-row {
   display: grid;
   grid-template-columns: 28px minmax(100px, 1fr) auto auto;
@@ -1900,7 +2014,8 @@ button {
   .hub-carousel,
   .detail-hero,
   .home-grid,
-  .detail-grid {
+  .detail-grid,
+  .tool-list {
     grid-template-columns: 1fr;
   }
 
@@ -2129,7 +2244,9 @@ button {
   .hardware-orbit,
   .metric-strip,
   .home-grid,
-  .benchmark-grid {
+  .benchmark-grid,
+  .environment-summary,
+  .runtime-mode-grid {
     grid-template-columns: 1fr;
   }
 

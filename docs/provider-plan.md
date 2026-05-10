@@ -91,6 +91,37 @@ File `aihub.provider.json` la nguon du lieu chinh de frontend hien thi card va d
     "metricsFile": "runtime/metrics.json",
     "pidFile": "runtime/provider.pid",
     "logFile": "logs/runtime.log"
+  },
+  "environment": {
+    "supportedOs": ["windows", "linux"],
+    "architectures": ["x64", "arm64"],
+    "frameworks": ["Docker Compose", "Python 3.12", "FastAPI"],
+    "requiredTools": [
+      {
+        "id": "git",
+        "label": "Git",
+        "command": "git --version",
+        "required": true,
+        "installHint": "Windows: winget install Git.Git. Linux: install git from package manager."
+      },
+      {
+        "id": "docker",
+        "label": "Docker",
+        "command": "docker --version",
+        "required": true,
+        "installHint": "Install Docker Desktop or Docker Engine."
+      }
+    ],
+    "runtimeModes": [
+      {
+        "id": "api",
+        "label": "Hosted API mode",
+        "description": "Uses remote inference endpoints.",
+        "requiresGpu": false,
+        "requiresNvidiaKey": true
+      }
+    ],
+    "setupNotes": ["Install clones source into deploy/{provider_id} only when user clicks Install."]
   }
 }
 ```
@@ -100,6 +131,7 @@ AI Hub chon command theo OS hien tai:
 - Windows: dung `commands.windows.*`.
 - Linux: dung `commands.linux.*`.
 - Neu mot OS chua support, manifest nen khai bao ro trong `platforms.unsupported` hoac script tra exit code `2`.
+- `environment.requiredTools` duoc backend enrich bang OS/arch hien tai va tool availability de frontend hien may dang thieu gi truoc khi install.
 
 ## 3. Quy uoc cross-platform
 

@@ -19,9 +19,9 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   (
     cd "$DEPLOY_DIR"
     export HTTP_HOST_PORT="$PORT"
-    docker network inspect acp-infra-network >/dev/null 2>&1 || docker network create acp-infra-network
     docker compose -f docker-compose.infra.yml -f docker-compose.yml build promotion-agent
     docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d --wait --wait-timeout 600
+    docker compose -f docker-compose.infra.yml -f docker-compose.yml --profile seed run --rm milvus-seeder
   )
 fi
 python - "$STATUS" "$ID" "$PORT" <<'PY'

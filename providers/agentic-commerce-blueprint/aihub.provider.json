@@ -37,6 +37,55 @@
     "port": 8088,
     "installDirectory": "deploy/agentic-commerce-blueprint"
   },
+  "environment": {
+    "supportedOs": ["windows", "linux"],
+    "architectures": ["x64", "arm64"],
+    "frameworks": ["Docker Compose", "Python 3.12 containers", "Node 22 containers", "NVIDIA Agent Intelligence Toolkit", "Milvus", "MinIO", "Phoenix", "Next.js"],
+    "requiredTools": [
+      {
+        "id": "git",
+        "label": "Git",
+        "command": "git --version",
+        "required": true,
+        "installHint": "Windows: winget install Git.Git. Linux: install git from your package manager."
+      },
+      {
+        "id": "docker",
+        "label": "Docker",
+        "command": "docker --version",
+        "required": true,
+        "installHint": "Install Docker Desktop on Windows/macOS or Docker Engine on Linux."
+      },
+      {
+        "id": "docker-compose",
+        "label": "Docker Compose v2",
+        "command": "docker compose version",
+        "required": true,
+        "installHint": "Install Docker Compose v2 plugin or Docker Desktop."
+      }
+    ],
+    "runtimeModes": [
+      {
+        "id": "api",
+        "label": "NVIDIA API mode",
+        "description": "Uses NVIDIA hosted NIM-compatible endpoints. No local GPU is required, but NVIDIA_API_KEY is required.",
+        "requiresGpu": false,
+        "requiresNvidiaKey": true
+      },
+      {
+        "id": "local_nim",
+        "label": "Local NIM mode",
+        "description": "Starts local NIM LLM and embedding containers. Requires NVIDIA GPU, NVIDIA runtime and model access.",
+        "requiresGpu": true,
+        "requiresNvidiaKey": true
+      }
+    ],
+    "setupNotes": [
+      "Install clones the source into deploy/agentic-commerce-blueprint.",
+      "Default Hub run path uses Docker Compose and fixed gateway port 8088.",
+      "Source repo supports Git Bash/Linux shell through runall.sh; Hub wrapper supports Windows PowerShell and Linux."
+    ]
+  },
   "lastBenchmark": {
     "headlineMetric": "0 req/min",
     "secondaryMetric": "not started",

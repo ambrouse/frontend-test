@@ -6,14 +6,18 @@ import subprocess
 from datetime import UTC, datetime
 from threading import Lock, Thread
 from time import monotonic
+from typing import Any
 
 from app.core.paths import deploy_root
 from app.schemas.models import HardwareSnapshot
 
+psutil: Any | None
 try:
-    import psutil
+    import psutil as psutil_module
 except ImportError:  # pragma: no cover
     psutil = None
+else:
+    psutil = psutil_module
 
 
 class HardwareService:

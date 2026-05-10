@@ -4,12 +4,13 @@ $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScr
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
 $DeployDir = Join-Path $DeployRoot $Id
 $Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "8091" }
+$Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
 $RepoUrl = "https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia"
 New-Item -ItemType Directory -Force -Path $DeployRoot, "$Root\logs", "$Root\runtime" | Out-Null
 if ($env:AIHUB_DRY_RUN -eq "1") {
   New-Item -ItemType Directory -Force -Path (Join-Path $DeployDir "deploy\compose") | Out-Null
 } elseif (!(Test-Path (Join-Path $DeployDir ".git"))) {
-  git clone --depth 1 --branch "main" $RepoUrl $DeployDir
+  git clone --depth 1 --branch $Branch $RepoUrl $DeployDir
 } else {
   git -C $DeployDir pull --ff-only
 }

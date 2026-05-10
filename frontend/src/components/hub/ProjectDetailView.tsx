@@ -184,6 +184,48 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
             <input value={effectiveConfig.installDirectory} readOnly />
           </label>
         </section>
+
+        {projectData.environment ? (
+          <section className="environment-panel" aria-labelledby="environment-title">
+            <div className="environment-heading">
+              <h2 id="environment-title">Runtime requirements</h2>
+              {projectData.environment.readiness ? (
+                <CompatibilityPing
+                  level={projectData.environment.readiness.level}
+                  reasons={projectData.environment.readiness.reasons}
+                />
+              ) : null}
+            </div>
+            <div className="environment-summary">
+              <MetricTile label="This OS" value={projectData.environment.readiness?.os ?? "unknown"} />
+              <MetricTile label="Architecture" value={projectData.environment.readiness?.architecture ?? "unknown"} />
+            </div>
+            <div className="tool-list" aria-label="Required tools">
+              {projectData.environment.requiredTools.map((tool) => (
+                <div key={tool.id} className={clsx("tool-row", tool.available ? "tool-ready" : "tool-missing")}>
+                  <span>{tool.available ? "Ready" : tool.required ? "Missing" : "Optional"}</span>
+                  <strong>{tool.label}</strong>
+                  <p>{tool.version ?? tool.installHint ?? tool.command}</p>
+                </div>
+              ))}
+            </div>
+            <div className="environment-chip-row" aria-label="Frameworks">
+              {projectData.environment.frameworks.slice(0, 8).map((framework) => (
+                <span key={framework}>{framework}</span>
+              ))}
+            </div>
+            <div className="runtime-mode-grid" aria-label="Runtime modes">
+              {projectData.environment.runtimeModes.map((mode) => (
+                <article key={mode.id}>
+                  <strong>{mode.label}</strong>
+                  <p>{mode.description}</p>
+                  <span>{mode.requiresGpu ? "GPU mode" : "API mode"}</span>
+                  {mode.requiresNvidiaKey ? <span>NVIDIA key</span> : null}
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
 
       <section className="logs-panel" aria-labelledby="logs-title">
