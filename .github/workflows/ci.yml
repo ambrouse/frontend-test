@@ -1,54 +1,44 @@
-name: Frontend CI
+name: CI
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "frontend/**"
-      - "backend/**"
-      - "providers/**"
-      - ".github/workflows/**"
-      - "docs/**"
-      - "plans/**"
+    branches: [main, master]
   pull_request:
-    branches: [main]
-    paths:
-      - "frontend/**"
-      - "backend/**"
-      - "providers/**"
-      - ".github/workflows/**"
-      - "docs/**"
-      - "plans/**"
+    branches: [main, master]
+  merge_group:
   workflow_dispatch:
 
 concurrency:
-  group: frontend-ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
-defaults:
-  run:
-    working-directory: frontend
-
 jobs:
-  verify:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+  workflow-lint:
+    name: Workflow lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: actionlint
+        uses: rhysd/actionlint@v1
+
+  frontend:
+    name: Frontend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: Linux x64
-            runner: ubuntu-24.04
-          - name: Linux ARM64
-            runner: ubuntu-24.04-arm
-          - name: Windows x64
-            runner: windows-2025
-          - name: Windows ARM64
-            runner: windows-11-arm
+        os: [ubuntu-24.04, windows-2025, macos-15]
+
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
       - name: Checkout
@@ -73,10 +63,13 @@ jobs:
       - name: Production build
         run: npm run build
 
-  dependency-audit:
-    name: Production dependency audit
+  frontend-security:
+    name: Frontend dependency audit
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -91,21 +84,17 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Audit all dependencies
+      - name: Audit production dependencies
         run: npm audit --audit-level=moderate
 
   backend:
-    name: Backend production gates
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 15
+    name: Backend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: Linux x64
-            runner: ubuntu-24.04
-          - name: Windows x64
-            runner: windows-2025
+        os: [ubuntu-24.04, windows-2025, macos-15]
 
     defaults:
       run:
@@ -120,10 +109,11 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: backend/pyproject.toml
 
-      - name: Install backend
+      - name: Install backend dependencies
         run: |
-          python -m pip install --upgrade pip setuptools
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install -e ".[dev]"
 
       - name: Seed provider fixtures
@@ -144,47 +134,50 @@ jobs:
       - name: Secret scan
         run: python scripts/check_no_secrets.py
 
-      - name: Run backend tests
-        run: pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=70
+      - name: Backend tests with coverage gate
+        run: pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=80
 
       - name: Provider dry-run lifecycle
         run: python scripts/provider_dry_run_lifecycle.py
 
       - name: Warm latency benchmark
-        run: python scripts/benchmark_latency.py --iterations 80 --warmup 10 --threshold-ms 100
+        run: python scripts/benchmark_latency.py --iterations 100 --warmup 20 --threshold-ms 100
 
-      - name: Generate OpenAPI schema
+      - name: OpenAPI smoke check
         run: python -c "from app.main import app; import json; print(json.dumps(app.openapi())[:200])"
+
+      - name: Build backend package
+        run: |
+          python -m pip install build
+          python -m build
 
       - name: Audit Python dependencies
         if: runner.os == 'Linux'
         run: pip-audit --skip-editable
 
   provider-scripts:
-    name: Provider script validation
+    name: Provider script syntax
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: .
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Bash syntax
-        run: |
-          bash -n setup.sh
-          find providers -path "*/scripts/linux/*.sh" -print0 | xargs -0 -n1 bash -n
+      - name: Root bash syntax
+        run: bash -n setup.sh
+
+      - name: Provider bash syntax
+        run: find providers -path "*/scripts/linux/*.sh" -print0 | xargs -0 -n1 bash -n
 
       - name: PowerShell syntax
         shell: pwsh
         run: |
           $scripts = @(Get-Item setup.ps1) + @(Get-ChildItem providers -Recurse -Filter *.ps1)
-          $scripts | ForEach-Object {
+          foreach ($script in $scripts) {
             $tokens = $null
             $errors = $null
-            $null = [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors)
-            if ($errors.Count -gt 0) {
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($script.FullName, [ref]$tokens, [ref]$errors)
+            if ($errors -and $errors.Count -gt 0) {
               $errors | ForEach-Object { Write-Error $_.Message }
               exit 1
             }
