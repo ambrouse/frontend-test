@@ -4,12 +4,32 @@ ID="${AIHUB_PROVIDER_ID:-multi-agent-intelligent-warehouse}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
 DEPLOY_DIR="$DEPLOY_ROOT/$ID"
-PORT="${AIHUB_PORT:-8091}"
+PORT="${AIHUB_PORT:-3001}"
 REPO_URL="https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
 METRICS="$ROOT/runtime/metrics.json"
+load_nvidia_api_key() {
+  if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
+    return
+  fi
+  local repo_root local_env key_line key_value
+  repo_root="$(cd "$ROOT/../.." && pwd)"
+  local_env="$repo_root/.env.local"
+  [[ -f "$local_env" ]] || return
+  key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
+  [[ -n "$key_line" ]] || return
+  key_value="${key_line#*=}"
+  key_value="${key_value%\"}"
+  key_value="${key_value#\"}"
+  if [[ -n "$key_value" ]]; then
+    export NVIDIA_API_KEY="$key_value"
+    export EMBEDDING_API_KEY="$key_value"
+    export RAIL_API_KEY="$key_value"
+  fi
+}
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
+load_nvidia_api_key
 log_json() { python - "$1" "$2" "$3" >> "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
@@ -27,6 +47,9 @@ if [[ "${AIHUB_DRY_RUN:-0}" == "1" ]]; then
   mkdir -p "$DEPLOY_DIR/deploy/compose"
 else
   if [[ ! -d "$DEPLOY_DIR/.git" ]]; then
+    if [[ -d "$DEPLOY_DIR" ]] && [[ -n "$(ls -A "$DEPLOY_DIR" 2>/dev/null)" ]]; then
+      rm -rf "$DEPLOY_DIR"
+    fi
     git clone --depth 1 --branch "${AIHUB_BRANCH:-main}" "$REPO_URL" "$DEPLOY_DIR"
   else
     git -C "$DEPLOY_DIR" fetch --depth 1 origin "${AIHUB_BRANCH:-main}"
@@ -53,8 +76,10 @@ for line in defaults:
             text += "\n" + line
             existing.add(key)
 updates = {
-    "BACKEND_PORT": port,
-    "HOST_BACKEND_PORT": port,
+    "BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "8091"),
+    "HOST_BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "8091"),
+    "FRONTEND_PORT": port,
+    "HOST_FRONTEND_PORT": port,
     "NVIDIA_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
     "EMBEDDING_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
     "RAIL_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
@@ -66,6 +91,9 @@ for line in text.splitlines():
         lines.append(f"{key}={updates[key]}")
         seen.add(key)
     elif key in {"BACKEND_PORT", "HOST_BACKEND_PORT"}:
+        lines.append(f"{key}={os.environ.get('AIHUB_BACKEND_PORT', '8091')}")
+        seen.add(key)
+    elif key in {"FRONTEND_PORT", "HOST_FRONTEND_PORT"}:
         lines.append(f"{key}={port}")
         seen.add(key)
     elif key == "LLM_MODEL" and line.endswith("meta/llama-3.1-70b-instruct"):

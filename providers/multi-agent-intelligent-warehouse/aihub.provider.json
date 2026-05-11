@@ -34,7 +34,7 @@
   "editableConfig": {
     "profile": "dev compose",
     "branch": "main",
-    "port": 8091,
+    "port": 3001,
     "installDirectory": "deploy/multi-agent-intelligent-warehouse"
   },
   "environment": {
@@ -82,7 +82,7 @@
     ],
     "setupNotes": [
       "Install clones the source into deploy/multi-agent-intelligent-warehouse.",
-      "Default Hub run path uses Docker Compose API mode and fixed backend port 8091.",
+      "Default Hub run path publishes frontend UI on the configured port (default 3001) and keeps backend API on host port 8091.",
       "Frontend provider UI is exposed by the source stack on port 3001 and nginx on 3002 when running standalone."
     ]
   },
@@ -96,7 +96,7 @@
   },
   "lastRunAt": "2026-05-10T00:00:00.000Z",
   "runtime": {
-    "defaultPort": 8091,
+    "defaultPort": 3001,
     "healthUrl": "http://localhost:8091/api/v1/health",
     "metricsUrl": "http://localhost:8091/metrics",
     "statusFile": "runtime/status.json",

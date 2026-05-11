@@ -1,6 +1,6 @@
 {
   "profile": "dev compose",
   "branch": "main",
-  "port": 8091,
+  "port": 3001,
   "installDirectory": "deploy/multi-agent-intelligent-warehouse"
 }
