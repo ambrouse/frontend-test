@@ -15,9 +15,9 @@ load_nvidia_api_key() {
   local repo_root local_env key_line key_value
   repo_root="$(cd "$ROOT/../.." && pwd)"
   local_env="$repo_root/.env.local"
-  [[ -f "$local_env" ]] || return
+  [[ -f "$local_env" ]] || return 0
   key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
-  [[ -n "$key_line" ]] || return
+  [[ -n "$key_line" ]] || return 0
   key_value="${key_line#*=}"
   key_value="${key_value%\"}"
   key_value="${key_value#\"}"

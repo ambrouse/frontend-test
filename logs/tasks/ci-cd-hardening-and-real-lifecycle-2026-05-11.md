@@ -42,3 +42,20 @@
 - `npm run typecheck --prefix frontend`
 - `npm run test --prefix frontend`
 - `npm run build --prefix frontend`
+
+## Follow-up Fix (same date)
+
+- Investigated failed CI run (`bf72048`) via GitHub check-run annotations:
+  - `Workflow lint`: `rhysd/actionlint@v1` could not be resolved.
+  - `Backend (ubuntu/macos)`: failed at `Provider dry-run lifecycle`.
+- Root cause for backend dry-run failure:
+  - Linux `load_nvidia_api_key` helper in provider scripts returned non-zero when `.env.local` was missing.
+  - With `set -euo pipefail`, this exited setup/run scripts early on clean CI machines.
+- Applied fixes:
+  - workflow lint now installs/runs `actionlint` via official download script (no unresolved action reference).
+  - provider Linux scripts now use `return 0` when `.env.local` or key line is absent.
+- Clean-machine bootstrap verification:
+  - removed old `source-github-provider/` and `deploy/*`.
+  - removed local runtime artifacts (`frontend/node_modules`, rebuilt `.venv`).
+  - cloned provider sources fresh from GitHub into `source-github-provider/`.
+  - reran root `setup.ps1` end-to-end successfully.

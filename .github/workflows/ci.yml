@@ -24,8 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: actionlint
-        uses: rhysd/actionlint@v1
+      - name: Install actionlint
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest /usr/local/bin
+
+      - name: Run actionlint
+        run: actionlint -color
 
   frontend:
     name: Frontend (${{ matrix.os }})

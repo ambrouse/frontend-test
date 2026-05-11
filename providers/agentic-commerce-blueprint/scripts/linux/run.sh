@@ -8,19 +8,56 @@ DEPLOY_DIR="$DEPLOY_ROOT/$ID"
 PORT="${AIHUB_PORT:-8088}"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
+load_nvidia_api_key() {
+  if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
+    return
+  fi
+  local repo_root local_env key_line key_value
+  repo_root="$(cd "$ROOT/../.." && pwd)"
+  local_env="$repo_root/.env.local"
+  [[ -f "$local_env" ]] || return 0
+  key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
+  [[ -n "$key_line" ]] || return 0
+  key_value="${key_line#*=}"
+  key_value="${key_value%\"}"
+  key_value="${key_value#\"}"
+  if [[ -n "$key_value" ]]; then
+    export NVIDIA_API_KEY="$key_value"
+    export NGC_API_KEY="$key_value"
+  fi
+}
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
+load_nvidia_api_key
 python - "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 print(json.dumps({"source":"runtime","level":"info","timestamp":datetime.now(timezone.utc).isoformat(),"message":"run requested"}), file=open(sys.argv[1], "a", encoding="utf-8"))
 PY
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
-  [[ -d "$DEPLOY_DIR" ]] || { echo "deploy directory missing; install first" >&2; exit 2; }
+  if [[ ! -d "$DEPLOY_DIR" ]]; then
+    SETUP_SCRIPT="$ROOT/scripts/linux/setup.sh"
+    [[ -f "$SETUP_SCRIPT" ]] || { echo "deploy directory missing and setup script is unavailable" >&2; exit 2; }
+    bash "$SETUP_SCRIPT"
+  fi
   (
     cd "$DEPLOY_DIR"
     export HTTP_HOST_PORT="$PORT"
     docker compose -f docker-compose.infra.yml -f docker-compose.yml build promotion-agent
-    docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d --wait --wait-timeout 600
+    docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d
+    python - "$PORT" <<'PY'
+import sys, time, urllib.request
+
+url = f"http://127.0.0.1:{sys.argv[1]}/api/health"
+for _ in range(300):
+    try:
+        with urllib.request.urlopen(url, timeout=2) as response:
+            if 200 <= response.status < 300:
+                raise SystemExit(0)
+    except Exception:
+        pass
+    time.sleep(2)
+raise SystemExit(f"gateway health check did not become ready at {url} within timeout")
+PY
     docker compose -f docker-compose.infra.yml -f docker-compose.yml --profile seed run --rm milvus-seeder
   )
 fi

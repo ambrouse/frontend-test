@@ -11,7 +11,27 @@ LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
 METRICS="$ROOT/runtime/metrics.json"
 
+load_nvidia_api_key() {
+  if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
+    return
+  fi
+  local repo_root local_env key_line key_value
+  repo_root="$(cd "$ROOT/../.." && pwd)"
+  local_env="$repo_root/.env.local"
+  [[ -f "$local_env" ]] || return 0
+  key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
+  [[ -n "$key_line" ]] || return 0
+  key_value="${key_line#*=}"
+  key_value="${key_value%\"}"
+  key_value="${key_value#\"}"
+  if [[ -n "$key_value" ]]; then
+    export NVIDIA_API_KEY="$key_value"
+    export NGC_API_KEY="$key_value"
+  fi
+}
+
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
+load_nvidia_api_key
 log_json() { python - "$1" "$2" "$3" >> "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
@@ -30,6 +50,9 @@ if [[ "${AIHUB_DRY_RUN:-0}" == "1" ]]; then
   mkdir -p "$DEPLOY_DIR"
 else
   if [[ ! -d "$DEPLOY_DIR/.git" ]]; then
+    if [[ -d "$DEPLOY_DIR" ]] && [[ -n "$(ls -A "$DEPLOY_DIR" 2>/dev/null)" ]]; then
+      rm -rf "$DEPLOY_DIR"
+    fi
     git clone --depth 1 --branch "${AIHUB_BRANCH:-main}" "$REPO_URL" "$DEPLOY_DIR"
   else
     git -C "$DEPLOY_DIR" fetch --depth 1 origin "${AIHUB_BRANCH:-main}"
