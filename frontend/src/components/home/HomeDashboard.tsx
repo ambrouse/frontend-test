@@ -2,7 +2,7 @@
 
 import { Activity, Cpu, Database, Gauge, HardDrive, Layers3, Server, Thermometer, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
-import { fetchHardwareSnapshot, fetchProviderSummary, fetchTasks } from "@/services/apiClient";
+import { clearTaskHistory, fetchActiveTasks, fetchHardwareSnapshot, fetchProviderSummary } from "@/services/apiClient";
 import { emptyHardwareSnapshot, emptyProviderSummary } from "@/services/emptyState";
 import type { HardwareSnapshot, ProviderSummary, RunningTask } from "@/services/types";
 import { formatMemory } from "@/utils/format";
@@ -28,7 +28,10 @@ export function HomeDashboard() {
       })
       .catch(() => setIsBackendOnline(false));
     void fetchProviderSummary({ signal: controller.signal }).then(setSummary).catch(() => {});
-    void fetchTasks({ signal: controller.signal }).then((response) => setTasks(response.tasks)).catch(() => setTasks([]));
+    void clearTaskHistory("finished", { signal: controller.signal }).catch(() => {});
+    void fetchActiveTasks({ signal: controller.signal })
+      .then((response) => setTasks(response.tasks))
+      .catch(() => setTasks([]));
     return () => controller.abort();
   }, []);
 

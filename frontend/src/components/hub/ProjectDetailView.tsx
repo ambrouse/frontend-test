@@ -1,10 +1,11 @@
 "use client";
 
 import clsx from "clsx";
-import { CheckCircle2, Copy, Download, Play, RotateCcw, Square, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Copy, Download, Loader2, Play, RotateCcw, Square, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchHardwareSnapshot,
+  fetchActiveTasks,
   fetchProviderConfig,
   fetchProviderDetail,
   fetchProviderLogs,
@@ -13,11 +14,19 @@ import {
   providerAction,
 } from "@/services/apiClient";
 import { emptyHardwareSnapshot } from "@/services/emptyState";
-import type { HardwareSnapshot, HubProject, LogLevel, ProjectLog, ProviderConfig, ProviderMetrics, ProviderStatus } from "@/services/types";
+import type { HardwareSnapshot, HubProject, LogLevel, ProjectLog, ProviderConfig, ProviderMetrics, ProviderStatus, RunningTask } from "@/services/types";
 import { formatMemory, formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
 
 const logLevels: Array<LogLevel | "all"> = ["all", "info", "warn", "error", "debug"];
+type ProviderLifecycleAction = "install" | "run" | "stop" | "delete";
+
+const actionLabels: Record<ProviderLifecycleAction, { idle: string; active: string }> = {
+  install: { idle: "Install", active: "Installing" },
+  run: { idle: "Run", active: "Running" },
+  stop: { idle: "Stop", active: "Stopping" },
+  delete: { idle: "Delete", active: "Deleting" },
+};
 
 export function ProjectDetailView({ projectId, project }: { projectId: string; project?: HubProject }) {
   const [activeLogLevel, setActiveLogLevel] = useState<LogLevel | "all">("all");
@@ -27,8 +36,14 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const [metrics, setMetrics] = useState<ProviderMetrics | null>(null);
   const [config, setConfig] = useState<ProviderConfig | null>(null);
   const [logs, setLogs] = useState<ProjectLog[]>([]);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [activeTasks, setActiveTasks] = useState<RunningTask[]>([]);
+  const [pendingAction, setPendingAction] = useState<ProviderLifecycleAction | null>(null);
+  const [queuedAction, setQueuedAction] = useState<{ taskId: string; action: ProviderLifecycleAction; queuedAt: number } | null>(null);
   const [actionMessage, setActionMessage] = useState("");
+  const [isLogFeedActive, setIsLogFeedActive] = useState(false);
+  const [lastLogChangeAt, setLastLogChangeAt] = useState<number>(0);
+  const terminalRef = useRef<HTMLDivElement | null>(null);
+  const latestLogFingerprintRef = useRef("");
 
   const visibleLogs = useMemo(() => {
     return activeLogLevel === "all" ? logs : logs.filter((log) => log.level === activeLogLevel);
@@ -40,6 +55,15 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const headlineMetric = metrics?.benchmark?.headlineMetric?.toString() ?? projectData?.lastBenchmark.headlineMetric ?? "loading";
   const secondaryMetric = metrics?.benchmark?.secondaryMetric?.toString() ?? projectData?.lastBenchmark.secondaryMetric ?? "waiting for backend";
   const runState = status?.state ?? projectData?.runStatus ?? "unknown";
+  const providerTask = useMemo(() => {
+    return activeTasks.find((task) => task.projectId === projectId) ?? null;
+  }, [activeTasks, projectId]);
+  const activeAction = queuedAction?.action ?? pendingAction ?? taskStatusToAction(providerTask?.status) ?? (runState === "running" ? "stop" : "run");
+  const isLifecycleBusy = pendingAction !== null || queuedAction !== null || providerTask !== null;
+  const lifecycleProgress = providerTask?.progressPercent ?? status?.progressPercent ?? (isLifecycleBusy ? 8 : 0);
+  const lifecycleStep =
+    providerTask?.currentStep ??
+    (queuedAction ? `Task ${queuedAction.taskId} queued` : pendingAction ? "Queuing provider action" : status?.currentStep ?? "Idle");
 
   useEffect(() => {
     if (!projectData) return;
@@ -56,6 +80,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       void fetchProviderMetrics(projectId, { signal: controller.signal }).then(setMetrics).catch(() => {});
       void fetchProviderConfig(projectId, { signal: controller.signal }).then(setConfig).catch(() => {});
       void fetchProviderLogs(projectId, { signal: controller.signal, level: activeLogLevel }).then((response) => setLogs(response.logs)).catch(() => {});
+      void fetchActiveTasks({ signal: controller.signal, timeoutMs: 1200 }).then((response) => setActiveTasks(response.tasks)).catch(() => {});
     };
     load();
     const interval = window.setInterval(load, 3000);
@@ -65,15 +90,90 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     };
   }, [activeLogLevel, projectId]);
 
-  const handleAction = async (action: "install" | "run" | "stop" | "delete") => {
+  useEffect(() => {
+    const controller = new AbortController();
+    const pollTasks = () => {
+      void fetchActiveTasks({ signal: controller.signal, timeoutMs: 1200 })
+        .then((response) => setActiveTasks(response.tasks))
+        .catch(() => {});
+    };
+
+    pollTasks();
+    const interval = window.setInterval(pollTasks, isLifecycleBusy ? 900 : 2500);
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+    };
+  }, [isLifecycleBusy]);
+
+  useEffect(() => {
+    if (!queuedAction) {
+      return;
+    }
+    if (activeTasks.some((task) => task.id === queuedAction.taskId)) {
+      return;
+    }
+    if (Date.now() - queuedAction.queuedAt < 1800) {
+      return;
+    }
+
+    setQueuedAction(null);
+    void fetchProviderDetail(projectId, { timeoutMs: 1500 }).then(setProjectData).catch(() => {});
+    void fetchProviderStatus(projectId, { timeoutMs: 1500 }).then(setStatus).catch(() => {});
+    void fetchProviderLogs(projectId, { timeoutMs: 1500, level: activeLogLevel }).then((response) => setLogs(response.logs)).catch(() => {});
+  }, [activeLogLevel, activeTasks, projectId, queuedAction]);
+
+  useEffect(() => {
+    const latestLog = logs.at(-1);
+    const fingerprint = latestLog ? `${logs.length}:${latestLog.timestamp}:${latestLog.level}:${latestLog.message}` : "empty";
+    if (fingerprint === latestLogFingerprintRef.current) {
+      return;
+    }
+
+    latestLogFingerprintRef.current = fingerprint;
+    setLastLogChangeAt(Date.now());
+    setIsLogFeedActive(Boolean(latestLog));
+  }, [logs]);
+
+  useEffect(() => {
+    if (!isLogFeedActive) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      if (Date.now() - lastLogChangeAt >= 6500) {
+        setIsLogFeedActive(false);
+      }
+    }, 800);
+
+    return () => window.clearInterval(timer);
+  }, [isLogFeedActive, lastLogChangeAt]);
+
+  useEffect(() => {
+    if (!isLogFeedActive) {
+      return;
+    }
+
+    const frame = terminalRef.current;
+    if (!frame) {
+      return;
+    }
+    frame.scrollTop = frame.scrollHeight;
+  }, [isLogFeedActive, logs]);
+
+  const handleAction = async (action: ProviderLifecycleAction) => {
     setPendingAction(action);
+    setQueuedAction(null);
     setActionMessage("");
     try {
       const response = await providerAction(projectId, action, { force: true });
-      setActionMessage(`Task ${response.taskId} queued`);
+      const nextMessage = response.warnings[0] ?? `Task ${response.taskId} queued`;
+      setActionMessage(nextMessage);
+      setQueuedAction({ taskId: response.taskId, action, queuedAt: Date.now() });
       const [nextStatus, nextLogs] = await Promise.all([
         fetchProviderStatus(projectId, { timeoutMs: 1500 }).catch(() => null),
         fetchProviderLogs(projectId, { timeoutMs: 1500, level: activeLogLevel }).catch(() => null),
+        fetchActiveTasks({ timeoutMs: 1500 }).then((response) => setActiveTasks(response.tasks)).catch(() => null),
       ]);
       if (nextStatus) setStatus(nextStatus);
       if (nextLogs) setLogs(nextLogs.logs);
@@ -125,22 +225,45 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
 
         <div className="detail-actions">
           <CompatibilityPing level={projectData.compatibility.level} reasons={projectData.compatibility.reasons} />
-          <button className="primary-action" type="button" onClick={() => handleAction(runState === "running" ? "stop" : "run")} disabled={pendingAction !== null}>
-            {runState === "running" ? <Square size={17} aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}
-            {pendingAction === "run" || pendingAction === "stop" ? "Working" : runState === "running" ? "Stop" : "Run"}
+          <button className="primary-action" type="button" onClick={() => handleAction(runState === "running" ? "stop" : "run")} disabled={isLifecycleBusy}>
+            {isLifecycleBusy && (activeAction === "run" || activeAction === "stop") ? (
+              <Loader2 className="spin-icon" size={17} aria-hidden="true" />
+            ) : runState === "running" ? (
+              <Square size={17} aria-hidden="true" />
+            ) : (
+              <Play size={17} aria-hidden="true" />
+            )}
+            {isLifecycleBusy && (activeAction === "run" || activeAction === "stop")
+              ? actionLabels[activeAction].active
+              : runState === "running"
+                ? "Stop"
+                : "Run"}
           </button>
-          <button className="ghost-action" type="button" onClick={() => handleAction("install")} disabled={pendingAction !== null}>
-            <RotateCcw size={17} aria-hidden="true" />
-            {pendingAction === "install" ? "Installing" : "Install"}
+          <button className="ghost-action" type="button" onClick={() => handleAction("install")} disabled={isLifecycleBusy}>
+            {isLifecycleBusy && activeAction === "install" ? <Loader2 className="spin-icon" size={17} aria-hidden="true" /> : <RotateCcw size={17} aria-hidden="true" />}
+            {isLifecycleBusy && activeAction === "install" ? actionLabels.install.active : actionLabels.install.idle}
           </button>
-          <button className="danger-action" type="button" onClick={() => handleAction("delete")} disabled={pendingAction !== null}>
-            <Trash2 size={17} aria-hidden="true" />
-            {pendingAction === "delete" ? "Deleting" : "Delete"}
+          <button className="danger-action" type="button" onClick={() => handleAction("delete")} disabled={isLifecycleBusy}>
+            {isLifecycleBusy && activeAction === "delete" ? <Loader2 className="spin-icon" size={17} aria-hidden="true" /> : <Trash2 size={17} aria-hidden="true" />}
+            {isLifecycleBusy && activeAction === "delete" ? actionLabels.delete.active : actionLabels.delete.idle}
           </button>
         </div>
       </section>
 
+      {isLifecycleBusy ? (
+        <section className="lifecycle-progress" aria-live="polite" aria-label="Provider lifecycle progress">
+          <div>
+            <span>{actionLabels[activeAction].active}</span>
+            <strong>{lifecycleStep}</strong>
+          </div>
+          <div className="progress-track" aria-label={`Progress ${lifecycleProgress}%`}>
+            <span style={{ width: `${Math.min(Math.max(lifecycleProgress, 8), 100)}%` }} />
+          </div>
+        </section>
+      ) : null}
+
       {actionMessage ? <p className="detail-action-message">{actionMessage}</p> : null}
+      <p className="detail-delete-note">Delete chi xoa runtime/deploy trong `deploy/{projectData.id}`, khong xoa source provider trong `providers/`.</p>
 
       <div className="detail-grid">
         <section className="fit-panel" aria-labelledby="fit-title">
@@ -257,7 +380,20 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
           ))}
         </div>
 
-        <div className="terminal-frame">
+        <div
+          className="terminal-frame"
+          ref={terminalRef}
+          onScroll={() => {
+            const frame = terminalRef.current;
+            if (!frame || !isLogFeedActive) {
+              return;
+            }
+            const isNearBottom = frame.scrollHeight - frame.scrollTop - frame.clientHeight < 10;
+            if (!isNearBottom) {
+              frame.scrollTop = frame.scrollHeight;
+            }
+          }}
+        >
           {visibleLogs.length === 0 ? (
             <p className="empty-log">No logs for this filter.</p>
           ) : (
@@ -270,9 +406,19 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
             ))
           )}
         </div>
+        <p className="log-follow-state">{isLogFeedActive ? "Live logs: auto-follow enabled." : "Logs idle: you can scroll manually."}</p>
       </section>
     </div>
   );
+}
+
+function taskStatusToAction(status?: RunningTask["status"]): ProviderLifecycleAction | null {
+  if (!status) return null;
+  if (status === "installing") return "install";
+  if (status === "running") return "run";
+  if (status === "stopping") return "stop";
+  if (status === "deleting") return "delete";
+  return null;
 }
 
 function RequirementRow({

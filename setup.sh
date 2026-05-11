@@ -122,6 +122,94 @@ PY
   return 1
 }
 
+find_venv_python() {
+  local candidates=(
+    "${VENV_DIR}/bin/python"
+    "${VENV_DIR}/bin/python3"
+    "${VENV_DIR}/Scripts/python.exe"
+    "${VENV_DIR}/Scripts/python"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "${candidate}" ]]; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+python_major_minor() {
+  "${PYTHON_BIN}" - <<'PY'
+import sys
+print(f"{sys.version_info.major}.{sys.version_info.minor}")
+PY
+}
+
+install_python_venv_support() {
+  local manager
+  manager="$(detect_manager)"
+  case "${manager}" in
+    apt)
+      local version
+      version="$(python_major_minor)"
+      install_packages apt "python${version}-venv" || install_packages apt python3-venv
+      ;;
+    dnf)
+      install_packages dnf python3 python3-pip
+      ;;
+    pacman)
+      install_packages pacman python python-pip
+      ;;
+    brew)
+      install_packages brew python@3.12
+      ;;
+    *)
+      echo "Install Python venv support manually, then rerun setup.sh." >&2
+      return 1
+      ;;
+  esac
+}
+
+remove_venv_dir() {
+  if [[ "${VENV_DIR}" != "${ROOT_DIR}/.venv" ]]; then
+    echo "Refusing to remove unexpected venv path: ${VENV_DIR}" >&2
+    return 1
+  fi
+  rm -rf -- "${VENV_DIR}"
+}
+
+create_venv() {
+  if "${PYTHON_BIN}" -m venv "${VENV_DIR}"; then
+    return 0
+  fi
+
+  if is_windows_bash; then
+    echo "Could not create Python virtual environment. On Windows, run setup.ps1 from PowerShell." >&2
+    return 1
+  fi
+
+  echo "Python venv support is missing or incomplete." >&2
+  if prompt_install "Python venv support"; then
+    install_python_venv_support
+    remove_venv_dir
+    "${PYTHON_BIN}" -m venv "${VENV_DIR}"
+  else
+    echo "Skipped Python venv support install." >&2
+    return 1
+  fi
+}
+
+print_backend_hints() {
+  if is_windows_bash; then
+    echo "Backend (PowerShell): .\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --app-dir backend"
+    echo "Backend (Git Bash, reload): WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --reload-dir backend --app-dir backend"
+    echo "Backend (Git Bash, no reload): ./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend"
+  else
+    echo "Backend:  ./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend"
+  fi
+}
+
 ensure_docker() {
   if command -v docker >/dev/null 2>&1; then
     echo "OK: Docker"
@@ -155,7 +243,8 @@ ensure_tool "Node.js" node nodejs
 ensure_tool "npm" npm npm
 ensure_docker
 
-read -r -p "NVIDIA API key (optional, press Enter to skip): " NVIDIA_API_KEY_INPUT
+NVIDIA_API_KEY_INPUT=""
+read -r -p "NVIDIA API key (optional, press Enter to skip): " NVIDIA_API_KEY_INPUT || true
 
 if [[ -n "${NVIDIA_API_KEY_INPUT}" ]]; then
   {
@@ -166,11 +255,22 @@ fi
 
 PYTHON_BIN="$(resolve_python)"
 if [[ ! -d "${VENV_DIR}" ]]; then
-  "${PYTHON_BIN}" -m venv "${VENV_DIR}"
+  create_venv
 fi
-VENV_PYTHON="${VENV_DIR}/bin/python"
+if ! VENV_PYTHON="$(find_venv_python)"; then
+  echo "Existing venv is incomplete. Recreating ${VENV_DIR}..." >&2
+  create_venv
+  if ! VENV_PYTHON="$(find_venv_python)"; then
+    echo "Could not locate venv python interpreter in ${VENV_DIR}." >&2
+    echo "Expected one of: .venv/bin/python, .venv/bin/python3, or .venv/Scripts/python(.exe)." >&2
+    exit 1
+  fi
+fi
+
 "${VENV_PYTHON}" -m pip install --upgrade pip setuptools
-"${VENV_PYTHON}" -m pip install -e "${ROOT_DIR}/backend[dev]"
+pushd "${ROOT_DIR}/backend" >/dev/null
+"${VENV_PYTHON}" -m pip install -e ".[dev]"
+popd >/dev/null
 
 if [[ -f "${ROOT_DIR}/frontend/package-lock.json" ]]; then
   npm ci --prefix "${ROOT_DIR}/frontend"
@@ -181,5 +281,5 @@ fi
 "${VENV_PYTHON}" "${ROOT_DIR}/backend/scripts/seed_providers.py"
 
 echo "Setup complete."
-echo "Backend:  ./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend"
+print_backend_hints
 echo "Frontend: cd frontend && npm run dev"

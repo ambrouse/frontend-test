@@ -86,7 +86,7 @@ def patch_provider_config(provider_id: str, patch: dict) -> ProviderConfig:
         json.dumps({key: getattr(config, key) for key in ("profile", "branch", "port", "installDirectory")}, indent=2),
         encoding="utf-8",
     )
-    provider_registry.refresh()
+    provider_registry.refresh(force=True)
     return config
 
 
@@ -149,6 +149,15 @@ def _queue_action(
     request: ProviderActionRequest,
 ) -> ProviderActionResponse:
     provider = _require_provider(provider_id)
+    existing_task = task_store.find_active_by_project(provider.id)
+    if existing_task is not None:
+        return ProviderActionResponse(
+            taskId=existing_task.id,
+            status=existing_task.status,
+            warnings=[
+                f"Provider already has active task {existing_task.id} ({existing_task.status}). Wait for it to finish."
+            ],
+        )
     task = task_store.create(
         project_id=provider.id,
         project_name=provider.name,
@@ -168,12 +177,33 @@ def _run_action(task_id: str, provider: HubProject, command_name: str, request: 
         _delete_deploy(provider)
         _write_status(provider, state="not_installed", current_step="Deleted", progress=100)
         task_store.update(task_id, status="completed", current_step="Deleted", progress_percent=100)
-        provider_registry.refresh()
+        provider_registry.refresh(force=True)
         return
 
     command = _script_for(provider, command_name)
     if command is None:
         raise RuntimeError(f"Provider {provider.id} does not define command {command_name}")
+
+    is_real_run = command_name == "run" and not (request.dryRun or os.environ.get("AIHUB_DRY_RUN") == "1")
+    if is_real_run and not (deploy_root() / provider.id).exists():
+        setup_command = _script_for(provider, "setup")
+        if setup_command is None:
+            message = "Deploy directory is missing and setup command is not defined"
+            _append_log(provider, "system", "error", message)
+            _write_status(provider, state="failed", current_step=message, progress=100)
+            task_store.update(task_id, status="failed", current_step=message, progress_percent=100)
+            provider_registry.refresh(force=True)
+            return
+        _append_log(provider, "system", "info", "Deploy directory missing. Running setup before run.")
+        task_store.update(task_id, current_step="Deploy missing. Running setup first", progress_percent=25)
+        setup_result = _run_script(provider, setup_command, request, task_id=task_id, command_name="setup")
+        if setup_result.returncode != 0:
+            message = _tail_message(setup_result.stderr.strip() or setup_result.stdout.strip() or "setup failed")
+            _append_log(provider, "system", "error", message)
+            _write_status(provider, state="failed", current_step=message, progress=100)
+            task_store.update(task_id, status="failed", current_step=message, progress_percent=100)
+            provider_registry.refresh(force=True)
+            return
 
     task_store.update(task_id, current_step=f"Executing {command_name} script", progress_percent=35)
     try:
@@ -185,7 +215,7 @@ def _run_action(task_id: str, provider: HubProject, command_name: str, request: 
         _append_log(provider, "system", "error", message)
         _write_status(provider, state="failed", current_step=message, progress=100)
         task_store.update(task_id, status="failed", current_step=message, progress_percent=100)
-        provider_registry.refresh()
+        provider_registry.refresh(force=True)
         return
 
     state = {"setup": "installed", "run": "running", "stop": "stopped", "delete": "not_installed"}.get(
@@ -195,7 +225,7 @@ def _run_action(task_id: str, provider: HubProject, command_name: str, request: 
     if command_name == "delete":
         _delete_deploy(provider)
     task_store.update(task_id, status="completed", current_step=f"{command_name} completed", progress_percent=100)
-    provider_registry.refresh()
+    provider_registry.refresh(force=True)
 
 
 def _run_script(

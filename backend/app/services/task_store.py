@@ -9,6 +9,8 @@ from uuid import uuid4
 
 from app.schemas.models import RunningTask, TaskStatus
 
+TERMINAL_TASK_STATUSES: set[TaskStatus] = {"completed", "failed"}
+
 
 class TaskStore:
     def __init__(self) -> None:
@@ -16,6 +18,7 @@ class TaskStore:
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="provider-task")
         self._tasks: dict[str, RunningTask] = {}
         self._started_at_monotonic: dict[str, float] = {}
+        self._finished_at_monotonic: dict[str, float] = {}
 
     def create(
         self,
@@ -43,6 +46,7 @@ class TaskStore:
             progressPercent=progress_percent,
         )
         with self._lock:
+            self._prune_locked()
             self._tasks[task.id] = task
             self._started_at_monotonic[task.id] = monotonic()
         return task
@@ -59,6 +63,7 @@ class TaskStore:
         progress_percent: int | None = None,
     ) -> RunningTask | None:
         with self._lock:
+            self._prune_locked()
             task = self._tasks.get(task_id)
             if task is None:
                 return None
@@ -72,22 +77,87 @@ class TaskStore:
             data["durationSec"] = int(monotonic() - self._started_at_monotonic.get(task_id, monotonic()))
             updated = RunningTask.model_validate(data)
             self._tasks[task_id] = updated
+            if updated.status in TERMINAL_TASK_STATUSES:
+                self._finished_at_monotonic[task_id] = monotonic()
+            else:
+                self._finished_at_monotonic.pop(task_id, None)
             return updated
 
     def get(self, task_id: str) -> RunningTask | None:
         with self._lock:
+            self._prune_locked()
             task = self._tasks.get(task_id)
         if task is None:
             return None
         return self.update(task.id) or task
 
-    def list_tasks(self) -> list[RunningTask]:
+    def list_tasks(self, *, include_finished: bool = True) -> list[RunningTask]:
         with self._lock:
+            self._prune_locked()
             task_ids = list(self._tasks)
-        return [task for task_id in task_ids if (task := self.get(task_id)) is not None]
+        tasks = [task for task_id in task_ids if (task := self.get(task_id)) is not None]
+        if not include_finished:
+            tasks = [task for task in tasks if task.status not in TERMINAL_TASK_STATUSES]
+        tasks.sort(key=lambda task: self._started_at_monotonic.get(task.id, 0.0), reverse=True)
+        return tasks
 
     def active(self) -> list[RunningTask]:
-        return [task for task in self.list_tasks() if task.status not in {"completed", "failed"}]
+        return self.list_tasks(include_finished=False)
+
+    def find_active_by_project(self, project_id: str) -> RunningTask | None:
+        with self._lock:
+            self._prune_locked()
+            active = [
+                task
+                for task in self._tasks.values()
+                if task.projectId == project_id and task.status not in TERMINAL_TASK_STATUSES
+            ]
+            if not active:
+                return None
+            active.sort(key=lambda task: self._started_at_monotonic.get(task.id, 0.0), reverse=True)
+            return active[0]
+
+    def clear(self, *, scope: str = "finished") -> int:
+        with self._lock:
+            if scope == "all":
+                removed = len(self._tasks)
+                self._tasks.clear()
+                self._started_at_monotonic.clear()
+                self._finished_at_monotonic.clear()
+                return removed
+
+            finished_task_ids = [
+                task_id for task_id, task in self._tasks.items() if task.status in TERMINAL_TASK_STATUSES
+            ]
+            for task_id in finished_task_ids:
+                self._tasks.pop(task_id, None)
+                self._started_at_monotonic.pop(task_id, None)
+                self._finished_at_monotonic.pop(task_id, None)
+            return len(finished_task_ids)
+
+    def _prune_locked(self, *, completed_ttl_sec: int = 900, max_history: int = 250) -> None:
+        now = monotonic()
+
+        expired_task_ids = [
+            task_id
+            for task_id, finished_at in self._finished_at_monotonic.items()
+            if (now - finished_at) >= completed_ttl_sec
+        ]
+        for task_id in expired_task_ids:
+            self._tasks.pop(task_id, None)
+            self._started_at_monotonic.pop(task_id, None)
+            self._finished_at_monotonic.pop(task_id, None)
+
+        if len(self._tasks) <= max_history:
+            return
+
+        terminal_tasks = [task for task in self._tasks.values() if task.status in TERMINAL_TASK_STATUSES]
+        terminal_tasks.sort(key=lambda task: self._finished_at_monotonic.get(task.id, 0.0))
+        while len(self._tasks) > max_history and terminal_tasks:
+            stale = terminal_tasks.pop(0)
+            self._tasks.pop(stale.id, None)
+            self._started_at_monotonic.pop(stale.id, None)
+            self._finished_at_monotonic.pop(stale.id, None)
 
     def _run_task(self, task_id: str, fn: Callable[[str], None]) -> None:
         try:

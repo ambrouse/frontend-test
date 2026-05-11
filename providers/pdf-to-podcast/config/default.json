@@ -1,0 +1,6 @@
+{
+  "profile": "hosted api mode",
+  "branch": "main",
+  "port": 7860,
+  "installDirectory": "deploy/pdf-to-podcast"
+}

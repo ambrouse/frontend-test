@@ -4,8 +4,9 @@
 
 **A low-latency local command center for installing, running, observing, and cleaning up AI provider projects from GitHub.**
 
-[![Frontend CI](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml)
+[![CI](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml)
 [![Frontend Artifact](https://github.com/ambrouse/frontend-test/actions/workflows/frontend-release.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/frontend-release.yml)
+[![Backend Artifact](https://github.com/ambrouse/frontend-test/actions/workflows/backend-release.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/backend-release.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
 ![FastAPI](https://img.shields.io/badge/FastAPI-runtime-009688?logo=fastapi)
 ![Docker](https://img.shields.io/badge/Provider_Runtime-Docker_Compose-2496ED?logo=docker)
@@ -32,7 +33,7 @@ It focuses on three things:
 | Provider | GitHub source | Port | Mode | Lifecycle |
 | --- | --- | ---: | --- | --- |
 | Agentic Commerce Blueprint | `baolnq-ai/Agentic-Commerce-blueprint-provider-` | `8088` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
-| Multi-Agent Intelligent Warehouse | `baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia` | `8091` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
+| Multi-Agent Intelligent Warehouse | `baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia` | `3001` (frontend) / `8091` (backend API) | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
 
 Both providers are tested through the Hub backend by cloning from GitHub into `deploy/{provider_id}` and then running the full lifecycle.
 
@@ -42,18 +43,33 @@ Both providers are tested through the Hub backend by cloning from GitHub into `d
 
 ```powershell
 .\setup.ps1
-.\.venv\Scripts\python -m uvicorn app.main:app --reload --app-dir backend
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir backend
 cd frontend
 npm run dev
 ```
 
-### Linux or Git Bash
+### Linux or macOS
 
 ```bash
 ./setup.sh
 ./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend
 cd frontend
 npm run dev
+```
+
+### Windows Git Bash
+
+```bash
+./setup.sh
+WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --reload-dir backend --app-dir backend
+cd frontend
+npm run dev
+```
+
+If reload is unstable in Git Bash, run without reload:
+
+```bash
+./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend
 ```
 
 Open the app at:
@@ -165,10 +181,11 @@ bash -lc "bash -n setup.sh && find providers -path '*/scripts/linux/*.sh' -print
 
 GitHub Actions currently checks:
 
-- frontend typecheck, unit tests, and production build on Linux/Windows targets;
-- backend lint, format, mypy, pytest, coverage, provider manifest validation, secret scan, dry-run lifecycle, and latency benchmark;
+- workflow linting with `actionlint`;
+- frontend typecheck, unit tests, and production build on Ubuntu/Windows/macOS;
+- backend lint, format, mypy, pytest, coverage, provider manifest validation, secret scan, dry-run lifecycle, package build, and latency benchmark on Ubuntu/Windows/macOS;
 - provider wrapper syntax for Bash and PowerShell;
-- frontend production artifact generation.
+- frontend and backend production artifact generation.
 
 ## Operational Notes
 

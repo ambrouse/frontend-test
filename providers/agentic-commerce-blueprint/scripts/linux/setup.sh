@@ -44,6 +44,27 @@ from datetime import datetime, timezone
 print(json.dumps({"projectId": sys.argv[1], "state": sys.argv[3], "pid": None, "port": int(sys.argv[2]), "platform": "linux", "startedAt": datetime.now(timezone.utc).isoformat(), "uptimeSec": 0, "currentStep": sys.argv[4], "progressPercent": int(sys.argv[5]), "health": {"level": "ok", "message": sys.argv[4]}}, indent=2))
 PY
 }
+patch_deploy_source() {
+  local mcp_client="$DEPLOY_DIR/src/ui/hooks/useMCPClient.ts"
+  [[ -f "$mcp_client" ]] || return 0
+  python - "$mcp_client" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+updated = text.replace(
+    "AbortSignal.timeout(65000), // 65s timeout for search agent (can take 20-30s)",
+    "AbortSignal.timeout(180000), // 180s timeout for slower first-run search agent calls",
+)
+updated = updated.replace(
+    "AbortSignal.timeout(65000), // 65s timeout for ARAG agent (takes ~25s)",
+    "AbortSignal.timeout(180000), // 180s timeout for slower first-run agent calls",
+)
+if updated != text:
+    path.write_text(updated, encoding="utf-8")
+PY
+}
 
 log_json install info "install started"
 if [[ "${AIHUB_DRY_RUN:-0}" == "1" ]]; then
@@ -60,6 +81,7 @@ else
     git -C "$DEPLOY_DIR" pull --ff-only
   fi
   find "$DEPLOY_DIR" -name "*.sh" -type f -exec sed -i 's/\r$//' {} +
+  patch_deploy_source
 fi
 
 if [[ ! -f "$DEPLOY_DIR/.env" ]]; then

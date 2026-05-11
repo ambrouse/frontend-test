@@ -35,7 +35,7 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
     [[ -f "$SETUP_SCRIPT" ]] || { echo "deploy directory missing and setup script is unavailable" >&2; exit 2; }
     bash "$SETUP_SCRIPT"
   fi
-  (cd "$DEPLOY_DIR" && BACKEND_PORT="$BACKEND_PORT" HOST_BACKEND_PORT="$BACKEND_PORT" FRONTEND_PORT="$PORT" HOST_FRONTEND_PORT="$PORT" docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml up -d --wait --wait-timeout 600)
+  (cd "$DEPLOY_DIR" && BACKEND_PORT="$BACKEND_PORT" HOST_BACKEND_PORT="$BACKEND_PORT" FRONTEND_PORT="$PORT" HOST_FRONTEND_PORT="$PORT" bash scripts/run_all_services.sh)
 fi
 python - "$STATUS" "$ID" "$PORT" <<'PY'
 import json, sys

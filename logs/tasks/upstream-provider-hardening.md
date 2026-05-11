@@ -50,3 +50,9 @@
 - Frontend: typecheck, unit tests and production build passed.
 - Latency benchmark stayed well below 100 ms p95; representative p95 values were 1.99-3.41 ms for health, hardware, provider list/detail and logs.
 - Removed temporary `source-github-provider/`; `deploy/` contains only `.gitkeep` after lifecycle delete.
+
+## 2026-05-11 - Frontend port publish fix
+
+- User-reported issue: deploy flow surfaced backend port as the primary provider port.
+- Updated `multi-agent-intelligent-warehouse` Hub wrapper config/scripts so `AIHUB_PORT` now maps to frontend publish port (default `3001`), while backend host API stays on `8091`.
+- Cloned upstream source repo `baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia` and patched dev compose to bind backend host port on loopback (`127.0.0.1`) so backend is no longer broadly exposed by default.

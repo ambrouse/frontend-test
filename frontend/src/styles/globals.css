@@ -72,9 +72,7 @@ body {
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   letter-spacing: 0;
-  transition:
-    color 160ms ease,
-    background 180ms ease;
+  transition: color 120ms ease;
 }
 
 :root[data-theme="light"] body {
@@ -84,6 +82,17 @@ body {
     linear-gradient(135deg, color-mix(in srgb, var(--page-accent-soft) 4%, #f8fdff), #eef8ff 46%, color-mix(in srgb, var(--accent-2) 8%, #dbeefd)),
     linear-gradient(90deg, #f9fdff, #deeffb),
     linear-gradient(135deg, var(--bg), var(--bg-ambient) 42%, var(--bg));
+}
+
+:root[data-hub-performance="balanced"] body {
+  background-attachment: scroll, scroll, scroll, scroll, scroll;
+}
+
+:root[data-theme-switching="1"] *,
+:root[data-theme-switching="1"] *::before,
+:root[data-theme-switching="1"] *::after {
+  transition: none !important;
+  animation: none !important;
 }
 
 body::before {
@@ -971,6 +980,10 @@ button {
   will-change: opacity;
 }
 
+.hub-page .hub-carousel-bg {
+  filter: none;
+}
+
 .hub-carousel-bg::after {
   position: absolute;
   inset: 0;
@@ -983,6 +996,12 @@ button {
     repeating-linear-gradient(0deg, rgba(148, 232, 255, 0.035) 0 1px, transparent 1px 64px),
     linear-gradient(180deg, rgba(2, 7, 9, 0.12), color-mix(in srgb, var(--bg) 72%, transparent) 82%);
   mix-blend-mode: screen;
+}
+
+.hub-page .hub-carousel-bg::after,
+.hub-page .hub-carousel::before {
+  mix-blend-mode: normal;
+  opacity: 0.4;
 }
 
 .hub-carousel-bg.is-current {
@@ -1057,6 +1076,10 @@ button {
     linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(14, 165, 233, 0.24)),
     var(--project-image);
   filter: saturate(0.72) contrast(1.02) brightness(0.72);
+}
+
+:root[data-theme="light"] .hub-page .hub-carousel-bg {
+  filter: none;
 }
 
 :root[data-theme="light"] .hub-carousel[data-project-type="vision"] .hub-carousel-bg {
@@ -1306,11 +1329,15 @@ button {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 16px 44px color-mix(in srgb, var(--project-accent) 8%, transparent);
-  content-visibility: auto;
-  contain-intrinsic-size: 220px 124px;
   transition:
     transform 180ms ease,
     border-color 180ms ease;
+}
+
+.hub-page .project-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 26px color-mix(in srgb, var(--project-accent) 8%, transparent);
 }
 
 .project-card:hover {
@@ -1319,6 +1346,13 @@ button {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 20px 54px color-mix(in srgb, var(--project-accent) 12%, transparent);
+}
+
+.hub-page .project-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 14px 34px color-mix(in srgb, var(--project-accent) 10%, transparent);
 }
 
 .project-card::before {
@@ -1350,6 +1384,11 @@ button {
 .project-card:hover .project-card-image {
   opacity: 0.52;
   transform: scale(1.025);
+}
+
+.hub-page .project-card:hover .project-card-image {
+  opacity: 0.5;
+  transform: none;
 }
 
 :root[data-theme="light"] .project-card {
@@ -1670,6 +1709,23 @@ button {
   padding: 0 15px;
 }
 
+.primary-action:disabled,
+.ghost-action:disabled,
+.danger-action:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.spin-icon {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .primary-action {
   color: #06231f;
   border-color: transparent;
@@ -1679,6 +1735,39 @@ button {
 
 .danger-action {
   color: var(--danger);
+}
+
+.lifecycle-progress {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--project-accent) 38%, var(--border));
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--project-accent) 14%, transparent), transparent 62%),
+    var(--surface);
+  box-shadow: 0 16px 54px rgba(0, 0, 0, 0.16);
+}
+
+.lifecycle-progress div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.lifecycle-progress span {
+  color: var(--project-accent);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.lifecycle-progress strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
 }
 
 .detail-grid {
@@ -1923,11 +2012,10 @@ button {
 }
 
 .terminal-frame {
-  display: grid;
-  min-height: 260px;
-  align-content: start;
-  gap: 6px;
+  display: block;
+  height: clamp(260px, 44vh, 460px);
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1936,30 +2024,49 @@ button {
   font-family: "JetBrains Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
 }
 
+.detail-delete-note,
+.log-follow-state {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
 :root[data-theme="light"] .terminal-frame {
   background: rgba(17, 24, 39, 0.92);
 }
 
 .log-line {
   display: grid;
-  grid-template-columns: 78px 62px minmax(0, 1fr);
-  gap: 10px;
-  align-items: baseline;
+  grid-template-columns: minmax(72px, max-content) minmax(58px, max-content) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-height: 28px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.log-line:last-child {
+  border-bottom: 0;
 }
 
 .log-line span {
   color: #93c5fd;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .log-line strong {
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .log-line p {
   margin: 0;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  min-width: 0;
 }
 
 .log-info strong {
@@ -2293,6 +2400,7 @@ button {
   .requirement-fit-row,
   .log-line {
     grid-template-columns: 1fr;
+    gap: 3px;
   }
 }
 

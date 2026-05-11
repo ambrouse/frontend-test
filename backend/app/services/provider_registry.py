@@ -16,7 +16,7 @@ from app.services.provider_seed import provider_seed
 
 
 class ProviderRegistry:
-    def __init__(self, root: Path | None = None, ttl_seconds: float = 2.0) -> None:
+    def __init__(self, root: Path | None = None, ttl_seconds: float = 30.0) -> None:
         self._root = root or providers_root()
         self._ttl_seconds = ttl_seconds
         self._lock = Lock()
@@ -50,8 +50,10 @@ class ProviderRegistry:
     def provider_root(self, provider_id: str) -> Path:
         return self._root / provider_id
 
-    def refresh(self) -> None:
+    def refresh(self, *, force: bool = False) -> None:
         with self._lock:
+            if not force and monotonic() - self._updated_at <= self._ttl_seconds:
+                return
             scanned = self._scan_provider_manifests()
             if scanned:
                 self._providers = scanned

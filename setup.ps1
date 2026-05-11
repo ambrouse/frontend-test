@@ -115,7 +115,9 @@ if (!(Test-Path -LiteralPath $VenvDir)) {
 }
 $VenvPython = Join-Path $VenvDir "Scripts\python.exe"
 & $VenvPython -m pip install --upgrade pip setuptools
-& $VenvPython -m pip install -e "$RootDir/backend[dev]"
+Push-Location (Join-Path $RootDir "backend")
+& $VenvPython -m pip install -e ".[dev]"
+Pop-Location
 
 if (Test-Path -LiteralPath (Join-Path $RootDir "frontend/package-lock.json")) {
   npm.cmd ci --prefix (Join-Path $RootDir "frontend")
@@ -126,5 +128,7 @@ if (Test-Path -LiteralPath (Join-Path $RootDir "frontend/package-lock.json")) {
 & $VenvPython (Join-Path $RootDir "backend/scripts/seed_providers.py")
 
 Write-Host "Setup complete."
-Write-Host "Backend:  .\.venv\Scripts\python -m uvicorn app.main:app --reload --app-dir backend"
+Write-Host "Backend (PowerShell): .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir backend"
+Write-Host "Backend (Git Bash, reload): WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --reload-dir backend --app-dir backend"
+Write-Host "Backend (Git Bash, no reload): ./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend"
 Write-Host "Frontend: cd frontend; npm run dev"

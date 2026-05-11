@@ -19,6 +19,16 @@ const projectTypes: Array<ProjectType | "all"> = [
   "tooling",
 ];
 
+const HUB_CACHE_KEY = "hub-providers-cache-v1";
+
+type HubCachePayload = {
+  providers: HubProject[];
+  featuredProjects: HubProject[];
+  providersCacheVersion: number;
+  featuredCacheVersion: number;
+  cachedAt: string;
+};
+
 export function HubExplorer() {
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
   const [query, setQuery] = useState("");
@@ -29,8 +39,21 @@ export function HubExplorer() {
   const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--page-accent", "#0ea5b7");
-    document.documentElement.style.setProperty("--page-accent-soft", "#062026");
+    const root = document.documentElement;
+    root.style.setProperty("--page-accent", "#0ea5b7");
+    root.style.setProperty("--page-accent-soft", "#062026");
+    root.setAttribute("data-hub-performance", "balanced");
+
+    return () => {
+      root.removeAttribute("data-hub-performance");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (featuredProjects.length === 0) {
+      return;
+    }
+
     const idleWindow = window as Window & {
       requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
       cancelIdleCallback?: (handle: number) => void;
@@ -51,31 +74,53 @@ export function HubExplorer() {
 
     const timer = globalThis.setTimeout(preload, 240);
     return () => globalThis.clearTimeout(timer);
-  }, []);
+  }, [featuredProjects]);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    void fetchProviders({ signal: controller.signal })
-      .then((response) => {
+    let hasCachedData = false;
+    const cachedRaw = window.sessionStorage.getItem(HUB_CACHE_KEY);
+    if (cachedRaw) {
+      try {
+        const cached = JSON.parse(cachedRaw) as HubCachePayload;
         startTransition(() => {
-          setProjects(response.providers);
+          setProjects(cached.providers);
+          setFeaturedProjects(cached.featuredProjects);
+          setActiveSlide(0);
+          setIsOffline(false);
+        });
+        hasCachedData = cached.providers.length > 0 || cached.featuredProjects.length > 0;
+      } catch {
+        window.sessionStorage.removeItem(HUB_CACHE_KEY);
+      }
+    }
+
+    void Promise.all([
+      fetchProviders({ signal: controller.signal }),
+      fetchFeaturedProviders({ signal: controller.signal }),
+    ])
+      .then(([providersResponse, featuredResponse]) => {
+        const payload: HubCachePayload = {
+          providers: providersResponse.providers,
+          featuredProjects: featuredResponse.providers,
+          providersCacheVersion: providersResponse.cacheVersion,
+          featuredCacheVersion: featuredResponse.cacheVersion,
+          cachedAt: new Date().toISOString(),
+        };
+        window.sessionStorage.setItem(HUB_CACHE_KEY, JSON.stringify(payload));
+
+        startTransition(() => {
+          setProjects(providersResponse.providers);
+          setFeaturedProjects(featuredResponse.providers);
+          setActiveSlide(0);
           setIsOffline(false);
         });
       })
       .catch(() => {
-        setIsOffline(true);
-      });
-
-    void fetchFeaturedProviders({ signal: controller.signal })
-      .then((response) => {
-        startTransition(() => {
-          setFeaturedProjects(response.providers);
-          setActiveSlide(0);
-        });
-      })
-      .catch(() => {
-        setIsOffline(true);
+        if (!hasCachedData) {
+          setIsOffline(true);
+        }
       });
 
     return () => controller.abort();
@@ -123,7 +168,7 @@ export function HubExplorer() {
   const featuredProject = featuredProjects[activeSlide] ?? projects[0] ?? null;
 
   return (
-    <div className="page-flow">
+    <div className="page-flow hub-page">
       {featuredProject ? (
         <HubCarousel featuredProject={featuredProject} previousProject={previousProject} />
       ) : (

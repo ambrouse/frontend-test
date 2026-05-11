@@ -29,6 +29,11 @@ type TasksResponse = {
   total: number;
 };
 
+type ClearTasksResponse = {
+  removed: number;
+  scope: "finished" | "all";
+};
+
 export function getApiBase() {
   return (process.env.NEXT_PUBLIC_API_BASE ?? DEFAULT_API_BASE).replace(/\/$/, "");
 }
@@ -47,6 +52,10 @@ export async function fetchActiveTasks(options?: { signal?: AbortSignal; timeout
 
 export async function fetchTasks(options?: { signal?: AbortSignal; timeoutMs?: number }) {
   return fetchJson<TasksResponse>("/api/tasks", options);
+}
+
+export async function clearTaskHistory(scope: "finished" | "all" = "finished", options?: { signal?: AbortSignal; timeoutMs?: number }) {
+  return fetchJson<ClearTasksResponse>(`/api/tasks?scope=${scope}`, { ...options, method: "DELETE", timeoutMs: options?.timeoutMs ?? 1200 });
 }
 
 export async function fetchHardwareSnapshot(options?: { signal?: AbortSignal; timeoutMs?: number }) {
