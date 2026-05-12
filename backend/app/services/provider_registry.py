@@ -5,7 +5,7 @@ import platform
 import shutil
 import subprocess
 from pathlib import Path
-from threading import Lock
+from threading import Lock, Thread
 from time import monotonic
 from urllib.parse import quote
 
@@ -26,7 +26,10 @@ class ProviderRegistry:
         self._lock = Lock()
         self._providers = [HubProject.model_validate(provider) for provider in provider_seed()]
         self._cache_version = 1
-        self._updated_at = 0.0
+        self._updated_at = monotonic()
+        self._has_scanned = False
+        self._refreshing = False
+        self._refresh_in_background()
 
     def list_providers(self, project_type: str | None = None, query: str | None = None) -> ProviderListResponse:
         providers = self._warm_providers()
@@ -49,25 +52,63 @@ class ProviderRegistry:
         return ProviderListResponse(providers=providers, total=len(providers), cacheVersion=self._cache_version)
 
     def get_provider(self, provider_id: str) -> HubProject | None:
-        return next((provider for provider in self._warm_providers() if provider.id == provider_id), None)
+        provider = next((provider for provider in self._warm_providers() if provider.id == provider_id), None)
+        if provider is not None or self._has_scanned:
+            return provider
+        self.refresh(force=True)
+        return next((provider for provider in self._providers if provider.id == provider_id), None)
 
     def provider_root(self, provider_id: str) -> Path:
         return self._root / provider_id
 
     def refresh(self, *, force: bool = False) -> None:
-        with self._lock:
-            if not force and monotonic() - self._updated_at <= self._ttl_seconds:
-                return
+        if not self._begin_refresh(force=force):
+            return
+        try:
             scanned = self._scan_provider_manifests()
+            self._complete_refresh(scanned)
+        except Exception:
+            self._complete_refresh([])
+            raise
+
+    def _begin_refresh(self, *, force: bool = False) -> bool:
+        with self._lock:
+            if self._refreshing and not force:
+                return False
+            if not force and not self._needs_refresh():
+                return False
+            self._refreshing = True
+            return True
+
+    def _complete_refresh(self, scanned: list[HubProject]) -> None:
+        with self._lock:
             if scanned:
                 self._providers = scanned
                 self._cache_version += 1
             self._updated_at = monotonic()
+            self._has_scanned = True
+            self._refreshing = False
 
     def _warm_providers(self) -> list[HubProject]:
-        if monotonic() - self._updated_at > self._ttl_seconds:
-            self.refresh()
+        if self._needs_refresh():
+            self._refresh_in_background()
         return self._providers
+
+    def _needs_refresh(self) -> bool:
+        return not self._has_scanned or monotonic() - self._updated_at > self._ttl_seconds
+
+    def _refresh_in_background(self) -> None:
+        if not self._begin_refresh():
+            return
+
+        def worker() -> None:
+            try:
+                scanned = self._scan_provider_manifests()
+            except Exception:
+                scanned = []
+            self._complete_refresh(scanned)
+
+        Thread(target=worker, name="provider-registry-refresh", daemon=True).start()
 
     def _scan_provider_manifests(self) -> list[HubProject]:
         if not self._root.exists():

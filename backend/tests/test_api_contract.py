@@ -45,6 +45,7 @@ def test_provider_asset_contract(tmp_path, monkeypatch) -> None:
     (media_dir / "01-banner.png").write_bytes(b"image")
 
     monkeypatch.setattr(routes_providers, "provider_registry", ProviderRegistry(root=tmp_path, ttl_seconds=0))
+    routes_providers.provider_registry.refresh(force=True)
 
     detail_response = client.get(f"/api/providers/{provider_id}")
     assert detail_response.status_code == 200

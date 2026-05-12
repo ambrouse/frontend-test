@@ -31,6 +31,7 @@ def test_provider_media_overrides_manifest_visual(tmp_path) -> None:
     (media_dir / "01-banner.png").write_bytes(b"image")
 
     registry = ProviderRegistry(root=tmp_path, ttl_seconds=0)
+    registry.refresh(force=True)
     provider = registry.get_provider(provider_id)
 
     assert provider is not None
