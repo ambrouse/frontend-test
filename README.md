@@ -128,6 +128,16 @@ Each provider manifest can expose:
 - API mode or GPU/NIM mode;
 - minimum and recommended hardware requirements.
 
+### Provider Images
+
+Provider-specific images live in the Hub provider folder, not in `deploy/`. Put image files in:
+
+```text
+providers/{provider_id}/media/
+```
+
+The backend also accepts `providers/{provider_id}/images/` and `providers/{provider_id}/assets/` as fallback folders. If images exist, the first sorted image becomes the card/banner image and the whole set becomes the detail-page slideshow. If no provider image exists, the manifest `visual.imageUrl` fallback is used.
+
 The frontend renders this readiness data so users can see what the current machine has before installing.
 
 ## Performance Targets

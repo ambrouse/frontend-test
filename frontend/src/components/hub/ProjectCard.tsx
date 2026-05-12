@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Box, Cpu, Database, HardDrive } from "lucide-react";
 import { memo } from "react";
+import { resolveApiAssetUrl } from "@/services/apiClient";
 import type { HubProject } from "@/services/types";
 import { formatMemory, formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
@@ -13,7 +14,7 @@ function ProjectCardComponent({ project }: { project: HubProject }) {
       style={
         {
           "--project-accent": project.accentColor,
-          "--project-image": `url(${project.visual.imageUrl})`,
+          "--project-image": `url(${resolveApiAssetUrl(project.visual.imageUrl)})`,
           "--project-focus": project.visual.focus,
         } as React.CSSProperties
       }

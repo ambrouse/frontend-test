@@ -110,6 +110,7 @@ export type HubProject = {
     focus: string;
     ambient: string;
     ambientSoft: string;
+    gallery?: string[];
   };
   installStatus: InstallStatus;
   runStatus: RunStatus;

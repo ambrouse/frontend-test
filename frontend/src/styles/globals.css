@@ -1701,6 +1701,62 @@ button {
   gap: 10px;
 }
 
+.detail-gallery-controls {
+  position: absolute;
+  right: clamp(18px, 3vw, 42px);
+  bottom: 18px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(4, 11, 15, 0.58);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+.detail-gallery-controls button {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  color: #f8fbff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detail-gallery-controls button:hover {
+  border-color: color-mix(in srgb, var(--project-accent) 62%, white 18%);
+  background: color-mix(in srgb, var(--project-accent) 24%, rgba(255, 255, 255, 0.1));
+}
+
+.detail-gallery-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 34px;
+  justify-content: center;
+}
+
+.detail-gallery-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.36);
+  transition:
+    width 160ms ease,
+    background 160ms ease;
+}
+
+.detail-gallery-dots span.is-active {
+  width: 18px;
+  border-radius: 999px;
+  background: #f8fbff;
+}
+
 .primary-action,
 .ghost-action,
 .danger-action {
@@ -2216,6 +2272,16 @@ button {
     min-height: auto;
     gap: 18px;
     padding: clamp(18px, 3vw, 30px);
+  }
+
+  .detail-hero {
+    padding-bottom: 82px;
+  }
+
+  .detail-gallery-controls {
+    right: auto;
+    left: clamp(18px, 6vw, 28px);
+    bottom: 18px;
   }
 
   .hero-console {

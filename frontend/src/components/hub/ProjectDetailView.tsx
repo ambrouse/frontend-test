@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { CheckCircle2, Copy, Download, Loader2, Play, RotateCcw, Square, Trash2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Loader2, Play, RotateCcw, Square, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchHardwareSnapshot,
@@ -12,6 +12,7 @@ import {
   fetchProviderMetrics,
   fetchProviderStatus,
   providerAction,
+  resolveApiAssetUrl,
 } from "@/services/apiClient";
 import { emptyHardwareSnapshot } from "@/services/emptyState";
 import type { HardwareSnapshot, HubProject, LogLevel, ProjectLog, ProviderConfig, ProviderMetrics, ProviderStatus, RunningTask } from "@/services/types";
@@ -32,6 +33,7 @@ const actionLabels: Record<ProviderLifecycleAction, { idle: string; active: stri
 export function ProjectDetailView({ projectId, project }: { projectId: string; project?: HubProject }) {
   const [activeLogTab, setActiveLogTab] = useState<LogPanelTab>("progress");
   const [activeLogLevel, setActiveLogLevel] = useState<LogLevel | "all">("all");
+  const [activeVisualIndex, setActiveVisualIndex] = useState(0);
   const [projectData, setProjectData] = useState<HubProject | null>(project ?? null);
   const [hardware, setHardware] = useState<HardwareSnapshot>(emptyHardwareSnapshot);
   const [status, setStatus] = useState<ProviderStatus | null>(null);
@@ -66,6 +68,12 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const lifecycleStep =
     providerTask?.currentStep ??
     (queuedAction ? `Task ${queuedAction.taskId} queued` : pendingAction ? "Queuing provider action" : status?.currentStep ?? "Idle");
+  const visualImages = useMemo(() => {
+    if (!projectData) return [];
+    const gallery = projectData.visual.gallery?.filter(Boolean) ?? [];
+    return gallery.length > 0 ? gallery : [projectData.visual.imageUrl];
+  }, [projectData]);
+  const activeVisualImage = resolveApiAssetUrl(visualImages[activeVisualIndex] ?? projectData?.visual.imageUrl ?? "");
   const progressEvents = useMemo(() => {
     const events: Array<{ id: string; label: string; message: string; tone: "active" | "info" | "error" }> = [];
     if (providerTask) {
@@ -113,6 +121,20 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     document.documentElement.style.setProperty("--page-accent", projectData.visual.ambient);
     document.documentElement.style.setProperty("--page-accent-soft", projectData.visual.ambientSoft);
   }, [projectData]);
+
+  useEffect(() => {
+    setActiveVisualIndex(0);
+  }, [projectData?.id, projectData?.visual.imageUrl, projectData?.visual.gallery?.join("|")]);
+
+  useEffect(() => {
+    if (visualImages.length <= 1) {
+      return;
+    }
+    const interval = window.setInterval(() => {
+      setActiveVisualIndex((current) => (current + 1) % visualImages.length);
+    }, 5200);
+    return () => window.clearInterval(interval);
+  }, [visualImages.length]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -227,6 +249,10 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     }
   };
 
+  const handleVisualStep = (direction: -1 | 1) => {
+    setActiveVisualIndex((current) => (current + direction + visualImages.length) % visualImages.length);
+  };
+
   if (!projectData || !effectiveConfig) {
     return (
       <div className="page-flow detail-flow">
@@ -251,7 +277,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
         style={
           {
             "--project-accent": projectData.accentColor,
-            "--project-image": `url(${projectData.visual.imageUrl})`,
+            "--project-image": `url(${activeVisualImage})`,
             "--project-focus": projectData.visual.focus,
           } as React.CSSProperties
         }
@@ -291,6 +317,22 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
             {isLifecycleBusy && activeAction === "delete" ? actionLabels.delete.active : actionLabels.delete.idle}
           </button>
         </div>
+
+        {visualImages.length > 1 ? (
+          <div className="detail-gallery-controls" aria-label="Provider images">
+            <button type="button" onClick={() => handleVisualStep(-1)} aria-label="Previous image">
+              <ChevronLeft size={18} aria-hidden="true" />
+            </button>
+            <div className="detail-gallery-dots" aria-hidden="true">
+              {visualImages.map((image, index) => (
+                <span key={`${image}-${index}`} className={index === activeVisualIndex ? "is-active" : undefined} />
+              ))}
+            </div>
+            <button type="button" onClick={() => handleVisualStep(1)} aria-label="Next image">
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+        ) : null}
       </section>
 
       {isLifecycleBusy ? (

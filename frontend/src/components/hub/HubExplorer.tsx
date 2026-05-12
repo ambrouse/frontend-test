@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { memo, startTransition, useEffect, useMemo, useState } from "react";
-import { fetchFeaturedProviders, fetchProviders } from "@/services/apiClient";
+import { fetchFeaturedProviders, fetchProviders, resolveApiAssetUrl } from "@/services/apiClient";
 import type { HubProject, ProjectType } from "@/services/types";
 import { formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
@@ -63,7 +63,7 @@ export function HubExplorer() {
       featuredProjects.slice(0, 8).forEach((project) => {
         const image = new Image();
         image.decoding = "async";
-        image.src = project.visual.imageUrl;
+        image.src = resolveApiAssetUrl(project.visual.imageUrl);
       });
     };
 
@@ -222,7 +222,7 @@ const HubCarousel = memo(function HubCarousel({
       style={
         {
           "--project-accent": featuredProject.accentColor,
-          "--project-image": `url(${featuredProject.visual.imageUrl})`,
+          "--project-image": `url(${resolveApiAssetUrl(featuredProject.visual.imageUrl)})`,
           "--project-focus": featuredProject.visual.focus,
         } as React.CSSProperties
       }
@@ -233,7 +233,7 @@ const HubCarousel = memo(function HubCarousel({
           className="hub-carousel-bg is-previous"
           style={
             {
-              "--project-image": `url(${previousProject.visual.imageUrl})`,
+              "--project-image": `url(${resolveApiAssetUrl(previousProject.visual.imageUrl)})`,
               "--project-focus": previousProject.visual.focus,
               "--project-accent": previousProject.accentColor,
             } as React.CSSProperties

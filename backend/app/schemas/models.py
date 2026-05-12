@@ -69,6 +69,7 @@ class ProviderVisual(BaseModel):
     focus: str
     ambient: str
     ambientSoft: str
+    gallery: list[str] = Field(default_factory=list)
 
 
 class EditableConfig(BaseModel):

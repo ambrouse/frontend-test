@@ -7,12 +7,16 @@ import subprocess
 from pathlib import Path
 from threading import Lock
 from time import monotonic
+from urllib.parse import quote
 
 from app.core.paths import providers_root
 from app.schemas.models import HubProject, ProviderListResponse, ToolRequirement
 from app.services.compatibility import evaluate_compatibility
 from app.services.hardware import hardware_service
 from app.services.provider_seed import provider_seed
+
+ASSET_DIR_NAMES = ("media", "images", "assets")
+IMAGE_EXTENSIONS = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"}
 
 
 class ProviderRegistry:
@@ -78,8 +82,20 @@ class ProviderRegistry:
             )
             data = self._apply_runtime_overlay(manifest_path.parent, data)
             data = self._apply_environment_overlay(data)
+            data = self._apply_visual_assets(manifest_path.parent, data)
             providers.append(HubProject.model_validate(data))
         return providers
+
+    def _apply_visual_assets(self, provider_root: Path, data: dict) -> dict:
+        visual = data.setdefault("visual", {})
+        fallback_image = visual.get("imageUrl")
+        local_images = _provider_images(provider_root)
+        if local_images:
+            visual["imageUrl"] = local_images[0]
+            visual["gallery"] = local_images
+        elif fallback_image:
+            visual["gallery"] = [fallback_image]
+        return data
 
     def _apply_environment_overlay(self, data: dict) -> dict:
         environment = data.get("environment")
@@ -202,3 +218,26 @@ def _current_arch() -> str:
 
 
 provider_registry = ProviderRegistry()
+
+
+def _provider_images(provider_root: Path) -> list[str]:
+    provider_id = provider_root.name
+    images: list[Path] = []
+    for directory_name in ASSET_DIR_NAMES:
+        asset_dir = provider_root / directory_name
+        if not asset_dir.exists():
+            continue
+        images.extend(
+            path
+            for path in asset_dir.rglob("*")
+            if path.is_file() and not path.name.startswith(".") and path.suffix.lower() in IMAGE_EXTENSIONS
+        )
+
+    unique_images = sorted(
+        set(images),
+        key=lambda path: tuple(part.lower() for part in path.relative_to(provider_root).parts),
+    )
+    return [
+        f"/api/providers/{quote(provider_id)}/assets/{quote(path.relative_to(provider_root).as_posix(), safe='/')}"
+        for path in unique_images
+    ]

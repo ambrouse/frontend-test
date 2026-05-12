@@ -38,6 +38,10 @@ export function getApiBase() {
   return (process.env.NEXT_PUBLIC_API_BASE ?? DEFAULT_API_BASE).replace(/\/$/, "");
 }
 
+export function resolveApiAssetUrl(url: string) {
+  return url.startsWith("/api/") ? `${getApiBase()}${url}` : url;
+}
+
 export async function fetchProviders(options?: { signal?: AbortSignal; timeoutMs?: number }) {
   return fetchJson<ProviderListResponse>("/api/providers", options);
 }

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
 
 from app.schemas.models import (
     HubProject,
@@ -10,7 +11,7 @@ from app.schemas.models import (
     ProviderMetrics,
     ProviderStatus,
 )
-from app.services.provider_registry import provider_registry
+from app.services.provider_registry import IMAGE_EXTENSIONS, provider_registry
 from app.services.provider_runtime import (
     delete_provider,
     install_provider,
@@ -54,6 +55,22 @@ def provider_detail(provider_id: str) -> HubProject:
     if provider is None:
         raise HTTPException(status_code=404, detail="Provider not found")
     return provider
+
+
+@router.get("/{provider_id}/assets/{asset_path:path}", response_class=FileResponse)
+def provider_asset(provider_id: str, asset_path: str) -> FileResponse:
+    provider = provider_registry.get_provider(provider_id)
+    if provider is None:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    provider_root = provider_registry.provider_root(provider_id).resolve()
+    asset = (provider_root / asset_path).resolve()
+    allowed_roots = [(provider_root / name).resolve() for name in ("media", "images", "assets")]
+    if not any(asset == root or root in asset.parents for root in allowed_roots):
+        raise HTTPException(status_code=404, detail="Provider asset not found")
+    if not asset.is_file() or asset.suffix.lower() not in IMAGE_EXTENSIONS:
+        raise HTTPException(status_code=404, detail="Provider asset not found")
+    return FileResponse(asset)
 
 
 @router.get("/{provider_id}/status", response_model=ProviderStatus)

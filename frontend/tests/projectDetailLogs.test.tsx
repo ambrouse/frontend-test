@@ -105,6 +105,7 @@ vi.mock("@/services/apiClient", () => ({
   fetchProviderMetrics: vi.fn(() => Promise.resolve(metrics)),
   fetchProviderStatus: vi.fn(() => Promise.resolve(status)),
   providerAction: vi.fn(() => Promise.resolve({ taskId: "task-1", status: "running", warnings: [] })),
+  resolveApiAssetUrl: vi.fn((url: string) => url),
 }));
 
 describe("ProjectDetailView provider activity", () => {
