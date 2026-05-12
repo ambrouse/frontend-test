@@ -13,16 +13,37 @@ function Find-Bash {
   throw "Git Bash or bash is required"
 }
 
+function Invoke-BashScript {
+  param(
+    [Parameter(Mandatory = $true)][string]$Bash,
+    [Parameter(Mandatory = $true)][string]$WorkingDirectory,
+    [Parameter(Mandatory = $true)][string[]]$Arguments,
+    [Parameter(Mandatory = $true)][string]$LogName
+  )
+  $OutPath = Join-Path $Root "logs\$LogName.out.log"
+  $ErrPath = Join-Path $Root "logs\$LogName.err.log"
+  Remove-Item -LiteralPath $OutPath, $ErrPath -ErrorAction SilentlyContinue
+  $Process = Start-Process `
+    -FilePath $Bash `
+    -ArgumentList $Arguments `
+    -WorkingDirectory $WorkingDirectory `
+    -RedirectStandardOutput $OutPath `
+    -RedirectStandardError $ErrPath `
+    -WindowStyle Hidden `
+    -Wait `
+    -PassThru
+
+  if (Test-Path $OutPath) { Get-Content -LiteralPath $OutPath }
+  if (Test-Path $ErrPath) { Get-Content -LiteralPath $ErrPath }
+  if ($Process.ExitCode -ne 0) {
+    throw "bash $($Arguments -join ' ') failed with exit code $($Process.ExitCode)"
+  }
+}
+
 New-Item -ItemType Directory -Force -Path "$Root\logs", "$Root\runtime" | Out-Null
 if ((Test-Path $DeployDir) -and (Test-Path (Join-Path $DeployDir "setup.sh"))) {
   $Bash = Find-Bash
-  Push-Location $DeployDir
-  try {
-    & $Bash setup.sh --down
-    if ($LASTEXITCODE -ne 0) { throw "setup.sh --down failed with exit code $LASTEXITCODE" }
-  } finally {
-    Pop-Location
-  }
+  Invoke-BashScript -Bash $Bash -WorkingDirectory $DeployDir -Arguments @("setup.sh", "--down") -LogName "setup-down"
 }
 $Status = @{ projectId=$Id; state="stopped"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Stopped"; progressPercent=100; health=@{ level="ok"; message="Stopped" } }
 $Status | ConvertTo-Json -Depth 5 | Set-Content "$Root\runtime\status.json" -Encoding utf8

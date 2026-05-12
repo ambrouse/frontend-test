@@ -5,6 +5,11 @@ $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Reso
 $DeployDir = Join-Path $DeployRoot $Id
 $Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "3001" }
 if ($env:AIHUB_DRY_RUN -ne "1" -and (Test-Path $DeployDir)) {
+  $ComposeEnvFile = Join-Path $DeployDir "deploy\compose\.env"
+  $ComposeFile = Join-Path $DeployDir "deploy\compose\docker-compose.dev.yaml"
+  if (!(Test-Path $ComposeEnvFile) -or !(Test-Path $ComposeFile)) {
+    Write-Warning "Warehouse compose files are missing; skipping docker compose down for partial deploy."
+  } else {
   Push-Location $DeployDir
   $PreviousErrorActionPreference = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
@@ -14,6 +19,7 @@ if ($env:AIHUB_DRY_RUN -ne "1" -and (Test-Path $DeployDir)) {
   } finally {
     $ErrorActionPreference = $PreviousErrorActionPreference
     Pop-Location
+  }
   }
 }
 $Status = @{ projectId=$Id; state="stopped"; pid=$null; port=[int]$Port; platform="windows"; startedAt=$null; uptimeSec=0; currentStep="Stopped"; progressPercent=100; health=@{ level="ok"; message="Stopped" } }

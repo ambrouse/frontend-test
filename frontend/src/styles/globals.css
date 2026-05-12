@@ -2011,8 +2011,90 @@ button {
   margin: 18px 0;
 }
 
+.log-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+}
+
+.log-tabs button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.log-tabs button.is-active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--project-accent) 24%, var(--surface));
+}
+
+.progress-feed {
+  display: grid;
+  gap: 10px;
+  min-height: 220px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+}
+
+.progress-event {
+  display: grid;
+  grid-template-columns: minmax(104px, max-content) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-height: 38px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+
+.progress-event span {
+  width: fit-content;
+  max-width: 180px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(148, 163, 184, 0.12);
+  font-size: 0.72rem;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.progress-event p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.progress-event-active span {
+  color: var(--project-accent);
+  background: color-mix(in srgb, var(--project-accent) 18%, transparent);
+}
+
+.progress-event-error span {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
 .terminal-frame {
   display: block;
+  margin-top: 16px;
   height: clamp(260px, 44vh, 460px);
   overflow: auto;
   overscroll-behavior: contain;
@@ -2398,9 +2480,14 @@ button {
   }
 
   .requirement-fit-row,
+  .progress-event,
   .log-line {
     grid-template-columns: 1fr;
     gap: 3px;
+  }
+
+  .progress-event span {
+    max-width: 100%;
   }
 }
 

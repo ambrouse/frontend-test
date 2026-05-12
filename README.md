@@ -32,10 +32,11 @@ It focuses on three things:
 
 | Provider | GitHub source | Port | Mode | Lifecycle |
 | --- | --- | ---: | --- | --- |
+| PDF to Podcast | `PhuongHo03/pdf-to-podcast` | `7860` (frontend) / dynamic API port | Git Bash + Python/Gradio + NVIDIA API | Install, run, logs, metrics, stop, delete |
 | Agentic Commerce Blueprint | `baolnq-ai/Agentic-Commerce-blueprint-provider-` | `8088` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
 | Multi-Agent Intelligent Warehouse | `baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia` | `3001` (frontend) / `8091` (backend API) | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
 
-Both providers are tested through the Hub backend by cloning from GitHub into `deploy/{provider_id}` and then running the full lifecycle.
+All three providers are tested through the Hub backend by cloning from GitHub into `deploy/{provider_id}` and then running the full lifecycle.
 
 ## Quick Start
 

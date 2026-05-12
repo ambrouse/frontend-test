@@ -20,6 +20,7 @@ import { CompatibilityPing } from "./CompatibilityPing";
 
 const logLevels: Array<LogLevel | "all"> = ["all", "info", "warn", "error", "debug"];
 type ProviderLifecycleAction = "install" | "run" | "stop" | "delete";
+type LogPanelTab = "progress" | "details";
 
 const actionLabels: Record<ProviderLifecycleAction, { idle: string; active: string }> = {
   install: { idle: "Install", active: "Installing" },
@@ -29,6 +30,7 @@ const actionLabels: Record<ProviderLifecycleAction, { idle: string; active: stri
 };
 
 export function ProjectDetailView({ projectId, project }: { projectId: string; project?: HubProject }) {
+  const [activeLogTab, setActiveLogTab] = useState<LogPanelTab>("progress");
   const [activeLogLevel, setActiveLogLevel] = useState<LogLevel | "all">("all");
   const [projectData, setProjectData] = useState<HubProject | null>(project ?? null);
   const [hardware, setHardware] = useState<HardwareSnapshot>(emptyHardwareSnapshot);
@@ -64,6 +66,47 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const lifecycleStep =
     providerTask?.currentStep ??
     (queuedAction ? `Task ${queuedAction.taskId} queued` : pendingAction ? "Queuing provider action" : status?.currentStep ?? "Idle");
+  const progressEvents = useMemo(() => {
+    const events: Array<{ id: string; label: string; message: string; tone: "active" | "info" | "error" }> = [];
+    if (providerTask) {
+      events.push({
+        id: `task-${providerTask.id}`,
+        label: `${providerTask.status} ${providerTask.progressPercent}%`,
+        message: providerTask.currentStep,
+        tone: providerTask.status === "failed" ? "error" : "active",
+      });
+    }
+    if (queuedAction) {
+      events.push({
+        id: `queued-${queuedAction.taskId}`,
+        label: actionLabels[queuedAction.action].active,
+        message: `Task ${queuedAction.taskId} queued`,
+        tone: "active",
+      });
+    }
+    if (status) {
+      events.push({
+        id: `status-${status.state}-${status.currentStep}`,
+        label: status.state,
+        message: status.currentStep,
+        tone: status.health?.level === "error" ? "error" : "info",
+      });
+    }
+    if (actionMessage) {
+      events.push({ id: "action-message", label: "message", message: actionMessage, tone: "info" });
+    }
+
+    for (const log of logs.slice(-8).reverse()) {
+      events.push({
+        id: log.id,
+        label: log.source,
+        message: log.message,
+        tone: log.level === "error" ? "error" : "info",
+      });
+    }
+
+    return events;
+  }, [actionMessage, logs, providerTask, queuedAction, status]);
 
   useEffect(() => {
     if (!projectData) return;
@@ -79,7 +122,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       void fetchProviderStatus(projectId, { signal: controller.signal }).then(setStatus).catch(() => {});
       void fetchProviderMetrics(projectId, { signal: controller.signal }).then(setMetrics).catch(() => {});
       void fetchProviderConfig(projectId, { signal: controller.signal }).then(setConfig).catch(() => {});
-      void fetchProviderLogs(projectId, { signal: controller.signal, level: activeLogLevel }).then((response) => setLogs(response.logs)).catch(() => {});
+      void fetchProviderLogs(projectId, { signal: controller.signal }).then((response) => setLogs(response.logs)).catch(() => {});
       void fetchActiveTasks({ signal: controller.signal, timeoutMs: 1200 }).then((response) => setActiveTasks(response.tasks)).catch(() => {});
     };
     load();
@@ -88,7 +131,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       controller.abort();
       window.clearInterval(interval);
     };
-  }, [activeLogLevel, projectId]);
+  }, [projectId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -120,8 +163,8 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     setQueuedAction(null);
     void fetchProviderDetail(projectId, { timeoutMs: 1500 }).then(setProjectData).catch(() => {});
     void fetchProviderStatus(projectId, { timeoutMs: 1500 }).then(setStatus).catch(() => {});
-    void fetchProviderLogs(projectId, { timeoutMs: 1500, level: activeLogLevel }).then((response) => setLogs(response.logs)).catch(() => {});
-  }, [activeLogLevel, activeTasks, projectId, queuedAction]);
+    void fetchProviderLogs(projectId, { timeoutMs: 1500 }).then((response) => setLogs(response.logs)).catch(() => {});
+  }, [activeTasks, projectId, queuedAction]);
 
   useEffect(() => {
     const latestLog = logs.at(-1);
@@ -172,7 +215,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       setQueuedAction({ taskId: response.taskId, action, queuedAt: Date.now() });
       const [nextStatus, nextLogs] = await Promise.all([
         fetchProviderStatus(projectId, { timeoutMs: 1500 }).catch(() => null),
-        fetchProviderLogs(projectId, { timeoutMs: 1500, level: activeLogLevel }).catch(() => null),
+        fetchProviderLogs(projectId, { timeoutMs: 1500 }).catch(() => null),
         fetchActiveTasks({ timeoutMs: 1500 }).then((response) => setActiveTasks(response.tasks)).catch(() => null),
       ]);
       if (nextStatus) setStatus(nextStatus);
@@ -354,8 +397,8 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       <section className="logs-panel" aria-labelledby="logs-title">
         <div className="logs-heading">
           <div>
-            <h2 id="logs-title">Logs</h2>
-            <p>Install/runtime/system output from backend provider runtime.</p>
+            <h2 id="logs-title">Provider activity</h2>
+            <p>Progress stays readable while detailed logs keep the full provider output.</p>
           </div>
           <div className="log-actions">
             <button type="button" aria-label="Copy logs">
@@ -367,46 +410,92 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
           </div>
         </div>
 
-        <div className="log-filter" aria-label="Log filter">
-          {logLevels.map((level) => (
-            <button
-              key={level}
-              type="button"
-              className={activeLogLevel === level ? "is-active" : undefined}
-              onClick={() => setActiveLogLevel(level)}
-            >
-              {level}
-            </button>
-          ))}
+        <div className="log-tabs" role="tablist" aria-label="Provider log views">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeLogTab === "progress"}
+            className={activeLogTab === "progress" ? "is-active" : undefined}
+            onClick={() => setActiveLogTab("progress")}
+          >
+            Progress
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeLogTab === "details"}
+            className={activeLogTab === "details" ? "is-active" : undefined}
+            onClick={() => setActiveLogTab("details")}
+          >
+            Detailed logs
+          </button>
         </div>
 
-        <div
-          className="terminal-frame"
-          ref={terminalRef}
-          onScroll={() => {
-            const frame = terminalRef.current;
-            if (!frame || !isLogFeedActive) {
-              return;
-            }
-            const isNearBottom = frame.scrollHeight - frame.scrollTop - frame.clientHeight < 10;
-            if (!isNearBottom) {
-              frame.scrollTop = frame.scrollHeight;
-            }
-          }}
-        >
-          {visibleLogs.length === 0 ? (
-            <p className="empty-log">No logs for this filter.</p>
-          ) : (
-            visibleLogs.map((log) => (
-              <div key={log.id} className={clsx("log-line", `log-${log.level}`)}>
-                <span>{new Date(log.timestamp).toLocaleTimeString("vi-VN")}</span>
-                <strong>{log.level}</strong>
-                <p>{log.message}</p>
-              </div>
-            ))
-          )}
-        </div>
-        <p className="log-follow-state">{isLogFeedActive ? "Live logs: auto-follow enabled." : "Logs idle: you can scroll manually."}</p>
+        {activeLogTab === "details" ? (
+          <div className="log-filter" aria-label="Log filter">
+            {logLevels.map((level) => (
+              <button
+                key={level}
+                type="button"
+                className={activeLogLevel === level ? "is-active" : undefined}
+                onClick={() => setActiveLogLevel(level)}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {activeLogTab === "progress" ? (
+          <div className="progress-feed" role="tabpanel" aria-label="Provider progress">
+            {progressEvents.length === 0 ? (
+              <p className="empty-log">No provider progress yet.</p>
+            ) : (
+              progressEvents.map((event) => (
+                <div key={event.id} className={clsx("progress-event", `progress-event-${event.tone}`)}>
+                  <span>{event.label}</span>
+                  <p>{event.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <>
+            <div
+              className="terminal-frame"
+              ref={terminalRef}
+              role="tabpanel"
+              aria-label="Detailed provider logs"
+              onScroll={() => {
+                const frame = terminalRef.current;
+                if (!frame || !isLogFeedActive) {
+                  return;
+                }
+                const isNearBottom = frame.scrollHeight - frame.scrollTop - frame.clientHeight < 10;
+                if (!isNearBottom) {
+                  frame.scrollTop = frame.scrollHeight;
+                }
+              }}
+            >
+              {visibleLogs.length === 0 ? (
+                <p className="empty-log">No logs for this filter.</p>
+              ) : (
+                visibleLogs.map((log) => (
+                  <div key={log.id} className={clsx("log-line", `log-${log.level}`)}>
+                    <span>{new Date(log.timestamp).toLocaleTimeString("vi-VN")}</span>
+                    <strong>{log.level}</strong>
+                    <p>{log.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+            <p className="log-follow-state">{isLogFeedActive ? "Live logs: auto-follow enabled." : "Logs idle: you can scroll manually."}</p>
+          </>
+        )}
+
+        {activeLogTab === "details" ? null : (
+          <p className="log-follow-state">{isLifecycleBusy ? "Progress is following the active provider task." : "Progress is idle."}</p>
+        )}
       </section>
     </div>
   );

@@ -44,6 +44,51 @@ function Wait-Http {
   throw "$Name did not become ready at $Url"
 }
 
+function Start-BashScript {
+  param(
+    [Parameter(Mandatory = $true)][string]$Bash,
+    [Parameter(Mandatory = $true)][string]$WorkingDirectory,
+    [Parameter(Mandatory = $true)][string[]]$Arguments,
+    [Parameter(Mandatory = $true)][string]$LogName
+  )
+  $OutPath = Join-Path $Root "logs\$LogName.out.log"
+  $ErrPath = Join-Path $Root "logs\$LogName.err.log"
+  Remove-Item -LiteralPath $OutPath, $ErrPath -ErrorAction SilentlyContinue
+  $ArgumentText = $Arguments -join " "
+  $Command = "start `"`" /min cmd.exe /c `" `"$Bash`" $ArgumentText > `"$OutPath`" 2> `"$ErrPath`" `""
+  Start-Process -FilePath "cmd.exe" -ArgumentList @("/c", $Command) -WorkingDirectory $WorkingDirectory -WindowStyle Hidden | Out-Null
+  Write-Output "Started PDF to Podcast bootstrap process."
+}
+
+function Write-BashScriptLog {
+  param([Parameter(Mandatory = $true)][string]$LogName)
+  $OutPath = Join-Path $Root "logs\$LogName.out.log"
+  $ErrPath = Join-Path $Root "logs\$LogName.err.log"
+  if (Test-Path $OutPath) { Get-Content -LiteralPath $OutPath -Tail 200 }
+  if (Test-Path $ErrPath) { Get-Content -LiteralPath $ErrPath -Tail 80 }
+}
+
+function Wait-File {
+  param([Parameter(Mandatory = $true)][string]$Path, [int]$Retries = 120)
+  for ($i = 1; $i -le $Retries; $i++) {
+    if (Test-Path $Path) { return }
+    Start-Sleep -Seconds 2
+  }
+  throw "Timed out waiting for $Path"
+}
+
+function Wait-PortMap {
+  param([Parameter(Mandatory = $true)][string]$Path, [int]$Retries = 120)
+  for ($i = 1; $i -le $Retries; $i++) {
+    if (Test-Path $Path) {
+      $Text = Get-Content -LiteralPath $Path -Raw
+      if ($Text -match "(?m)^FRONTEND_PORT=\d+" -and $Text -match "(?m)^API_SERVICE_PORT=\d+") { return }
+    }
+    Start-Sleep -Seconds 2
+  }
+  throw "Timed out waiting for complete port map at $Path"
+}
+
 New-Item -ItemType Directory -Force -Path "$Root\logs", "$Root\runtime" | Out-Null
 
 if ($env:AIHUB_DRY_RUN -ne "1") {
@@ -53,14 +98,9 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   }
 
   $Bash = Find-Bash
-  Push-Location $DeployDir
-  try {
-    $env:FRONTEND_PORT = $Port
-    & $Bash setup.sh --up
-    if ($LASTEXITCODE -ne 0) { throw "setup.sh --up failed with exit code $LASTEXITCODE" }
-  } finally {
-    Pop-Location
-  }
+  $env:FRONTEND_PORT = $Port
+  Start-BashScript -Bash $Bash -WorkingDirectory $DeployDir -Arguments @("setup.sh", "--up") -LogName "setup-up"
+  Wait-PortMap -Path (Join-Path $DeployDir ".auto-ports.env")
 }
 
 $Ports = Read-PortMap -DeployPath $DeployDir
@@ -69,6 +109,7 @@ $ApiPort = [int]$Ports.API_SERVICE_PORT
 if ($env:AIHUB_DRY_RUN -ne "1") {
   Wait-Http -Url "http://127.0.0.1:$ApiPort/health" -Name "API health"
   Wait-Http -Url "http://127.0.0.1:$FrontendPort" -Name "Gradio frontend"
+  Write-Output "PDF to Podcast bootstrap health checks passed."
 }
 
 $PidPath = Join-Path $DeployDir "frontend\.frontend.pid"
