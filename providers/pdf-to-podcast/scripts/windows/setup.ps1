@@ -7,6 +7,14 @@ $DeployDir = Join-Path $DeployRoot $Id
 $Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "7860" }
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
 $RepoUrl = "https://github.com/PhuongHo03/pdf-to-podcast.git"
+$ProviderEnvKeys = @(
+  "NVIDIA_API_KEY",
+  "ELEVENLABS_API_KEY",
+  "MAX_CONCURRENT_REQUESTS",
+  "MODEL_API_URL",
+  "DEFAULT_VOICE_1",
+  "DEFAULT_VOICE_2"
+)
 
 function Get-LocalEnvValue {
   param([string]$ProviderRoot, [string]$Key)
@@ -60,12 +68,11 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
     Copy-Item (Join-Path $DeployDir ".env.example") $EnvFile
   }
 
-  $NvidiaKey = $env:NVIDIA_API_KEY
-  if (-not $NvidiaKey) { $NvidiaKey = Get-LocalEnvValue -ProviderRoot $Root -Key "NVIDIA_API_KEY" }
-  $ElevenLabsKey = $env:ELEVENLABS_API_KEY
-  if (-not $ElevenLabsKey) { $ElevenLabsKey = Get-LocalEnvValue -ProviderRoot $Root -Key "ELEVENLABS_API_KEY" }
-  Set-EnvValue -Path $EnvFile -Key "NVIDIA_API_KEY" -Value $NvidiaKey
-  Set-EnvValue -Path $EnvFile -Key "ELEVENLABS_API_KEY" -Value $ElevenLabsKey
+  foreach ($Key in $ProviderEnvKeys) {
+    $Value = [Environment]::GetEnvironmentVariable($Key)
+    if (-not $Value) { $Value = Get-LocalEnvValue -ProviderRoot $Root -Key $Key }
+    Set-EnvValue -Path $EnvFile -Key $Key -Value $Value
+  }
 }
 
 $Status = @{ projectId=$Id; state="installed"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Installed"; progressPercent=100; health=@{ level="ok"; message="Installed" } }

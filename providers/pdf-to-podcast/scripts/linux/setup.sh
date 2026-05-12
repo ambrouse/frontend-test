@@ -8,6 +8,14 @@ DEPLOY_DIR="$DEPLOY_ROOT/$ID"
 PORT="${AIHUB_PORT:-7860}"
 BRANCH="${AIHUB_BRANCH:-main}"
 REPO_URL="https://github.com/PhuongHo03/pdf-to-podcast.git"
+PROVIDER_ENV_KEYS=(
+  NVIDIA_API_KEY
+  ELEVENLABS_API_KEY
+  MAX_CONCURRENT_REQUESTS
+  MODEL_API_URL
+  DEFAULT_VOICE_1
+  DEFAULT_VOICE_2
+)
 
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
 
@@ -55,10 +63,13 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
     cp "$DEPLOY_DIR/.env.example" "$ENV_FILE"
   fi
 
-  NVIDIA_VALUE="${NVIDIA_API_KEY:-$(local_env_value NVIDIA_API_KEY)}"
-  ELEVENLABS_VALUE="${ELEVENLABS_API_KEY:-$(local_env_value ELEVENLABS_API_KEY)}"
-  set_env_value "$ENV_FILE" NVIDIA_API_KEY "$NVIDIA_VALUE"
-  set_env_value "$ENV_FILE" ELEVENLABS_API_KEY "$ELEVENLABS_VALUE"
+  for key in "${PROVIDER_ENV_KEYS[@]}"; do
+    value="${!key:-}"
+    if [[ -z "$value" ]]; then
+      value="$(local_env_value "$key")"
+    fi
+    set_env_value "$ENV_FILE" "$key" "$value"
+  done
 fi
 
 python - "$ROOT/runtime/status.json" "$ID" "$PORT" <<'PY'
