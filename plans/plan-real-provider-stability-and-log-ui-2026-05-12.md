@@ -85,5 +85,16 @@
   - Provider runtime/log folders con `.gitkeep`.
   - Build/cache/test artifacts da don.
 - Con lai:
-  - Commit/push source goc.
-  - Xoa source hien tai, clone moi tu GitHub, restore key local, setup va lap lai lifecycle that cho 3 provider.
+  - Don artifact lan cuoi.
+  - Push log/doc ket qua clean clone.
+
+## Ket qua clean clone
+- Source local da duoc xoa va clone lai tu `https://github.com/ambrouse/frontend-test.git`.
+- Commit clean clone duoc test: `37ea4f7`.
+- `.env.local` da restore tu backup local ignored, khong in key.
+- `setup.ps1` pass tren clean clone.
+- Backend/frontend pass health tren clean clone.
+- Lifecycle that tren clean clone:
+  - `pdf-to-podcast`: pass tu `4e9ffb6`.
+  - `agentic-commerce-blueprint`: pass tu `426454f`.
+  - `multi-agent-intelligent-warehouse`: pass tu `4729d72`.

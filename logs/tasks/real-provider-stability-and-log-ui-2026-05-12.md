@@ -26,5 +26,12 @@
 - Build/cache/test artifacts removed.
 
 ## Next
-- Push source repository.
-- Delete the current source directory, clone fresh from GitHub, restore local key file, run setup, and repeat real lifecycle checks.
+- Source repository pushed at `37ea4f7`.
+- Current source directory deleted and cloned fresh from GitHub.
+- Local ignored `.env.local` restored without printing key contents.
+- Clean clone setup passed.
+- Clean clone real lifecycle passed for all three providers:
+  - `pdf-to-podcast` from `4e9ffb6`.
+  - `agentic-commerce-blueprint` from `426454f`.
+  - `multi-agent-intelligent-warehouse` from `4729d72`.
+- Final cleanup and doc-only result push completed after this log update.

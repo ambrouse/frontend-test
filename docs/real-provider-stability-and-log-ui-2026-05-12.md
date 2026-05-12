@@ -70,3 +70,17 @@ The final Hub install for `pdf-to-podcast` cloned commit `4e9ffb6` from GitHub a
 
 ## Follow-up Gate
 - After this report is pushed, the repository must be cloned fresh from GitHub, `.env.local` restored locally, setup run again, and all three real provider lifecycles repeated from clean clone state.
+
+## Clean Clone Gate Result
+- Source was deleted locally and cloned again from `https://github.com/ambrouse/frontend-test.git`.
+- Clean clone commit under test: `37ea4f7`.
+- `.env.local` was restored from a local ignored backup; the key was not printed or committed.
+- `setup.ps1` completed successfully from the clean clone.
+- Backend and frontend started from the clean clone and responded on:
+  - `http://127.0.0.1:8000/api/health`
+  - `http://127.0.0.1:3000/hub/pdf-to-podcast`
+- Final clean clone lifecycle:
+  - `pdf-to-podcast`: passed from `https://github.com/PhuongHo03/pdf-to-podcast.git@4e9ffb6`.
+  - `agentic-commerce-blueprint`: passed from `https://github.com/baolnq-ai/Agentic-Commerce-blueprint-provider-@426454f`.
+  - `multi-agent-intelligent-warehouse`: passed from `https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia@4729d72`.
+- Each provider completed `delete -> install -> run -> status/logs/metrics -> stop -> delete` without dry-run or fallback.
