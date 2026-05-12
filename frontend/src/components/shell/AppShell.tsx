@@ -116,18 +116,18 @@ function ThemeToggle() {
   const [theme, setTheme] = useState<ThemeMode>("dark");
   const switchTimer = useRef<number | null>(null);
 
+  const applyTheme = (nextTheme: ThemeMode) => {
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem("ai-hub-theme", nextTheme);
+    setTheme(nextTheme);
+  };
+
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("ai-hub-theme") as ThemeMode | null;
     const preferredTheme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
     const nextTheme = savedTheme ?? preferredTheme;
-    setTheme(nextTheme);
-    document.documentElement.dataset.theme = nextTheme;
+    applyTheme(nextTheme);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("ai-hub-theme", theme);
-  }, [theme]);
 
   useEffect(() => {
     return () => {
@@ -140,14 +140,18 @@ function ThemeToggle() {
 
   const handleToggleTheme = () => {
     const root = document.documentElement;
+    const nextTheme = theme === "dark" ? "light" : "dark";
     root.dataset.themeSwitching = "1";
-    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
     if (switchTimer.current !== null) {
       window.clearTimeout(switchTimer.current);
     }
-    switchTimer.current = window.setTimeout(() => {
-      delete root.dataset.themeSwitching;
-    }, 240);
+
+    window.requestAnimationFrame(() => {
+      applyTheme(nextTheme);
+      switchTimer.current = window.setTimeout(() => {
+        delete root.dataset.themeSwitching;
+      }, 120);
+    });
   };
 
   return (

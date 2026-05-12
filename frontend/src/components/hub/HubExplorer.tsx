@@ -29,11 +29,28 @@ type HubCachePayload = {
   cachedAt: string;
 };
 
+function readHubCache() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const cachedRaw = window.sessionStorage.getItem(HUB_CACHE_KEY);
+  if (!cachedRaw) {
+    return null;
+  }
+  try {
+    return JSON.parse(cachedRaw) as HubCachePayload;
+  } catch {
+    window.sessionStorage.removeItem(HUB_CACHE_KEY);
+    return null;
+  }
+}
+
 export function HubExplorer() {
+  const [initialCache] = useState<HubCachePayload | null>(() => readHubCache());
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
   const [query, setQuery] = useState("");
-  const [projects, setProjects] = useState<HubProject[]>([]);
-  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>([]);
+  const [projects, setProjects] = useState<HubProject[]>(() => initialCache?.providers ?? []);
+  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(() => initialCache?.featuredProjects ?? []);
   const [activeSlide, setActiveSlide] = useState(0);
   const [previousProject, setPreviousProject] = useState<HubProject | null>(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -79,22 +96,7 @@ export function HubExplorer() {
   useEffect(() => {
     const controller = new AbortController();
 
-    let hasCachedData = false;
-    const cachedRaw = window.sessionStorage.getItem(HUB_CACHE_KEY);
-    if (cachedRaw) {
-      try {
-        const cached = JSON.parse(cachedRaw) as HubCachePayload;
-        startTransition(() => {
-          setProjects(cached.providers);
-          setFeaturedProjects(cached.featuredProjects);
-          setActiveSlide(0);
-          setIsOffline(false);
-        });
-        hasCachedData = cached.providers.length > 0 || cached.featuredProjects.length > 0;
-      } catch {
-        window.sessionStorage.removeItem(HUB_CACHE_KEY);
-      }
-    }
+    const hasCachedData = Boolean(initialCache?.providers.length || initialCache?.featuredProjects.length);
 
     void Promise.all([
       fetchProviders({ signal: controller.signal }),
@@ -124,7 +126,7 @@ export function HubExplorer() {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [initialCache]);
 
   useEffect(() => {
     if (featuredProjects.length === 0) {

@@ -95,6 +95,20 @@ body {
   animation: none !important;
 }
 
+:root[data-theme-switching="1"] body {
+  background-attachment: scroll, scroll, scroll, scroll, scroll;
+}
+
+:root[data-theme-switching="1"] body::before {
+  opacity: 0;
+}
+
+:root[data-theme-switching="1"] .hub-carousel-bg,
+:root[data-theme-switching="1"] .project-card-image,
+:root[data-theme-switching="1"] .detail-hero {
+  filter: none !important;
+}
+
 body::before {
   position: fixed;
   inset: 0;
