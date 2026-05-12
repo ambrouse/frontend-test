@@ -12,6 +12,7 @@ import type {
 
 const DEFAULT_API_BASE = "http://127.0.0.1:8000";
 const FAST_TIMEOUT_MS = 250;
+const SELECTED_PROVIDER_CACHE_KEY = "hub-selected-provider-v1";
 
 type ProviderListResponse = {
   providers: HubProject[];
@@ -40,6 +41,24 @@ export function getApiBase() {
 
 export function resolveApiAssetUrl(url: string) {
   return url.startsWith("/api/") ? `${getApiBase()}${url}` : url;
+}
+
+export function cacheSelectedProvider(project: HubProject) {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(SELECTED_PROVIDER_CACHE_KEY, JSON.stringify(project));
+}
+
+export function readSelectedProvider(providerId: string) {
+  if (typeof window === "undefined") return null;
+  const cachedRaw = window.sessionStorage.getItem(SELECTED_PROVIDER_CACHE_KEY);
+  if (!cachedRaw) return null;
+  try {
+    const cached = JSON.parse(cachedRaw) as HubProject;
+    return cached.id === providerId ? cached : null;
+  } catch {
+    window.sessionStorage.removeItem(SELECTED_PROVIDER_CACHE_KEY);
+    return null;
+  }
 }
 
 export async function fetchProviders(options?: { signal?: AbortSignal; timeoutMs?: number }) {

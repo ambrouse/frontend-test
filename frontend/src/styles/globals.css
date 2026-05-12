@@ -1312,6 +1312,9 @@ button {
 .project-card {
   position: relative;
   container-type: inline-size;
+  contain: layout paint style;
+  content-visibility: auto;
+  contain-intrinsic-size: 280px;
   display: grid;
   aspect-ratio: 16 / 9;
   height: auto;

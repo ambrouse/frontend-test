@@ -6,8 +6,6 @@ type ProjectPageProps = {
   }>;
 };
 
-export const dynamic = "force-dynamic";
-
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
   return <ProjectDetailView projectId={projectId} />;

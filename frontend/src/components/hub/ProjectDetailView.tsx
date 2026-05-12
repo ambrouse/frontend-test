@@ -12,6 +12,7 @@ import {
   fetchProviderMetrics,
   fetchProviderStatus,
   providerAction,
+  readSelectedProvider,
   resolveApiAssetUrl,
 } from "@/services/apiClient";
 import { emptyHardwareSnapshot } from "@/services/emptyState";
@@ -34,7 +35,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const [activeLogTab, setActiveLogTab] = useState<LogPanelTab>("progress");
   const [activeLogLevel, setActiveLogLevel] = useState<LogLevel | "all">("all");
   const [activeVisualIndex, setActiveVisualIndex] = useState(0);
-  const [projectData, setProjectData] = useState<HubProject | null>(project ?? null);
+  const [projectData, setProjectData] = useState<HubProject | null>(() => project ?? readSelectedProvider(projectId));
   const [hardware, setHardware] = useState<HardwareSnapshot>(emptyHardwareSnapshot);
   const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [metrics, setMetrics] = useState<ProviderMetrics | null>(null);

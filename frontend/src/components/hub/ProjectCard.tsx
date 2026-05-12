@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Box, Cpu, Database, HardDrive } from "lucide-react";
 import { memo } from "react";
-import { resolveApiAssetUrl } from "@/services/apiClient";
+import { cacheSelectedProvider, resolveApiAssetUrl } from "@/services/apiClient";
 import type { HubProject } from "@/services/types";
 import { formatMemory, formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
@@ -41,7 +41,7 @@ function ProjectCardComponent({ project }: { project: HubProject }) {
         ))}
       </div>
 
-      <div className="requirement-row" aria-label="Yêu cầu tối thiểu">
+      <div className="requirement-row" aria-label="Minimum requirements">
         <span>
           <Cpu size={14} aria-hidden="true" />
           {project.requirements.minimum.cpuCores}c
@@ -61,7 +61,12 @@ function ProjectCardComponent({ project }: { project: HubProject }) {
           <span>Last metric</span>
           <strong>{project.lastBenchmark.headlineMetric}</strong>
         </div>
-        <Link href={`/hub/${project.id}`} className="open-link" aria-label={`Mở ${project.name}`}>
+        <Link
+          href={`/hub/${project.id}`}
+          className="open-link"
+          aria-label={`Open ${project.name}`}
+          onClick={() => cacheSelectedProvider(project)}
+        >
           <ArrowUpRight size={18} aria-hidden="true" />
         </Link>
       </div>
