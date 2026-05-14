@@ -32,7 +32,7 @@ It focuses on three things:
 
 | Provider | GitHub source | Port | Mode | Lifecycle |
 | --- | --- | ---: | --- | --- |
-| PDF to Podcast | `PhuongHo03/pdf-to-podcast` | `7860` (frontend) / dynamic API port | Git Bash + Python/Gradio + NVIDIA API | Install, run, logs, metrics, stop, delete |
+| PDF to Podcast | `PhuongHo03/pdf-to-podcast` | `7860` (frontend) / dynamic API port | Git Bash + Docker Compose + Python/Gradio + NVIDIA/ElevenLabs API | Install, run, logs, metrics, stop, delete |
 | Agentic Commerce Blueprint | `baolnq-ai/Agentic-Commerce-blueprint-provider-` | `8088` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
 | Multi-Agent Intelligent Warehouse | `baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia` | `3001` (frontend) / `8091` (backend API) | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
 
@@ -203,7 +203,8 @@ GitHub Actions currently checks:
 - Never commit `.env`, `.env.local`, provider logs, runtime files, or `deploy/` contents.
 - NVIDIA API keys are accepted through setup or lifecycle requests and written only to ignored local files.
 - Hardware shortages are shown as warnings. Missing required tools are shown clearly and provider scripts fail with actionable messages.
-- Provider source fixes should be made upstream first, then retested through Hub install from GitHub.
+- Provider source fixes should be made upstream first, pushed to the provider repo, then retested through Hub install from GitHub.
+- PDF to Podcast upstream main is verified at `e336a89` with retry-hardened Python dependency installs for Docker and local setup.
 
 ## License
 
