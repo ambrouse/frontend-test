@@ -3,7 +3,7 @@ $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "ai-virtual-assistant-provid
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "3001" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "13001" }
 New-Item -ItemType Directory -Force -Path "$Root\logs", "$Root\runtime" | Out-Null
 Sync-Repo -RepoUrl "https://github.com/mionm/ai-virtual-assistant-provider.git" -Branch $Branch -DeployDir $DeployDir
 if ($env:AIHUB_DRY_RUN -ne "1") {

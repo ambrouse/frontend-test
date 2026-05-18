@@ -58,6 +58,21 @@ def test_provider_config_reports_port_conflict() -> None:
     local_config.unlink(missing_ok=True)
 
 
+def test_reserved_hub_frontend_port_blocks_lifecycle_script() -> None:
+    local_config = repo_root() / "providers/agentic-commerce-blueprint/runtime/config.local.json"
+    local_config.unlink(missing_ok=True)
+    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 3000})
+
+    install = client.post("/api/providers/agentic-commerce-blueprint/install", json={"dryRun": False})
+    assert install.status_code == 200
+    task = _wait_task(install.json()["taskId"])
+
+    assert task["status"] == "failed"
+    assert "reserved for the Hub frontend dev server" in task["currentStep"]
+    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 8088})
+    local_config.unlink(missing_ok=True)
+
+
 def test_provider_config_persists_local_env_without_touching_defaults() -> None:
     local_config = repo_root() / "providers/pdf-to-podcast/runtime/config.local.json"
     local_config.unlink(missing_ok=True)

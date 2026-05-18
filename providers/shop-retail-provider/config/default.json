@@ -1,7 +1,7 @@
 {
   "profile": "api mode",
   "branch": "main",
-  "port": 3000,
+  "port": 13000,
   "installDirectory": "deploy/shop-retail-provider",
   "env": {
     "NVIDIA_API_KEY": "",

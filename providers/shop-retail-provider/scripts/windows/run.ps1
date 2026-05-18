@@ -2,7 +2,7 @@
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "shop-retail-provider" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "3000" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "13000" }
 $ChainPort = $env:CHAIN_SERVER_PORT; if (-not $ChainPort) { $ChainPort = "8009" }
 $CatalogPort = $env:CATALOG_RETRIEVER_PORT; if (-not $CatalogPort) { $CatalogPort = "8010" }
 $MemoryPort = $env:MEMORY_RETRIEVER_PORT; if (-not $MemoryPort) { $MemoryPort = "8011" }

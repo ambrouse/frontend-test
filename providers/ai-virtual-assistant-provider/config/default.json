@@ -1,7 +1,7 @@
 {
   "profile": "hosted api mode",
   "branch": "main",
-  "port": 3001,
+  "port": 13001,
   "installDirectory": "deploy/aiva",
   "env": {
     "NVIDIA_API_KEY": "",

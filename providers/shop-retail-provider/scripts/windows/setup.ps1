@@ -3,7 +3,7 @@ $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "shop-retail-provider" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "3000" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "13000" }
 $RepoUrl = "https://github.com/mionm/Shop-Retail-Provider-mion-.git"
 New-Item -ItemType Directory -Force -Path "$Root\logs", "$Root\runtime" | Out-Null
 Sync-Repo -RepoUrl $RepoUrl -Branch $Branch -DeployDir $DeployDir

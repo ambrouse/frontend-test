@@ -46,6 +46,9 @@ No secrets, API keys, runtime local config, provider logs, Docker volumes, or de
 - Provider manifest/catalog validation after delete cleanup changes: passed with 7 manifests.
 - Backend provider tests after delete cleanup changes: 14 passed across provider registry, API contract, and lifecycle tests.
 - Frontend interruption follow-up: repeated syntax, dry-run delete, seven-provider setup-delete, provider validation, and backend provider tests after removing shared auto-kill behavior; all passed.
+- Frontend install crash follow-up: identified remaining risk as provider UI port collisions with Hub dev ports `3000`/`3001`; moved Shop Retail to `13000`, AI Virtual Assistant to `13001`, Warehouse to `13002`, and Warehouse nginx to `13003`.
+- Added backend reserved-port guard and regression test so provider lifecycle scripts fail before execution if a local config attempts to use `3000` or `3001`.
+- Validation after port-collision fix: provider manifests passed, backend provider tests passed with 15 tests, frontend typecheck passed, seven-provider Windows setup-delete passed, and `deploy/` was clean.
 
 ## Next
 

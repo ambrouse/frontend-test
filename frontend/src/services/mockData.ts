@@ -1,4 +1,4 @@
-﻿import { evaluateCompatibility } from "./compatibility";
+import { evaluateCompatibility } from "./compatibility";
 import type { HardwareSnapshot, HubProject, ProjectLog, RunningTask } from "./types";
 
 export const hardwareSnapshot: HardwareSnapshot = {
@@ -223,7 +223,7 @@ const projectsSeed = [
         "editableConfig":  {
                                "profile":  "hosted api mode",
                                "branch":  "main",
-                               "port":  3001,
+                               "port":  13001,
                                "installDirectory":  "deploy/aiva"
                            },
         "environment":  {
@@ -291,8 +291,8 @@ const projectsSeed = [
                           },
         "lastRunAt":  "2026-05-13T00:00:00.000Z",
         "runtime":  {
-                        "defaultPort":  3001,
-                        "healthUrl":  "http://localhost:3001",
+                        "defaultPort":  13001,
+                        "healthUrl":  "http://localhost:13001",
                         "metricsUrl":  "http://localhost:9000/agent/health",
                         "statusFile":  "runtime/status.json",
                         "metricsFile":  "runtime/metrics.json",
@@ -651,7 +651,7 @@ const projectsSeed = [
         "editableConfig":  {
                                "profile":  "api mode",
                                "branch":  "main",
-                               "port":  3000,
+                               "port":  13000,
                                "installDirectory":  "deploy/shop-retail-provider"
                            },
         "environment":  {
@@ -717,8 +717,8 @@ const projectsSeed = [
                           },
         "lastRunAt":  "2026-05-13T00:00:00.000Z",
         "runtime":  {
-                        "defaultPort":  3000,
-                        "healthUrl":  "http://localhost:3000/api/health",
+                        "defaultPort":  13000,
+                        "healthUrl":  "http://localhost:13000/api/health",
                         "metricsUrl":  "http://localhost:8009/health",
                         "statusFile":  "runtime/status.json",
                         "metricsFile":  "runtime/metrics.json",
@@ -784,7 +784,7 @@ const projectsSeed = [
         "editableConfig":  {
                                "profile":  "dev compose",
                                "branch":  "main",
-                               "port":  3001,
+                               "port":  13002,
                                "installDirectory":  "deploy/multi-agent-intelligent-warehouse"
                            },
         "environment":  {
@@ -849,8 +849,8 @@ const projectsSeed = [
                                              ],
                             "setupNotes":  [
                                                "Install clones the source into deploy/multi-agent-intelligent-warehouse.",
-                                               "Default Hub run path publishes frontend UI on the configured port (default 3001) and keeps backend API on host port 8091.",
-                                               "Frontend provider UI is exposed by the source stack on port 3001 and nginx on 3002 when running standalone."
+                                               "Default Hub run path publishes frontend UI on the configured port (default 13002) and keeps backend API on host port 8091.",
+                                               "Frontend provider UI is exposed by the source stack on port 13002 and nginx on 13003 when running standalone."
                                            ]
                         },
         "lastBenchmark":  {
@@ -863,7 +863,7 @@ const projectsSeed = [
                           },
         "lastRunAt":  "2026-05-10T00:00:00.000Z",
         "runtime":  {
-                        "defaultPort":  3001,
+                        "defaultPort":  13002,
                         "healthUrl":  "http://localhost:8091/api/v1/health",
                         "metricsUrl":  "http://localhost:8091/metrics",
                         "statusFile":  "runtime/status.json",

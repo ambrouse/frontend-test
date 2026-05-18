@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/multi-agent-intelligent-warehouse}"
-FRONTEND_PORT="${AIHUB_PORT:-3001}"
+FRONTEND_PORT="${AIHUB_PORT:-13002}"
 BACKEND_PORT="${AIHUB_BACKEND_PORT:-8091}"
 SAMPLED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 

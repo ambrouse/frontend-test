@@ -2,7 +2,7 @@
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "ai-virtual-assistant-provider" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "3001" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "13001" }
 $ApiPort = $env:API_GATEWAY_PORT; if (-not $ApiPort) { $ApiPort = "9000" }
 $PgadminPort = $env:PGADMIN_PORT; if (-not $PgadminPort) { $PgadminPort = "5050" }
 New-Item -ItemType Directory -Force -Path "$Root\logs", "$Root\runtime" | Out-Null

@@ -1,14 +1,14 @@
 {
   "profile": "dev compose",
   "branch": "main",
-  "port": 3001,
+  "port": 13002,
   "installDirectory": "deploy/multi-agent-intelligent-warehouse",
   "env": {
     "NVIDIA_API_KEY": "",
     "EMBEDDING_API_KEY": "",
     "RAIL_API_KEY": "",
     "AIHUB_BACKEND_PORT": "8091",
-    "HOST_NGINX_PORT": "3002",
+    "HOST_NGINX_PORT": "13003",
     "HOST_POSTGRES_PORT": "5435",
     "HOST_REDIS_PORT": "6381",
     "HOST_KAFKA_PORT": "9095",

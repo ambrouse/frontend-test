@@ -27,6 +27,8 @@ Keep AI Hub focused on seven active providers and make the repository clearer fo
 - Updated provider delete wrappers so provider-owned Docker Compose cleanup runs before deploy removal, including volumes, orphans, and local images.
 - Hardened Windows deploy removal for transient locked files by retrying, clearing read-only attributes, and deferring cleanup after a safe rename without killing unrelated processes.
 - Restricted AIQ Windows stop fallback process termination to processes running from `deploy/aiq`.
+- Moved provider UI defaults away from Hub frontend dev ports: Shop Retail uses `13000`, AI Virtual Assistant uses `13001`, and Warehouse uses `13002` with nginx on `13003`.
+- Added backend lifecycle protection so provider scripts are blocked if a local config tries to use reserved Hub frontend ports `3000` or `3001`.
 
 ## Verification
 
@@ -38,6 +40,8 @@ Keep AI Hub focused on seven active providers and make the repository clearer fo
 - Windows setup-delete verification passed for all seven active providers.
 - Provider manifest validation passed with exactly seven manifests.
 - Backend provider tests passed: provider registry, API contract, and lifecycle subsets all green.
+- Reserved-port regression test passed: lifecycle scripts fail before execution when a provider is configured to use Hub frontend port `3000`.
+- Frontend TypeScript typecheck passed after updating fallback provider ports.
 
 ## Remaining Release Gate
 

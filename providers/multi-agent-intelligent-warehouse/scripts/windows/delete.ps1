@@ -2,7 +2,7 @@
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "multi-agent-intelligent-warehouse" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "3001" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "13002" }
 $ComposeDir = Join-Path $DeployDir "deploy\compose"
 if ((Test-Path -LiteralPath (Join-Path $ComposeDir ".env")) -and (Test-Path -LiteralPath (Join-Path $ComposeDir "docker-compose.dev.yaml"))) {
   Invoke-DockerComposeCleanup -WorkingDirectory $DeployDir -ComposeArgs @("--env-file", "deploy/compose/.env", "-f", "deploy/compose/docker-compose.dev.yaml")
