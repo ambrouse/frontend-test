@@ -25,7 +25,8 @@ Keep AI Hub focused on seven active providers and make the repository clearer fo
 - Updated README with fresh clone instructions, active provider table, lifecycle notes, CI/CD checks, and release packaging guidance.
 - Added `banner.jpg` at the repository root for README hero usage.
 - Updated provider delete wrappers so provider-owned Docker Compose cleanup runs before deploy removal, including volumes, orphans, and local images.
-- Hardened Windows deploy removal for transient locked files by retrying, clearing read-only attributes, stopping path-bound processes, and deferring cleanup after a safe rename when needed.
+- Hardened Windows deploy removal for transient locked files by retrying, clearing read-only attributes, and deferring cleanup after a safe rename without killing unrelated processes.
+- Restricted AIQ Windows stop fallback process termination to processes running from `deploy/aiq`.
 
 ## Verification
 

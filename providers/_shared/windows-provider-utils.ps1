@@ -109,19 +109,6 @@ function Invoke-DockerComposeCleanup {
   }
 }
 
-function Stop-ProcessesUsingPath {
-  param([string]$Path)
-  $ResolvedPath = [System.IO.Path]::GetFullPath($Path)
-  try {
-    $Processes = Get-CimInstance Win32_Process | Where-Object {
-      $_.ProcessId -ne $PID -and $_.CommandLine -and $_.CommandLine.IndexOf($ResolvedPath, [System.StringComparison]::OrdinalIgnoreCase) -ge 0
-    }
-    foreach ($Process in $Processes) {
-      try { Stop-Process -Id $Process.ProcessId -Force -ErrorAction Stop } catch {}
-    }
-  } catch {}
-}
-
 function Remove-DeployDirSafe {
   param([string]$DeployDir)
   if ($env:AIHUB_DRY_RUN -eq "1" -or !(Test-Path -LiteralPath $DeployDir)) { return }
@@ -134,7 +121,6 @@ function Remove-DeployDirSafe {
     throw "Refusing to delete outside deploy root: $ResolvedDeployDir"
   }
 
-  Stop-ProcessesUsingPath -Path $ResolvedDeployDir
   Get-ChildItem -LiteralPath $DeployDir -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object {
     try { $_.Attributes = $_.Attributes -band (-bnot [System.IO.FileAttributes]::ReadOnly) } catch {}
   }
@@ -146,7 +132,6 @@ function Remove-DeployDirSafe {
       return
     } catch {
       $LastError = $_
-      Stop-ProcessesUsingPath -Path $ResolvedDeployDir
       Start-Sleep -Milliseconds $DelayMs
     }
   }

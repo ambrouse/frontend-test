@@ -14,11 +14,17 @@ function Find-Bash {
 }
 
 function Stop-PortProcess {
-  param([int]$Port)
+  param([int]$Port, [string]$DeployPath)
   try {
+    $ResolvedDeployPath = [System.IO.Path]::GetFullPath($DeployPath)
     Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop |
       Select-Object -ExpandProperty OwningProcess -Unique |
-      ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
+      ForEach-Object {
+        $Process = Get-CimInstance Win32_Process -Filter "ProcessId = $_" -ErrorAction SilentlyContinue
+        if ($Process -and $Process.CommandLine -and $Process.CommandLine.IndexOf($ResolvedDeployPath, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+          Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue
+        }
+      }
   } catch {}
 }
 
@@ -45,9 +51,9 @@ if (Test-Path $DeployDir) {
 
 $PortsPath = Join-Path $DeployDir ".runtime\ports.env"
 $Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-StringData } else { @{ FRONTEND_PORT = "13080"; BACKEND_PORT = "18080"; NEXT_INTERNAL_PORT = "13081" } }
-Stop-PortProcess -Port ([int]$Ports.FRONTEND_PORT)
-Stop-PortProcess -Port ([int]$Ports.NEXT_INTERNAL_PORT)
-Stop-PortProcess -Port ([int]$Ports.BACKEND_PORT)
+Stop-PortProcess -Port ([int]$Ports.FRONTEND_PORT) -DeployPath $DeployDir
+Stop-PortProcess -Port ([int]$Ports.NEXT_INTERNAL_PORT) -DeployPath $DeployDir
+Stop-PortProcess -Port ([int]$Ports.BACKEND_PORT) -DeployPath $DeployDir
 Stop-UiOrphans
 
 New-Item -ItemType Directory -Force -Path "$Root\runtime" | Out-Null
