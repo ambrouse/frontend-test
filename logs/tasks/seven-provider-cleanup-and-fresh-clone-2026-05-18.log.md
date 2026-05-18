@@ -39,7 +39,12 @@ No secrets, API keys, runtime local config, provider logs, Docker volumes, or de
 - Frontend unit tests: passed.
 - Frontend production build: passed.
 - PowerShell provider script syntax check: completed without reported parser errors.
+- Provider delete cleanup update: Windows and Linux delete wrappers now call provider-specific Docker Compose cleanup with volumes, orphans, and local image removal before removing deploy directories.
+- Windows delete robustness: deploy removal now retries locked files, stops processes whose command line references the deploy path, clears read-only attributes, and renames locked deploy folders for deferred cleanup if needed.
+- Seven-provider Windows setup-delete verification: passed for `agentic-commerce-blueprint`, `ai-virtual-assistant-provider`, `aiq`, `nemotron-voice-agent-provider`, `shop-retail-provider`, `multi-agent-intelligent-warehouse`, and `pdf-to-podcast`.
+- Provider manifest/catalog validation after delete cleanup changes: passed with 7 manifests.
+- Backend provider tests after delete cleanup changes: 14 passed across provider registry, API contract, and lifecycle tests.
 
 ## Next
 
-Stage only project cleanup/release files, commit, push, monitor CI, then create release artifacts if CI stays green.
+Stage only provider cleanup and task documentation/log files, commit, push, then monitor CI.

@@ -1,21 +1,13 @@
-$ErrorActionPreference = "Stop"
-
+. "$PSScriptRoot\..\..\..\_shared\windows-provider-utils.ps1"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "aiq" }
-$Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
-$DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
-$DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
-
-& (Join-Path $Root "scripts\windows\stop.ps1") | Out-Null
-
-if (Test-Path $DeployDir) {
-  $ResolvedDeployRoot = [System.IO.Path]::GetFullPath($DeployRoot)
-  $ResolvedDeployDir = [System.IO.Path]::GetFullPath($DeployDir)
-  if (-not $ResolvedDeployDir.StartsWith($ResolvedDeployRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-    throw "Refusing to delete outside deploy root: $ResolvedDeployDir"
-  }
-  Remove-Item -LiteralPath $DeployDir -Recurse -Force
+$Root = Get-ProviderRoot
+$DeployDir = Get-DeployDir -ProviderId $Id
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "13080" }
+$ComposeDir = Join-Path $DeployDir "deploy"
+if ((Test-Path -LiteralPath (Join-Path $ComposeDir ".env")) -and (Test-Path -LiteralPath (Join-Path $ComposeDir "docker-compose.yml"))) {
+  Invoke-DockerComposeCleanup -WorkingDirectory $ComposeDir -ComposeArgs @("--env-file", ".env", "-f", "docker-compose.yml")
 }
-
-$Status = @{ projectId=$Id; state="not_installed"; pid=$null; port=13080; platform="windows"; startedAt=$null; uptimeSec=0; currentStep="Deleted"; progressPercent=100; health=@{ level="unknown"; message="Deleted" } }
-$Status | ConvertTo-Json -Depth 5 | Set-Content "$Root\runtime\status.json" -Encoding utf8
-Write-Output (@{ state="not_installed" } | ConvertTo-Json -Compress)
+& (Join-Path $Root "scripts\windows\stop.ps1") | Out-Null
+Remove-DeployDirSafe -DeployDir $DeployDir
+Write-ProviderStatus -ProviderId $Id -Root $Root -State "not_installed" -Port ([int]$Port) -Step "Deleted AI-Q deploy and local Docker resources" -ExtraHealth @{ backendPort = 18080 }
+Write-Output (@{ state="deleted" } | ConvertTo-Json -Compress)

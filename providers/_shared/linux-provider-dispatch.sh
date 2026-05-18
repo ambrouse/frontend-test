@@ -151,6 +151,26 @@ stop_provider() {
   write_status stopped "Stopped"
 }
 
+cleanup_provider() {
+  [[ -d "$DEPLOY_DIR" && "${AIHUB_DRY_RUN:-}" != "1" ]] || return 0
+  case "$PROVIDER_ID" in
+    shop-retail-provider)
+      [[ -f "$DEPLOY_DIR/.env" && -f "$DEPLOY_DIR/docker-compose.yaml" ]] && (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yaml down --volumes --remove-orphans --rmi local || true)
+      ;;
+    nemotron-voice-agent-provider)
+      [[ -f "$DEPLOY_DIR/.env" && -f "$DEPLOY_DIR/docker-compose.yml" ]] && (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml down --volumes --remove-orphans --rmi local || true)
+      ;;
+    ai-virtual-assistant-provider)
+      if [[ -f "$DEPLOY_DIR/deploy/compose/docker-compose.yaml" ]]; then
+        local args=(--env-file .env -f deploy/compose/docker-compose.yaml)
+        [[ -f "$DEPLOY_DIR/.runtime/docker-compose.aihub.yaml" ]] && args+=(-f .runtime/docker-compose.aihub.yaml)
+        [[ -f "$DEPLOY_DIR/.runtime/docker-compose.cpu.yaml" ]] && args+=(-f .runtime/docker-compose.cpu.yaml)
+        (cd "$DEPLOY_DIR" && docker compose "${args[@]}" down --volumes --remove-orphans --rmi local || true)
+      fi
+      ;;
+  esac
+}
+
 metrics_provider() {
   mkdir -p "$ROOT/runtime"
   local running=0
@@ -171,7 +191,7 @@ case "$ACTION" in
   setup) setup_provider ;;
   run) run_provider ;;
   stop) stop_provider ;;
-  delete) stop_provider; rm -rf "$DEPLOY_DIR"; write_status not_installed "Deleted" ;;
+  delete) cleanup_provider; rm -rf "$DEPLOY_DIR"; write_status not_installed "Deleted" ;;
   health) [[ -f "$ROOT/runtime/status.json" ]] && cat "$ROOT/runtime/status.json" || echo '{"state":"unknown","health":{"level":"unknown","message":"No status file"}}' ;;
   metrics) metrics_provider ;;
   *) echo "Unknown action ${ACTION}" >&2; exit 2 ;;

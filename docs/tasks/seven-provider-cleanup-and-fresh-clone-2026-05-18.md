@@ -24,12 +24,19 @@ Keep AI Hub focused on seven active providers and make the repository clearer fo
 - Archived Ambient Healthcare docs as removed-provider history instead of active integration documentation.
 - Updated README with fresh clone instructions, active provider table, lifecycle notes, CI/CD checks, and release packaging guidance.
 - Added `banner.jpg` at the repository root for README hero usage.
+- Updated provider delete wrappers so provider-owned Docker Compose cleanup runs before deploy removal, including volumes, orphans, and local images.
+- Hardened Windows deploy removal for transient locked files by retrying, clearing read-only attributes, stopping path-bound processes, and deferring cleanup after a safe rename when needed.
 
 ## Verification
 
 - Backend provider registry/API contract subset passed after updating the seven-provider expectations.
 - Frontend provider detail tests passed.
 - Frontend TypeScript typecheck passed after adding provider command typing.
+- PowerShell and Bash provider delete script syntax checks passed.
+- Windows dry-run delete passed for all seven active providers.
+- Windows setup-delete verification passed for all seven active providers.
+- Provider manifest validation passed with exactly seven manifests.
+- Backend provider tests passed: provider registry, API contract, and lifecycle subsets all green.
 
 ## Remaining Release Gate
 

@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot\..\..\..\_shared\windows-provider-utils.ps1"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "agentic-commerce-blueprint" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
@@ -41,15 +42,20 @@ if ($env:AIHUB_DRY_RUN -eq "1") {
     $ExistingItem = Get-ChildItem -Force -LiteralPath $DeployDir -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($ExistingItem) { Remove-Item -LiteralPath $DeployDir -Recurse -Force }
   }
-  git clone --depth 1 --branch $Branch $RepoUrl $DeployDir
+  Invoke-GitChecked -Arguments @("clone", "--depth", "1", "--branch", $Branch, $RepoUrl, $DeployDir) -FailureMessage "git clone failed for $RepoUrl branch $Branch"
 } else {
-  git -C $DeployDir fetch --depth 1 origin $Branch
-  git -C $DeployDir checkout $Branch
-  git -C $DeployDir pull --ff-only
+  Invoke-GitChecked -Arguments @("-C", $DeployDir, "fetch", "--depth", "1", "origin", $Branch) -FailureMessage "git fetch failed for $RepoUrl branch $Branch"
+  Invoke-GitChecked -Arguments @("-C", $DeployDir, "checkout", $Branch) -FailureMessage "git checkout failed for branch $Branch"
+  Invoke-GitChecked -Arguments @("-C", $DeployDir, "pull", "--ff-only") -FailureMessage "git pull failed for branch $Branch"
 }
+if (!(Test-Path -LiteralPath $DeployDir)) { throw "deploy directory was not created: $DeployDir" }
 Update-DeploySource -DeployPath $DeployDir
 $EnvFile = Join-Path $DeployDir ".env"
-if (!(Test-Path $EnvFile)) { Copy-Item "$Root\.env.example" $EnvFile }
+$EnvExample = Join-Path $Root ".env.example"
+if (!(Test-Path $EnvFile)) {
+  if (!(Test-Path $EnvExample)) { throw "provider .env.example is missing: $EnvExample" }
+  Copy-Item $EnvExample $EnvFile
+}
 $Text = Get-Content $EnvFile -Raw
 $Text = $Text -replace '(?m)^HTTP_HOST_PORT=.*$', "HTTP_HOST_PORT=$Port"
 $ResolvedNvidiaApiKey = $env:NVIDIA_API_KEY

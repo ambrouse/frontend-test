@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot\..\..\..\_shared\windows-provider-utils.ps1"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "multi-agent-intelligent-warehouse" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
@@ -26,11 +27,11 @@ if ($env:AIHUB_DRY_RUN -eq "1") {
     $ExistingItem = Get-ChildItem -Force -LiteralPath $DeployDir -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($ExistingItem) { Remove-Item -LiteralPath $DeployDir -Recurse -Force }
   }
-  git clone --depth 1 --branch $Branch $RepoUrl $DeployDir
+  Invoke-GitChecked -Arguments @("clone", "--depth", "1", "--branch", $Branch, $RepoUrl, $DeployDir) -FailureMessage "git clone failed for $RepoUrl branch $Branch"
 } else {
-  git -C $DeployDir fetch --depth 1 origin $Branch
-  git -C $DeployDir checkout $Branch
-  git -C $DeployDir pull --ff-only
+  Invoke-GitChecked -Arguments @("-C", $DeployDir, "fetch", "--depth", "1", "origin", $Branch) -FailureMessage "git fetch failed for $RepoUrl branch $Branch"
+  Invoke-GitChecked -Arguments @("-C", $DeployDir, "checkout", $Branch) -FailureMessage "git checkout failed for branch $Branch"
+  Invoke-GitChecked -Arguments @("-C", $DeployDir, "pull", "--ff-only") -FailureMessage "git pull failed for branch $Branch"
 }
 $EnvFile = Join-Path $DeployDir "deploy\compose\.env"
 New-Item -ItemType Directory -Force -Path (Split-Path $EnvFile) | Out-Null

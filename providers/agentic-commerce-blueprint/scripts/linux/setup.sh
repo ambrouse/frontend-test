@@ -54,17 +54,19 @@ else
     if [[ -d "$DEPLOY_DIR" ]] && [[ -n "$(ls -A "$DEPLOY_DIR" 2>/dev/null)" ]]; then
       rm -rf "$DEPLOY_DIR"
     fi
-    git clone --depth 1 --branch "${AIHUB_BRANCH:-main}" "$REPO_URL" "$DEPLOY_DIR"
+    git clone --depth 1 --branch "${AIHUB_BRANCH:-main}" "$REPO_URL" "$DEPLOY_DIR" || { log_json install error "git clone failed for $REPO_URL"; exit 1; }
   else
-    git -C "$DEPLOY_DIR" fetch --depth 1 origin "${AIHUB_BRANCH:-main}"
-    git -C "$DEPLOY_DIR" checkout "${AIHUB_BRANCH:-main}"
-    git -C "$DEPLOY_DIR" pull --ff-only
+    git -C "$DEPLOY_DIR" fetch --depth 1 origin "${AIHUB_BRANCH:-main}" || { log_json install error "git fetch failed for $REPO_URL"; exit 1; }
+    git -C "$DEPLOY_DIR" checkout "${AIHUB_BRANCH:-main}" || { log_json install error "git checkout failed for ${AIHUB_BRANCH:-main}"; exit 1; }
+    git -C "$DEPLOY_DIR" pull --ff-only || { log_json install error "git pull failed for ${AIHUB_BRANCH:-main}"; exit 1; }
   fi
+  [[ -d "$DEPLOY_DIR" ]] || { log_json install error "deploy directory was not created: $DEPLOY_DIR"; exit 1; }
   find "$DEPLOY_DIR" -name "*.sh" -type f -exec sed -i 's/\r$//' {} +
   patch_deploy_source
 fi
 
 if [[ ! -f "$DEPLOY_DIR/.env" ]]; then
+  [[ -f "$ROOT/.env.example" ]] || { log_json install error "provider .env.example is missing: $ROOT/.env.example"; exit 1; }
   cp "$ROOT/.env.example" "$DEPLOY_DIR/.env"
 fi
 python - "$DEPLOY_DIR/.env" "$PORT" <<'PY'

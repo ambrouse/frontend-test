@@ -8,6 +8,11 @@ DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 
 "$ROOT/scripts/linux/stop.sh" >/dev/null || true
 
+COMPOSE_DIR="$DEPLOY_DIR/deploy"
+if [[ "${AIHUB_DRY_RUN:-0}" != "1" && -f "$COMPOSE_DIR/.env" && -f "$COMPOSE_DIR/docker-compose.yml" ]]; then
+  (cd "$COMPOSE_DIR" && docker compose --env-file .env -f docker-compose.yml down --volumes --remove-orphans --rmi local || true)
+fi
+
 case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
   "$(cd "$DEPLOY_ROOT" && pwd)"/*) rm -rf "$DEPLOY_DIR" ;;
   *) echo "Refusing to delete outside deploy root: $DEPLOY_DIR" >&2; exit 1 ;;
