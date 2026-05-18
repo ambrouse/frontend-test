@@ -11,7 +11,7 @@ import type {
 } from "./types";
 
 const DEFAULT_API_BASE = "http://127.0.0.1:8000";
-const FAST_TIMEOUT_MS = 250;
+const FAST_TIMEOUT_MS = 1200;
 const SELECTED_PROVIDER_CACHE_KEY = "hub-selected-provider-v1";
 
 type ProviderListResponse = {

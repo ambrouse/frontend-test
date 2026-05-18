@@ -122,6 +122,7 @@ class ProviderRegistry:
                 hardware, data["requirements"]["minimum"], data["requirements"]["recommended"]
             )
             data = self._apply_runtime_overlay(manifest_path.parent, data)
+            data = self._apply_metrics_overlay(manifest_path.parent, data)
             data = self._apply_environment_overlay(data)
             data = self._apply_visual_assets(manifest_path.parent, data)
             providers.append(HubProject.model_validate(data))
@@ -182,7 +183,7 @@ class ProviderRegistry:
         if not status_path.exists():
             return data
         try:
-            status = json.loads(status_path.read_text(encoding="utf-8"))
+            status = json.loads(status_path.read_text(encoding="utf-8-sig"))
         except json.JSONDecodeError:
             return data
         state = status.get("state")
@@ -198,6 +199,30 @@ class ProviderRegistry:
             data["runStatus"] = "error"
         else:
             data["runStatus"] = "stopped"
+        return data
+
+    def _apply_metrics_overlay(self, provider_root: Path, data: dict) -> dict:
+        metrics_path = provider_root / data.get("runtime", {}).get("metricsFile", "runtime/metrics.json")
+        if not metrics_path.exists():
+            return data
+        try:
+            metrics = json.loads(metrics_path.read_text(encoding="utf-8-sig"))
+        except json.JSONDecodeError:
+            return data
+        benchmark = metrics.get("benchmark")
+        if not isinstance(benchmark, dict):
+            return data
+
+        merged_benchmark = dict(data.get("lastBenchmark", {}))
+        merged_benchmark.update({key: value for key, value in benchmark.items() if value is not None})
+        sampled_at = metrics.get("sampledAt")
+        if sampled_at and not merged_benchmark.get("measuredAt"):
+            merged_benchmark["measuredAt"] = sampled_at
+        elif sampled_at:
+            merged_benchmark["measuredAt"] = benchmark.get("measuredAt", sampled_at)
+        data["lastBenchmark"] = merged_benchmark
+        if sampled_at and data.get("runStatus") == "running":
+            data["lastRunAt"] = sampled_at
         return data
 
 
@@ -220,12 +245,13 @@ def _detect_tool(command: str) -> dict[str, str | bool | None]:
     if shutil.which(executable) is None:
         result: dict[str, str | bool | None] = {"available": False, "version": None}
     else:
-        result = {"available": True, "version": _tool_version(command)}
+        probe = _run_tool_command(command)
+        result = {"available": probe["returncode"] == 0, "version": str(probe["version"]) if probe["version"] else None}
     _TOOL_CACHE[command] = (now, result)
     return result
 
 
-def _tool_version(command: str) -> str | None:
+def _run_tool_command(command: str) -> dict[str, int | str | None]:
     try:
         completed = subprocess.run(
             command.split(),
@@ -235,9 +261,9 @@ def _tool_version(command: str) -> str | None:
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return None
+        return {"returncode": 1, "version": None}
     output = (completed.stdout or completed.stderr).strip().splitlines()
-    return output[0][:120] if output else None
+    return {"returncode": completed.returncode, "version": output[0][:120] if output else None}
 
 
 def _current_os() -> str:

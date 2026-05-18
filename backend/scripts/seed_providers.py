@@ -33,24 +33,33 @@ def main() -> None:
         (provider_root / "config").mkdir(parents=True, exist_ok=True)
         (provider_root / "runtime").mkdir(parents=True, exist_ok=True)
         (provider_root / "logs").mkdir(parents=True, exist_ok=True)
-        (provider_root / "scripts" / "windows").mkdir(parents=True, exist_ok=True)
-        (provider_root / "scripts" / "linux").mkdir(parents=True, exist_ok=True)
+        (provider_root / "runtime" / ".gitkeep").touch()
+        (provider_root / "logs" / ".gitkeep").touch()
 
-        (provider_root / "aihub.provider.json").write_text(
-            json.dumps(provider, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-        (provider_root / "config" / "default.json").write_text(
-            json.dumps(provider["editableConfig"], indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-        (provider_root / "runtime" / ".gitkeep").write_text("", encoding="utf-8")
-        (provider_root / "logs" / ".gitkeep").write_text("", encoding="utf-8")
+        manifest_path = provider_root / "aihub.provider.json"
+        if not manifest_path.exists():
+            manifest_path.write_text(
+                json.dumps(provider, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
 
-        for script_name in ("setup", "run", "stop", "health", "collect-metrics"):
-            (provider_root / "scripts" / "windows" / f"{script_name}.ps1").write_text(WINDOWS_SCRIPT, encoding="utf-8")
-            linux_path = provider_root / "scripts" / "linux" / f"{script_name}.sh"
-            linux_path.write_text(LINUX_SCRIPT, encoding="utf-8")
+        config_path = provider_root / "config" / "default.json"
+        if not config_path.exists():
+            config_path.write_text(
+                json.dumps(provider["editableConfig"], indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+
+        for platform in ("windows", "linux"):
+            script_dir = provider_root / "scripts" / platform
+            if script_dir.exists():
+                continue
+            script_dir.mkdir(parents=True, exist_ok=True)
+            for script_name in ("setup", "run", "stop", "health", "collect-metrics"):
+                if platform == "windows":
+                    (script_dir / f"{script_name}.ps1").write_text(WINDOWS_SCRIPT, encoding="utf-8")
+                else:
+                    (script_dir / f"{script_name}.sh").write_text(LINUX_SCRIPT, encoding="utf-8")
 
     print(f"Seeded {len(provider_seed())} providers into {providers_root}")
 

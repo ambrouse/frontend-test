@@ -3,33 +3,13 @@ set -euo pipefail
 ID="${AIHUB_PROVIDER_ID:-multi-agent-intelligent-warehouse}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
-DEPLOY_DIR="$DEPLOY_ROOT/$ID"
+DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-3001}"
 REPO_URL="https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
 METRICS="$ROOT/runtime/metrics.json"
-load_nvidia_api_key() {
-  if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
-    return
-  fi
-  local repo_root local_env key_line key_value
-  repo_root="$(cd "$ROOT/../.." && pwd)"
-  local_env="$repo_root/.env.local"
-  [[ -f "$local_env" ]] || return 0
-  key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
-  [[ -n "$key_line" ]] || return 0
-  key_value="${key_line#*=}"
-  key_value="${key_value%\"}"
-  key_value="${key_value#\"}"
-  if [[ -n "$key_value" ]]; then
-    export NVIDIA_API_KEY="$key_value"
-    export EMBEDDING_API_KEY="$key_value"
-    export RAIL_API_KEY="$key_value"
-  fi
-}
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
-load_nvidia_api_key
 log_json() { python - "$1" "$2" "$3" >> "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
@@ -81,8 +61,17 @@ updates = {
     "FRONTEND_PORT": port,
     "HOST_FRONTEND_PORT": port,
     "NVIDIA_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
-    "EMBEDDING_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
-    "RAIL_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
+    "EMBEDDING_API_KEY": os.environ.get("EMBEDDING_API_KEY") or os.environ.get("NVIDIA_API_KEY", ""),
+    "RAIL_API_KEY": os.environ.get("RAIL_API_KEY") or os.environ.get("NVIDIA_API_KEY", ""),
+    "HOST_NGINX_PORT": os.environ.get("HOST_NGINX_PORT", ""),
+    "HOST_POSTGRES_PORT": os.environ.get("HOST_POSTGRES_PORT", ""),
+    "HOST_REDIS_PORT": os.environ.get("HOST_REDIS_PORT", ""),
+    "HOST_KAFKA_PORT": os.environ.get("HOST_KAFKA_PORT", ""),
+    "HOST_ETCD_PORT": os.environ.get("HOST_ETCD_PORT", ""),
+    "HOST_MINIO_PORT": os.environ.get("HOST_MINIO_PORT", ""),
+    "HOST_MINIO_CONSOLE_PORT": os.environ.get("HOST_MINIO_CONSOLE_PORT", ""),
+    "HOST_MILVUS_GRPC_PORT": os.environ.get("HOST_MILVUS_GRPC_PORT", ""),
+    "HOST_MILVUS_HTTP_PORT": os.environ.get("HOST_MILVUS_HTTP_PORT", ""),
 }
 lines, seen = [], set()
 for line in text.splitlines():

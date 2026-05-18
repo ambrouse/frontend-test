@@ -1,6 +1,0 @@
-{
-  "profile": "Index workers",
-  "branch": "main",
-  "port": 8231,
-  "installDirectory": "D:/AIHub/providers/spark-rag-indexer"
-}

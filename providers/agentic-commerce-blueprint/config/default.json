@@ -2,5 +2,11 @@
   "profile": "api mode",
   "branch": "main",
   "port": 8088,
-  "installDirectory": "deploy/agentic-commerce-blueprint"
+  "installDirectory": "deploy/agentic-commerce-blueprint",
+  "env": {
+    "NVIDIA_API_KEY": "",
+    "NGC_API_KEY": "",
+    "MERCHANT_API_KEY": "merchant-api-key-12345",
+    "PSP_API_KEY": "psp-api-key-12345"
+  }
 }

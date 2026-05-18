@@ -4,30 +4,11 @@ set -euo pipefail
 ID="${AIHUB_PROVIDER_ID:-agentic-commerce-blueprint}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
-DEPLOY_DIR="$DEPLOY_ROOT/$ID"
+DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-8088}"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
-load_nvidia_api_key() {
-  if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
-    return
-  fi
-  local repo_root local_env key_line key_value
-  repo_root="$(cd "$ROOT/../.." && pwd)"
-  local_env="$repo_root/.env.local"
-  [[ -f "$local_env" ]] || return 0
-  key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
-  [[ -n "$key_line" ]] || return 0
-  key_value="${key_line#*=}"
-  key_value="${key_value%\"}"
-  key_value="${key_value#\"}"
-  if [[ -n "$key_value" ]]; then
-    export NVIDIA_API_KEY="$key_value"
-    export NGC_API_KEY="$key_value"
-  fi
-}
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
-load_nvidia_api_key
 python - "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone

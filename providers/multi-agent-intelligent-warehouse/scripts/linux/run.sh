@@ -3,32 +3,12 @@ set -euo pipefail
 ID="${AIHUB_PROVIDER_ID:-multi-agent-intelligent-warehouse}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
-DEPLOY_DIR="$DEPLOY_ROOT/$ID"
+DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-3001}"
 BACKEND_PORT="${AIHUB_BACKEND_PORT:-8091}"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
-load_nvidia_api_key() {
-  if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
-    return
-  fi
-  local repo_root local_env key_line key_value
-  repo_root="$(cd "$ROOT/../.." && pwd)"
-  local_env="$repo_root/.env.local"
-  [[ -f "$local_env" ]] || return 0
-  key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
-  [[ -n "$key_line" ]] || return 0
-  key_value="${key_line#*=}"
-  key_value="${key_value%\"}"
-  key_value="${key_value#\"}"
-  if [[ -n "$key_value" ]]; then
-    export NVIDIA_API_KEY="$key_value"
-    export EMBEDDING_API_KEY="$key_value"
-    export RAIL_API_KEY="$key_value"
-  fi
-}
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
-load_nvidia_api_key
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   if [[ ! -d "$DEPLOY_DIR" ]]; then
     SETUP_SCRIPT="$ROOT/scripts/linux/setup.sh"

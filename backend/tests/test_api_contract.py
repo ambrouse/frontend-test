@@ -16,28 +16,56 @@ def test_health_contract() -> None:
     assert response.json() == {"ok": True}
 
 
+def test_local_dev_cors_allows_next_fallback_port() -> None:
+    response = client.options(
+        "/api/providers",
+        headers={
+            "Origin": "http://localhost:3001",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3001"
+
+
 def test_providers_contract() -> None:
     response = client.get("/api/providers")
     assert response.status_code == 200
     body = response.json()
-    assert body["total"] >= 30
+    assert body["total"] == 7
+    provider_ids = {provider["id"] for provider in body["providers"]}
+    assert provider_ids == {
+        "agentic-commerce-blueprint",
+        "ai-virtual-assistant-provider",
+        "aiq",
+        "nemotron-voice-agent-provider",
+        "shop-retail-provider",
+        "multi-agent-intelligent-warehouse",
+        "pdf-to-podcast",
+    }
     first_provider = body["providers"][0]
     assert {"id", "name", "type", "requirements", "compatibility", "lastBenchmark"} <= set(first_provider)
 
 
 def test_provider_detail_contract() -> None:
-    response = client.get("/api/providers/local-llm-studio")
+    response = client.get("/api/providers/aiq")
     assert response.status_code == 200
     body = response.json()
-    assert body["id"] == "local-llm-studio"
-    assert body["editableConfig"]["port"] == 7860
+    assert body["id"] == "aiq"
+    assert body["editableConfig"]["port"] == 13080
+
+
+def test_removed_provider_returns_404() -> None:
+    response = client.get("/api/providers/local-llm-studio")
+    assert response.status_code == 404
 
 
 def test_provider_asset_contract(tmp_path, monkeypatch) -> None:
     provider_id = "sample-provider"
     provider_root = tmp_path / provider_id
     provider_root.mkdir()
-    manifest = json.loads((providers_root() / "local-llm-studio" / "aihub.provider.json").read_text(encoding="utf-8"))
+    manifest = json.loads((providers_root() / "aiq" / "aihub.provider.json").read_text(encoding="utf-8"))
     manifest["id"] = provider_id
     (provider_root / "aihub.provider.json").write_text(json.dumps(manifest), encoding="utf-8")
     media_dir = provider_root / "media"

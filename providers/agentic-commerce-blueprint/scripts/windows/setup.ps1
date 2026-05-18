@@ -2,27 +2,21 @@ $ErrorActionPreference = "Stop"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "agentic-commerce-blueprint" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
-$DeployDir = Join-Path $DeployRoot $Id
+$DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "8088" }
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
 $RepoUrl = "https://github.com/baolnq-ai/Agentic-Commerce-blueprint-provider-"
-function Get-LocalNvidiaApiKey {
-  param([string]$ProviderRoot)
-  try {
-    $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $ProviderRoot "..\.."))
-    $LocalEnvFile = Join-Path $RepoRoot ".env.local"
-    if (!(Test-Path $LocalEnvFile)) { return "" }
-    $Line = Get-Content -Path $LocalEnvFile | Where-Object { $_ -match '^\s*NVIDIA_API_KEY\s*=' } | Select-Object -Last 1
-    if (-not $Line) { return "" }
-    $Value = ($Line -split '=', 2)[1].Trim()
-    if ($Value.StartsWith('"') -and $Value.EndsWith('"') -and $Value.Length -ge 2) {
-      $Value = $Value.Substring(1, $Value.Length - 2)
-    }
-    return $Value
-  } catch {
-    return ""
+$ProviderEnvKeys = @("NVIDIA_API_KEY", "NGC_API_KEY", "MERCHANT_API_KEY", "PSP_API_KEY")
+
+function Set-EnvValue {
+  param([string]$Text, [string]$Key, [string]$Value)
+  if ($null -eq $Value -or $Value -eq "") { return $Text }
+  if ($Text -match "(?m)^$([regex]::Escape($Key))=") {
+    return ($Text -replace "(?m)^$([regex]::Escape($Key))=.*$", "$Key=$Value")
   }
+  return ($Text.TrimEnd() + "`n$Key=$Value`n")
 }
+
 function Update-DeploySource {
   param([string]$DeployPath)
   $McpClient = Join-Path $DeployPath "src\ui\hooks\useMCPClient.ts"
@@ -59,21 +53,13 @@ if (!(Test-Path $EnvFile)) { Copy-Item "$Root\.env.example" $EnvFile }
 $Text = Get-Content $EnvFile -Raw
 $Text = $Text -replace '(?m)^HTTP_HOST_PORT=.*$', "HTTP_HOST_PORT=$Port"
 $ResolvedNvidiaApiKey = $env:NVIDIA_API_KEY
-if (-not $ResolvedNvidiaApiKey) {
-  $ResolvedNvidiaApiKey = Get-LocalNvidiaApiKey -ProviderRoot $Root
-  if ($ResolvedNvidiaApiKey) { $env:NVIDIA_API_KEY = $ResolvedNvidiaApiKey }
-}
 if ($ResolvedNvidiaApiKey) {
-  if ($Text -match '(?m)^NVIDIA_API_KEY=.*$') {
-    $Text = $Text -replace '(?m)^NVIDIA_API_KEY=.*$', "NVIDIA_API_KEY=$ResolvedNvidiaApiKey"
-  } else {
-    $Text += "`nNVIDIA_API_KEY=$ResolvedNvidiaApiKey"
-  }
-  if ($Text -match '(?m)^NGC_API_KEY=.*$') {
-    $Text = $Text -replace '(?m)^NGC_API_KEY=.*$', "NGC_API_KEY=$ResolvedNvidiaApiKey"
-  } else {
-    $Text += "`nNGC_API_KEY=$ResolvedNvidiaApiKey"
-  }
+  $Text = Set-EnvValue -Text $Text -Key "NVIDIA_API_KEY" -Value $ResolvedNvidiaApiKey
+}
+foreach ($Key in $ProviderEnvKeys) {
+  $Value = [Environment]::GetEnvironmentVariable($Key)
+  if ($Key -eq "NGC_API_KEY" -and -not $Value) { $Value = $ResolvedNvidiaApiKey }
+  $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value
 }
 Set-Content -Path $EnvFile -Value $Text -Encoding utf8
 $Status = @{ projectId=$Id; state="installed"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Installed"; progressPercent=100; health=@{ level="ok"; message="Installed" } }

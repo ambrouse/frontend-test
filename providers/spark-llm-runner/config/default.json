@@ -1,6 +1,0 @@
-{
-  "profile": "Single node executor",
-  "branch": "main",
-  "port": 9091,
-  "installDirectory": "D:/AIHub/providers/spark-llm-runner"
-}

@@ -4,34 +4,14 @@ set -euo pipefail
 ID="${AIHUB_PROVIDER_ID:-agentic-commerce-blueprint}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
-DEPLOY_DIR="$DEPLOY_ROOT/$ID"
+DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-8088}"
 REPO_URL="https://github.com/baolnq-ai/Agentic-Commerce-blueprint-provider-"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
 METRICS="$ROOT/runtime/metrics.json"
 
-load_nvidia_api_key() {
-  if [[ -n "${NVIDIA_API_KEY:-}" ]]; then
-    return
-  fi
-  local repo_root local_env key_line key_value
-  repo_root="$(cd "$ROOT/../.." && pwd)"
-  local_env="$repo_root/.env.local"
-  [[ -f "$local_env" ]] || return 0
-  key_line="$(grep -E '^\s*NVIDIA_API_KEY=' "$local_env" | tail -n 1 || true)"
-  [[ -n "$key_line" ]] || return 0
-  key_value="${key_line#*=}"
-  key_value="${key_value%\"}"
-  key_value="${key_value#\"}"
-  if [[ -n "$key_value" ]]; then
-    export NVIDIA_API_KEY="$key_value"
-    export NGC_API_KEY="$key_value"
-  fi
-}
-
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
-load_nvidia_api_key
 log_json() { python - "$1" "$2" "$3" >> "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
@@ -93,21 +73,28 @@ path, port = sys.argv[1], sys.argv[2]
 text = open(path, encoding="utf-8").read()
 lines = []
 seen_port = False
-seen_key = False
+updates = {
+    "NVIDIA_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
+    "NGC_API_KEY": os.environ.get("NGC_API_KEY") or os.environ.get("NVIDIA_API_KEY", ""),
+    "MERCHANT_API_KEY": os.environ.get("MERCHANT_API_KEY", ""),
+    "PSP_API_KEY": os.environ.get("PSP_API_KEY", ""),
+}
+seen = set()
 for line in text.splitlines():
-    if line.startswith("HTTP_HOST_PORT="):
+    key = line.split("=", 1)[0] if "=" in line else ""
+    if key == "HTTP_HOST_PORT":
         lines.append(f"HTTP_HOST_PORT={port}")
         seen_port = True
-    elif line.startswith("NVIDIA_API_KEY="):
-        value = os.environ.get("NVIDIA_API_KEY", line.split("=", 1)[1])
-        lines.append(f"NVIDIA_API_KEY={value}")
-        seen_key = True
+    elif key in updates and updates[key]:
+        lines.append(f"{key}={updates[key]}")
+        seen.add(key)
     else:
         lines.append(line)
 if not seen_port:
     lines.append(f"HTTP_HOST_PORT={port}")
-if not seen_key:
-    lines.append(f"NVIDIA_API_KEY={os.environ.get('NVIDIA_API_KEY', '')}")
+for key, value in updates.items():
+    if key not in seen and value:
+        lines.append(f"{key}={value}")
 open(path, "w", encoding="utf-8").write("\n".join(lines) + "\n")
 PY
 python - "$METRICS" <<'PY'

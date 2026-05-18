@@ -70,7 +70,7 @@ const config: ProviderConfig = {
   branch: "main",
   port: 7860,
   installDirectory: "deploy/pdf-to-podcast",
-  env: {},
+  env: { NVIDIA_API_KEY: "", API_SERVICE_PORT: "8002" },
   warnings: [],
 };
 
@@ -104,6 +104,7 @@ vi.mock("@/services/apiClient", () => ({
   fetchProviderLogs: vi.fn(() => Promise.resolve(logsResponse)),
   fetchProviderMetrics: vi.fn(() => Promise.resolve(metrics)),
   fetchProviderStatus: vi.fn(() => Promise.resolve(status)),
+  patchProviderConfig: vi.fn((_: string, patch: Partial<ProviderConfig>) => Promise.resolve({ ...config, ...patch })),
   providerAction: vi.fn(() => Promise.resolve({ taskId: "task-1", status: "running", warnings: [] })),
   readSelectedProvider: vi.fn(() => null),
   resolveApiAssetUrl: vi.fn((url: string) => url),
@@ -121,5 +122,21 @@ describe("ProjectDetailView provider activity", () => {
     expect(screen.getByRole("tab", { name: "Detailed logs" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByLabelText("Log filter")).toBeInTheDocument();
     expect(screen.getByText("Detailed runtime error")).toBeInTheDocument();
+  });
+
+  it("shows editable provider env config fields", async () => {
+    render(<ProjectDetailView projectId="pdf-to-podcast" project={project} />);
+
+    await waitFor(() => expect(screen.getByLabelText("NVIDIA_API_KEY")).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("API_SERVICE_PORT"), { target: { value: "8012" } });
+    fireEvent.click(screen.getByLabelText("Save config"));
+
+    await waitFor(async () => {
+      const api = await import("@/services/apiClient");
+      expect(api.patchProviderConfig).toHaveBeenCalledWith(
+        "pdf-to-podcast",
+        expect.objectContaining({ env: expect.objectContaining({ API_SERVICE_PORT: "8012" }) }),
+      );
+    });
   });
 });

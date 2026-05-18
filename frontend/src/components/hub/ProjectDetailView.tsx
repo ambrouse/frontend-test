@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Loader2, Play, RotateCcw, Square, Trash2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Loader2, Play, RotateCcw, Save, Square, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchHardwareSnapshot,
@@ -11,6 +11,7 @@ import {
   fetchProviderLogs,
   fetchProviderMetrics,
   fetchProviderStatus,
+  patchProviderConfig,
   providerAction,
   readSelectedProvider,
   resolveApiAssetUrl,
@@ -35,16 +36,20 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const [activeLogTab, setActiveLogTab] = useState<LogPanelTab>("progress");
   const [activeLogLevel, setActiveLogLevel] = useState<LogLevel | "all">("all");
   const [activeVisualIndex, setActiveVisualIndex] = useState(0);
-  const [projectData, setProjectData] = useState<HubProject | null>(() => project ?? readSelectedProvider(projectId));
+  const [projectData, setProjectData] = useState<HubProject | null>(project ?? null);
   const [hardware, setHardware] = useState<HardwareSnapshot>(emptyHardwareSnapshot);
   const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [metrics, setMetrics] = useState<ProviderMetrics | null>(null);
   const [config, setConfig] = useState<ProviderConfig | null>(null);
+  const [draftConfig, setDraftConfig] = useState<ProviderConfig | null>(null);
   const [logs, setLogs] = useState<ProjectLog[]>([]);
   const [activeTasks, setActiveTasks] = useState<RunningTask[]>([]);
   const [pendingAction, setPendingAction] = useState<ProviderLifecycleAction | null>(null);
   const [queuedAction, setQueuedAction] = useState<{ taskId: string; action: ProviderLifecycleAction; queuedAt: number } | null>(null);
   const [actionMessage, setActionMessage] = useState("");
+  const [configMessage, setConfigMessage] = useState("");
+  const [isConfigEditing, setIsConfigEditing] = useState(false);
+  const [isConfigSaving, setIsConfigSaving] = useState(false);
   const [isLogFeedActive, setIsLogFeedActive] = useState(false);
   const [lastLogChangeAt, setLastLogChangeAt] = useState<number>(0);
   const terminalRef = useRef<HTMLDivElement | null>(null);
@@ -56,9 +61,16 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
 
   const availableRamMb = Math.max(0, hardware.ram.totalMb - hardware.ram.usedMb);
   const availableVramMb = Math.max(0, hardware.gpu.vramTotalMb - hardware.gpu.vramUsedMb);
-  const effectiveConfig = config ?? (projectData ? { ...projectData.editableConfig, env: {}, warnings: [] } : null);
+  const fallbackConfig = useMemo<ProviderConfig | null>(() => {
+    return projectData ? { ...projectData.editableConfig, env: {}, warnings: [] } : null;
+  }, [projectData]);
+  const effectiveConfig = draftConfig ?? config ?? fallbackConfig;
+  const isConfigDirty = Boolean(draftConfig && config && !areProviderConfigsEqual(draftConfig, config));
+  const configEnvEntries = Object.entries(effectiveConfig?.env ?? {});
   const headlineMetric = metrics?.benchmark?.headlineMetric?.toString() ?? projectData?.lastBenchmark.headlineMetric ?? "loading";
   const secondaryMetric = metrics?.benchmark?.secondaryMetric?.toString() ?? projectData?.lastBenchmark.secondaryMetric ?? "waiting for backend";
+  const benchmarkVramPeak =
+    typeof metrics?.benchmark?.vramPeakMb === "number" ? metrics.benchmark.vramPeakMb : (projectData?.lastBenchmark.vramPeakMb ?? 0);
   const runState = status?.state ?? projectData?.runStatus ?? "unknown";
   const providerTask = useMemo(() => {
     return activeTasks.find((task) => task.projectId === projectId) ?? null;
@@ -128,6 +140,11 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   }, [projectData?.id, projectData?.visual.imageUrl, projectData?.visual.gallery?.join("|")]);
 
   useEffect(() => {
+    if (!config || isConfigEditing) return;
+    setDraftConfig(config);
+  }, [config, isConfigEditing]);
+
+  useEffect(() => {
     if (visualImages.length <= 1) {
       return;
     }
@@ -138,6 +155,12 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   }, [visualImages.length]);
 
   useEffect(() => {
+    if (!project) {
+      const cachedProject = readSelectedProvider(projectId);
+      if (cachedProject) {
+        setProjectData(cachedProject);
+      }
+    }
     const controller = new AbortController();
     const load = () => {
       void fetchProviderDetail(projectId, { signal: controller.signal }).then(setProjectData).catch(() => {});
@@ -154,7 +177,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       controller.abort();
       window.clearInterval(interval);
     };
-  }, [projectId]);
+  }, [project, projectId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -227,11 +250,67 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     frame.scrollTop = frame.scrollHeight;
   }, [isLogFeedActive, logs]);
 
+  const saveConfig = async () => {
+    if (!effectiveConfig) return null;
+    setIsConfigSaving(true);
+    setConfigMessage("");
+    try {
+      const saved = await patchProviderConfig(projectId, {
+        profile: effectiveConfig.profile,
+        branch: effectiveConfig.branch,
+        port: effectiveConfig.port,
+        installDirectory: effectiveConfig.installDirectory,
+        env: effectiveConfig.env,
+      });
+      setConfig(saved);
+      setDraftConfig(saved);
+      setIsConfigEditing(false);
+      setConfigMessage(saved.warnings[0] ?? "Config saved");
+      return saved;
+    } catch (error) {
+      setConfigMessage(error instanceof Error ? error.message : "Config save failed");
+      return null;
+    } finally {
+      setIsConfigSaving(false);
+    }
+  };
+
+  const saveConfigIfNeeded = async (action: ProviderLifecycleAction) => {
+    if ((action === "install" || action === "run") && isConfigDirty) {
+      return saveConfig();
+    }
+    return config ?? effectiveConfig;
+  };
+
+  const updateDraftConfig = (patch: Partial<ProviderConfig>) => {
+    setIsConfigEditing(true);
+    setConfigMessage("");
+    setDraftConfig((current) => {
+      const base = current ?? config ?? fallbackConfig;
+      return base ? { ...base, ...patch } : current;
+    });
+  };
+
+  const updateDraftEnv = (key: string, value: string) => {
+    setIsConfigEditing(true);
+    setConfigMessage("");
+    setDraftConfig((current) => {
+      const base = current ?? config ?? fallbackConfig;
+      if (!base) return current;
+      return { ...base, env: { ...base.env, [key]: value } };
+    });
+  };
+
   const handleAction = async (action: ProviderLifecycleAction) => {
     setPendingAction(action);
     setQueuedAction(null);
     setActionMessage("");
     try {
+      const savedConfig = await saveConfigIfNeeded(action);
+      if (!savedConfig) {
+        setPendingAction(null);
+        return;
+      }
       const response = await providerAction(projectId, action, { force: true });
       const nextMessage = response.warnings[0] ?? `Task ${response.taskId} queued`;
       setActionMessage(nextMessage);
@@ -367,7 +446,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
             <strong>{secondaryMetric}</strong>
           </div>
           <div className="benchmark-grid">
-            <MetricTile label="VRAM peak" value={formatMemory(projectData.lastBenchmark.vramPeakMb)} />
+            <MetricTile label="VRAM peak" value={formatMemory(benchmarkVramPeak)} />
             <MetricTile label="Profile" value={effectiveConfig.profile} />
             <MetricTile label="Port" value={`${effectiveConfig.port}`} />
             <MetricTile label="Branch" value={effectiveConfig.branch} />
@@ -375,23 +454,50 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
         </section>
 
         <section className="config-panel" aria-labelledby="config-title">
-          <h2 id="config-title">Quick config</h2>
+          <div className="config-heading">
+            <h2 id="config-title">Quick config</h2>
+            <button type="button" onClick={() => void saveConfig()} disabled={isConfigSaving || !isConfigDirty} aria-label="Save config">
+              {isConfigSaving ? <Loader2 size={16} aria-hidden="true" /> : <Save size={16} aria-hidden="true" />}
+            </button>
+          </div>
           <label>
             Profile
-            <input value={effectiveConfig.profile} readOnly />
+            <input value={effectiveConfig.profile} onChange={(event) => updateDraftConfig({ profile: event.target.value })} />
           </label>
           <label>
             Branch
-            <input value={effectiveConfig.branch} readOnly />
+            <input value={effectiveConfig.branch} onChange={(event) => updateDraftConfig({ branch: event.target.value })} />
           </label>
           <label className={effectiveConfig.warnings.length ? "config-warning" : undefined}>
             Port
-            <input value={effectiveConfig.port} readOnly />
+            <input
+              type="number"
+              min={1}
+              max={65535}
+              value={effectiveConfig.port}
+              onChange={(event) => updateDraftConfig({ port: Number(event.target.value) })}
+            />
           </label>
           <label>
             Install path
-            <input value={effectiveConfig.installDirectory} readOnly />
+            <input value={effectiveConfig.installDirectory} onChange={(event) => updateDraftConfig({ installDirectory: event.target.value })} />
           </label>
+          {configEnvEntries.length > 0 ? (
+            <div className="config-env-list" aria-label="Environment variables">
+              {configEnvEntries.map(([key, value]) => (
+                <label key={key}>
+                  {key}
+                  <input
+                    autoComplete="off"
+                    type={isSecretEnvKey(key) ? "password" : "text"}
+                    value={value}
+                    onChange={(event) => updateDraftEnv(key, event.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+          ) : null}
+          {configMessage ? <p className={clsx("config-message", effectiveConfig.warnings.length ? "config-warning" : undefined)}>{configMessage}</p> : null}
         </section>
 
         {projectData.environment ? (
@@ -551,6 +657,24 @@ function taskStatusToAction(status?: RunningTask["status"]): ProviderLifecycleAc
   if (status === "stopping") return "stop";
   if (status === "deleting") return "delete";
   return null;
+}
+
+function areProviderConfigsEqual(left: ProviderConfig, right: ProviderConfig) {
+  return JSON.stringify(normalizeProviderConfig(left)) === JSON.stringify(normalizeProviderConfig(right));
+}
+
+function normalizeProviderConfig(config: ProviderConfig) {
+  return {
+    profile: config.profile,
+    branch: config.branch,
+    port: config.port,
+    installDirectory: config.installDirectory,
+    env: Object.fromEntries(Object.entries(config.env).sort(([left], [right]) => left.localeCompare(right))),
+  };
+}
+
+function isSecretEnvKey(key: string) {
+  return /(?:KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL)/i.test(key);
 }
 
 function RequirementRow({

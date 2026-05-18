@@ -1,5 +1,5 @@
-import { evaluateCompatibility } from "./compatibility";
-import type { HardwareSnapshot, HubProject, ProjectLog, ProjectType, RunningTask } from "./types";
+﻿import { evaluateCompatibility } from "./compatibility";
+import type { HardwareSnapshot, HubProject, ProjectLog, RunningTask } from "./types";
 
 export const hardwareSnapshot: HardwareSnapshot = {
   cpu: {
@@ -29,479 +29,1015 @@ export const hardwareSnapshot: HardwareSnapshot = {
   timestamp: "2026-05-10T10:33:00.000Z",
 };
 
-const projectsSeed: Omit<HubProject, "compatibility">[] = [
-  {
-    id: "local-llm-studio",
-    name: "Local LLM Studio",
-    type: "llm",
-    repoUrl: "https://github.com/ntc-ai/local-llm-studio",
-    description: "Serve Llama, Qwen, DeepSeek và các model GGUF bằng profile quantized.",
-    tags: ["gguf", "llama.cpp", "chat"],
-    accentColor: "#5eead4",
-    visual: {
-      imageUrl: "/assets/projects/local-llm.jpg",
-      focus: "66% 48%",
-      ambient: "#1f8c86",
-      ambientSoft: "#0a2f31",
+const projectsSeed = [
+    {
+        "id":  "agentic-commerce-blueprint",
+        "name":  "Agentic Commerce Blueprint",
+        "type":  "nvidia-blueprint",
+        "repoUrl":  "https://github.com/baolnq-ai/Agentic-Commerce-blueprint-provider-",
+        "description":  "Dockerized NVIDIA agentic commerce stack with storefront, merchant APIs, agents, Milvus, MinIO and Phoenix.",
+        "tags":  [
+                     "commerce",
+                     "agents",
+                     "nvidia"
+                 ],
+        "accentColor":  "#22c55e",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/nvidia-blueprint.jpg",
+                       "focus":  "54% 50%",
+                       "ambient":  "#22c55e",
+                       "ambientSoft":  "#052e16"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  8,
+                                             "ramMb":  24576,
+                                             "vramMb":  0,
+                                             "diskGb":  32,
+                                             "gpuRequired":  false,
+                                             "notes":  "API mode can use NVIDIA hosted endpoints; local NIM mode needs NVIDIA GPU."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  16,
+                                                 "ramMb":  65536,
+                                                 "vramMb":  24576,
+                                                 "diskGb":  160,
+                                                 "gpuRequired":  true
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "api mode",
+                               "branch":  "main",
+                               "port":  8088,
+                               "installDirectory":  "deploy/agentic-commerce-blueprint"
+                           },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64",
+                                                  "arm64"
+                                              ],
+                            "frameworks":  [
+                                               "Docker Compose",
+                                               "Python 3.12 containers",
+                                               "Node 22 containers",
+                                               "NVIDIA Agent Intelligence Toolkit",
+                                               "Milvus",
+                                               "MinIO",
+                                               "Phoenix",
+                                               "Next.js"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Windows: winget install Git.Git. Linux: install git from your package manager."
+                                                  },
+                                                  {
+                                                      "id":  "docker",
+                                                      "label":  "Docker",
+                                                      "command":  "docker --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Desktop on Windows/macOS or Docker Engine on Linux."
+                                                  },
+                                                  {
+                                                      "id":  "docker-compose",
+                                                      "label":  "Docker Compose v2",
+                                                      "command":  "docker compose version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Compose v2 plugin or Docker Desktop."
+                                                  },
+                                                  {
+                                                      "id":  "docker-daemon",
+                                                      "label":  "Docker daemon",
+                                                      "command":  "docker info --format {{.ServerVersion}}",
+                                                      "required":  true,
+                                                      "installHint":  "Start Docker Desktop and wait until the Linux engine is running."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "api",
+                                                     "label":  "NVIDIA API mode",
+                                                     "description":  "Uses NVIDIA hosted NIM-compatible endpoints. No local GPU is required, but NVIDIA_API_KEY is required.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 },
+                                                 {
+                                                     "id":  "local_nim",
+                                                     "label":  "Local NIM mode",
+                                                     "description":  "Starts local NIM LLM and embedding containers. Requires NVIDIA GPU, NVIDIA runtime and model access.",
+                                                     "requiresGpu":  true,
+                                                     "requiresNvidiaKey":  true
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "Install clones the source into deploy/agentic-commerce-blueprint.",
+                                               "Default Hub run path uses Docker Compose and fixed gateway port 8088.",
+                                               "Source repo supports Git Bash/Linux shell through runall.sh; Hub wrapper supports Windows PowerShell and Linux."
+                                           ]
+                        },
+        "lastBenchmark":  {
+                              "headlineMetric":  "0 req/min",
+                              "secondaryMetric":  "not started",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-10T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-10T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  8088,
+                        "healthUrl":  "http://localhost:8088/api/health",
+                        "metricsUrl":  "http://localhost:8088/metrics",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
     },
-    installStatus: "installed",
-    runStatus: "running",
-    requirements: {
-      minimum: {
-        cpuCores: 8,
-        ramMb: 16384,
-        vramMb: 8192,
-        diskGb: 24,
-        gpuRequired: true,
-        notes: "Profile Q4 cho model 7B-14B.",
-      },
-      recommended: {
-        cpuCores: 12,
-        ramMb: 32768,
-        vramMb: 16000,
-        diskGb: 80,
-        gpuRequired: true,
-      },
+    {
+        "id":  "ai-virtual-assistant-provider",
+        "name":  "AI Virtual Assistant Provider",
+        "type":  "nvidia-blueprint",
+        "repoUrl":  "https://github.com/mionm/ai-virtual-assistant-provider.git",
+        "description":  "Deprecated NVIDIA AI Virtual Assistant customer service blueprint with agent, retrievers, analytics, API gateway, UI and data services.",
+        "tags":  [
+                     "assistant",
+                     "customer-service",
+                     "rag",
+                     "deprecated",
+                     "nvidia"
+                 ],
+        "accentColor":  "#f59e0b",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/nvidia-blueprint.jpg",
+                       "focus":  "50% 50%",
+                       "ambient":  "#f59e0b",
+                       "ambientSoft":  "#451a03"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  12,
+                                             "ramMb":  32768,
+                                             "vramMb":  0,
+                                             "diskGb":  100,
+                                             "gpuRequired":  false,
+                                             "notes":  "Project is deprecated upstream as of Apr 2026; Hub default uses hosted NVIDIA endpoints and CPU Milvus override."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  24,
+                                                 "ramMb":  131072,
+                                                 "vramMb":  81920,
+                                                 "diskGb":  400,
+                                                 "gpuRequired":  true
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "hosted api mode",
+                               "branch":  "main",
+                               "port":  3001,
+                               "installDirectory":  "deploy/aiva"
+                           },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64"
+                                              ],
+                            "frameworks":  [
+                                               "Docker Compose",
+                                               "FastAPI",
+                                               "React",
+                                               "LangGraph",
+                                               "Milvus",
+                                               "Postgres",
+                                               "Redis",
+                                               "NVIDIA API"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Git."
+                                                  },
+                                                  {
+                                                      "id":  "bash",
+                                                      "label":  "Bash",
+                                                      "command":  "bash --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Git Bash on Windows."
+                                                  },
+                                                  {
+                                                      "id":  "docker",
+                                                      "label":  "Docker",
+                                                      "command":  "docker --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "hosted",
+                                                     "label":  "Hosted API mode",
+                                                     "description":  "Uses NVIDIA hosted endpoints with local app/data containers.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "This provider wraps a deprecated upstream blueprint for reproducible local evaluation.",
+                                               "Run writes compose overrides so Quick config ports are effective."
+                                           ]
+                        },
+        "lastBenchmark":  {
+                              "headlineMetric":  "not started",
+                              "secondaryMetric":  "no runtime sample",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-13T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-13T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  3001,
+                        "healthUrl":  "http://localhost:3001",
+                        "metricsUrl":  "http://localhost:9000/agent/health",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
     },
-    editableConfig: {
-      profile: "Qwen 14B Q4_K_M",
-      branch: "main",
-      port: 7860,
-      installDirectory: "D:/AIHub/providers/local-llm-studio",
+    {
+        "id":  "aiq",
+        "name":  "NVIDIA AI-Q Blueprint",
+        "type":  "nvidia-blueprint",
+        "repoUrl":  "https://github.com/PhuongHo03/aiq.git",
+        "description":  "NVIDIA AI-Q research assistant blueprint with FastAPI async jobs, Knowledge API, LlamaIndex retrieval and a Next.js UI.",
+        "tags":  [
+                     "research",
+                     "agents",
+                     "nvidia",
+                     "knowledge",
+                     "nextjs"
+                 ],
+        "accentColor":  "#76b900",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/nvidia-blueprint.jpg",
+                       "focus":  "52% 50%",
+                       "ambient":  "#76b900",
+                       "ambientSoft":  "#052e16"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  8,
+                                             "ramMb":  16384,
+                                             "vramMb":  0,
+                                             "diskGb":  32,
+                                             "gpuRequired":  false,
+                                             "notes":  "Validated in hosted NVIDIA API mode with local SQLite/Dask and Knowledge API. Full web/paper search requires Tavily and Serper keys."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  12,
+                                                 "ramMb":  32768,
+                                                 "vramMb":  0,
+                                                 "diskGb":  80,
+                                                 "gpuRequired":  false
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "hosted knowledge mode",
+                               "branch":  "develop",
+                               "port":  13080,
+                               "installDirectory":  "deploy/aiq"
+                           },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64"
+                                              ],
+                            "frameworks":  [
+                                               "Python 3.11+",
+                                               "NVIDIA Agent Intelligence Toolkit",
+                                               "FastAPI",
+                                               "Dask",
+                                               "LlamaIndex",
+                                               "Next.js",
+                                               "NVIDIA API"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Windows: winget install Git.Git. Linux: install git from your package manager."
+                                                  },
+                                                  {
+                                                      "id":  "bash",
+                                                      "label":  "Bash",
+                                                      "command":  "bash --version",
+                                                      "required":  true,
+                                                      "installHint":  "Windows: install Git Bash. Linux: bash is usually preinstalled."
+                                                  },
+                                                  {
+                                                      "id":  "python",
+                                                      "label":  "Python 3.11-3.13",
+                                                      "command":  "python --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Python 3.11, 3.12 or 3.13. Windows launcher py -3.11 is supported."
+                                                  },
+                                                  {
+                                                      "id":  "node",
+                                                      "label":  "Node.js",
+                                                      "command":  "node --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Node.js 20+."
+                                                  },
+                                                  {
+                                                      "id":  "npm",
+                                                      "label":  "npm",
+                                                      "command":  "npm --version",
+                                                      "required":  true,
+                                                      "installHint":  "npm ships with Node.js."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "hosted_knowledge",
+                                                     "label":  "Hosted knowledge mode",
+                                                     "description":  "Uses NVIDIA hosted endpoints, local SQLite/Dask and the built-in Knowledge API. NVIDIA_API_KEY is required.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 },
+                                                 {
+                                                     "id":  "full_sources",
+                                                     "label":  "Full source mode",
+                                                     "description":  "Also enables Tavily web search and Serper paper search when TAVILY_API_KEY and SERPER_API_KEY are available.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "Install clones branch develop from PhuongHo03/aiq.git into deploy/aiq.",
+                                               "Hub applies a tested lifecycle patch during install because direct upstream push is currently blocked by GitHub permissions.",
+                                               "Default Hub run path disables optional Docker support services and uses local SQLite/Dask."
+                                           ]
+                        },
+        "lastBenchmark":  {
+                              "headlineMetric":  "not started",
+                              "secondaryMetric":  "no runtime sample",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-12T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-12T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  13080,
+                        "healthUrl":  "http://localhost:18080/health",
+                        "metricsUrl":  "http://localhost:18080/v1/jobs/async/agents",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
     },
-    lastBenchmark: {
-      headlineMetric: "72.4 tok/s",
-      secondaryMetric: "TTFT 410 ms",
-      latencyMs: 410,
-      throughput: 72.4,
-      vramPeakMb: 14820,
-      measuredAt: "2026-05-10T09:12:00.000Z",
+    {
+        "id":  "nemotron-voice-agent-provider",
+        "name":  "Nemotron Voice Agent Provider",
+        "type":  "speech",
+        "repoUrl":  "https://github.com/mionm/nemotron-voice-agent-provider.git",
+        "description":  "Nemotron voice agent blueprint with WebRTC UI, Pipecat pipeline, hosted NVIDIA ASR/TTS/LLM defaults and optional local NIM mode.",
+        "tags":  [
+                     "voice",
+                     "webrtc",
+                     "nemotron",
+                     "asr",
+                     "tts"
+                 ],
+        "accentColor":  "#38bdf8",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/nvidia-blueprint.jpg",
+                       "focus":  "50% 50%",
+                       "ambient":  "#38bdf8",
+                       "ambientSoft":  "#082f49"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  8,
+                                             "ramMb":  24576,
+                                             "vramMb":  0,
+                                             "diskGb":  80,
+                                             "gpuRequired":  false,
+                                             "notes":  "Hub default starts API mode python-app and ui-app without local NIM services."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  16,
+                                                 "ramMb":  65536,
+                                                 "vramMb":  98304,
+                                                 "diskGb":  320,
+                                                 "gpuRequired":  true
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "api mode",
+                               "branch":  "main",
+                               "port":  9000,
+                               "installDirectory":  "deploy/nemotron-voice-agent-provider"
+                           },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64"
+                                              ],
+                            "frameworks":  [
+                                               "Docker Compose",
+                                               "Pipecat",
+                                               "WebRTC",
+                                               "NVIDIA API"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Git."
+                                                  },
+                                                  {
+                                                      "id":  "bash",
+                                                      "label":  "Bash",
+                                                      "command":  "bash --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Git Bash on Windows."
+                                                  },
+                                                  {
+                                                      "id":  "docker",
+                                                      "label":  "Docker",
+                                                      "command":  "docker --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "api",
+                                                     "label":  "Hosted API mode",
+                                                     "description":  "Uses NVIDIA hosted ASR/TTS/LLM endpoints.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "Install clones the source and prepares .env from config/env.example.",
+                                               "Run starts python-app and ui-app with bounded health checks."
+                                           ]
+                        },
+        "lastBenchmark":  {
+                              "headlineMetric":  "not started",
+                              "secondaryMetric":  "no runtime sample",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-13T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-13T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  9000,
+                        "healthUrl":  "http://localhost:9000",
+                        "metricsUrl":  "http://localhost:7860/docs",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
     },
-    lastRunAt: "2026-05-10T09:12:00.000Z",
-  },
-  {
-    id: "vision-lab",
-    name: "Vision Lab",
-    type: "vision",
-    repoUrl: "https://github.com/ntc-ai/vision-lab",
-    description: "Pipeline detection, segmentation và captioning cho camera hoặc batch ảnh.",
-    tags: ["yolo", "sam", "caption"],
-    accentColor: "#22d3ee",
-    visual: {
-      imageUrl: "/assets/projects/vision-lab.jpg",
-      focus: "62% 72%",
-      ambient: "#0284c7",
-      ambientSoft: "#061f35",
+    {
+        "id":  "shop-retail-provider",
+        "name":  "Shop Retail Provider",
+        "type":  "nvidia-blueprint",
+        "repoUrl":  "https://github.com/mionm/Shop-Retail-Provider-mion-.git",
+        "description":  "Retail shopping assistant stack with React UI, chain server, catalog and memory retrievers, guardrails, Milvus, MinIO and nginx.",
+        "tags":  [
+                     "retail",
+                     "shopping",
+                     "rag",
+                     "agents",
+                     "nvidia"
+                 ],
+        "accentColor":  "#76b900",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/nvidia-blueprint.jpg",
+                       "focus":  "54% 50%",
+                       "ambient":  "#76b900",
+                       "ambientSoft":  "#052e16"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  8,
+                                             "ramMb":  24576,
+                                             "vramMb":  0,
+                                             "diskGb":  60,
+                                             "gpuRequired":  false,
+                                             "notes":  "Default Hub mode uses NVIDIA hosted endpoints with local Docker services."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  16,
+                                                 "ramMb":  65536,
+                                                 "vramMb":  24576,
+                                                 "diskGb":  180,
+                                                 "gpuRequired":  true
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "api mode",
+                               "branch":  "main",
+                               "port":  3000,
+                               "installDirectory":  "deploy/shop-retail-provider"
+                           },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64"
+                                              ],
+                            "frameworks":  [
+                                               "Docker Compose",
+                                               "FastAPI",
+                                               "React",
+                                               "Milvus",
+                                               "MinIO",
+                                               "NVIDIA API"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Git."
+                                                  },
+                                                  {
+                                                      "id":  "docker",
+                                                      "label":  "Docker",
+                                                      "command":  "docker --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Desktop or Docker Engine."
+                                                  },
+                                                  {
+                                                      "id":  "docker-compose",
+                                                      "label":  "Docker Compose v2",
+                                                      "command":  "docker compose version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Compose v2."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "api",
+                                                     "label":  "Hosted API mode",
+                                                     "description":  "Uses NVIDIA hosted endpoints for LLM, embeddings and rails.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "Install clones the mionm source into deploy/shop-retail-provider.",
+                                               "Quick config env keys are written to ignored .env files before Docker Compose starts."
+                                           ]
+                        },
+        "lastBenchmark":  {
+                              "headlineMetric":  "not started",
+                              "secondaryMetric":  "no runtime sample",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-13T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-13T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  3000,
+                        "healthUrl":  "http://localhost:3000/api/health",
+                        "metricsUrl":  "http://localhost:8009/health",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
     },
-    installStatus: "installed",
-    runStatus: "stopped",
-    requirements: {
-      minimum: {
-        cpuCores: 6,
-        ramMb: 12288,
-        vramMb: 6144,
-        diskGb: 18,
-        gpuRequired: true,
-      },
-      recommended: {
-        cpuCores: 10,
-        ramMb: 24576,
-        vramMb: 12288,
-        diskGb: 48,
-        gpuRequired: true,
-      },
+    {
+        "id":  "multi-agent-intelligent-warehouse",
+        "name":  "Multi-Agent Intelligent Warehouse",
+        "type":  "nvidia-blueprint",
+        "repoUrl":  "https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia",
+        "description":  "NVIDIA Blueprint-aligned warehouse assistant with LangGraph agents, RAG, Milvus, monitoring and React dashboard.",
+        "tags":  [
+                     "warehouse",
+                     "rag",
+                     "nvidia"
+                 ],
+        "accentColor":  "#38bdf8",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/nvidia-blueprint.jpg",
+                       "focus":  "54% 50%",
+                       "ambient":  "#0284c7",
+                       "ambientSoft":  "#061f35"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  8,
+                                             "ramMb":  24576,
+                                             "vramMb":  0,
+                                             "diskGb":  48,
+                                             "gpuRequired":  false,
+                                             "notes":  "CPU/dev compose can boot without GPU; GPU/NIM mode needs NVIDIA runtime."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  16,
+                                                 "ramMb":  65536,
+                                                 "vramMb":  24576,
+                                                 "diskGb":  180,
+                                                 "gpuRequired":  true
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "dev compose",
+                               "branch":  "main",
+                               "port":  3001,
+                               "installDirectory":  "deploy/multi-agent-intelligent-warehouse"
+                           },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64",
+                                                  "arm64"
+                                              ],
+                            "frameworks":  [
+                                               "Docker Compose",
+                                               "Python 3.11 containers",
+                                               "Node 20 containers",
+                                               "FastAPI",
+                                               "React",
+                                               "LangGraph",
+                                               "Milvus",
+                                               "TimescaleDB",
+                                               "Redis",
+                                               "Kafka"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Windows: winget install Git.Git. Linux: install git from your package manager."
+                                                  },
+                                                  {
+                                                      "id":  "docker",
+                                                      "label":  "Docker",
+                                                      "command":  "docker --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Desktop on Windows/macOS or Docker Engine on Linux."
+                                                  },
+                                                  {
+                                                      "id":  "docker-compose",
+                                                      "label":  "Docker Compose v2",
+                                                      "command":  "docker compose version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Compose v2 plugin or Docker Desktop."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "api",
+                                                     "label":  "NVIDIA API mode",
+                                                     "description":  "Uses NVIDIA hosted LLM/embedding endpoints and does not start local NIM by default.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 },
+                                                 {
+                                                     "id":  "local-nim",
+                                                     "label":  "Local NIM profile",
+                                                     "description":  "Optional compose profile for local NIM. Requires NVIDIA GPU, NVIDIA runtime and enough VRAM.",
+                                                     "requiresGpu":  true,
+                                                     "requiresNvidiaKey":  true
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "Install clones the source into deploy/multi-agent-intelligent-warehouse.",
+                                               "Default Hub run path publishes frontend UI on the configured port (default 3001) and keeps backend API on host port 8091.",
+                                               "Frontend provider UI is exposed by the source stack on port 3001 and nginx on 3002 when running standalone."
+                                           ]
+                        },
+        "lastBenchmark":  {
+                              "headlineMetric":  "0 q/min",
+                              "secondaryMetric":  "not started",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-10T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-10T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  3001,
+                        "healthUrl":  "http://localhost:8091/api/v1/health",
+                        "metricsUrl":  "http://localhost:8091/metrics",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
     },
-    editableConfig: {
-      profile: "Realtime 1080p",
-      branch: "stable",
-      port: 8077,
-      installDirectory: "D:/AIHub/providers/vision-lab",
-    },
-    lastBenchmark: {
-      headlineMetric: "58 FPS",
-      secondaryMetric: "p95 34 ms",
-      latencyMs: 34,
-      throughput: 58,
-      vramPeakMb: 10450,
-      measuredAt: "2026-05-09T17:30:00.000Z",
-    },
-    lastRunAt: "2026-05-09T17:30:00.000Z",
-  },
-  {
-    id: "spark-llm-runner",
-    name: "Spark LLM Runner",
-    type: "spark-llm",
-    repoUrl: "https://github.com/ntc-ai/spark-llm-runner",
-    description: "Chạy batch inference LLM qua Spark cho dữ liệu lớn và job phân tán.",
-    tags: ["spark", "batch", "etl"],
-    accentColor: "#2563eb",
-    visual: {
-      imageUrl: "/assets/projects/spark-llm.jpg",
-      focus: "62% 48%",
-      ambient: "#1d4ed8",
-      ambientSoft: "#071936",
-    },
-    installStatus: "not_installed",
-    runStatus: "stopped",
-    requirements: {
-      minimum: {
-        cpuCores: 12,
-        ramMb: 32768,
-        vramMb: 12000,
-        diskGb: 96,
-        gpuRequired: true,
-      },
-      recommended: {
-        cpuCores: 16,
-        ramMb: 65536,
-        vramMb: 20000,
-        diskGb: 180,
-        gpuRequired: true,
-      },
-    },
-    editableConfig: {
-      profile: "Single node executor",
-      branch: "main",
-      port: 9091,
-      installDirectory: "D:/AIHub/providers/spark-llm-runner",
-    },
-    lastBenchmark: {
-      headlineMetric: "1.9k rows/min",
-      secondaryMetric: "job p95 8.6s",
-      latencyMs: 8600,
-      throughput: 1900,
-      vramPeakMb: 18600,
-      measuredAt: "2026-05-05T12:44:00.000Z",
-    },
-    lastRunAt: "2026-05-05T12:44:00.000Z",
-  },
-  {
-    id: "nvidia-blueprint-rag",
-    name: "NVIDIA Blueprint RAG",
-    type: "nvidia-blueprint",
-    repoUrl: "https://github.com/ntc-ai/nvidia-blueprint-rag",
-    description: "Blueprint RAG containerized với vector store, reranker và endpoint OpenAI-compatible.",
-    tags: ["nvidia", "rag", "containers"],
-    accentColor: "#4ade80",
-    visual: {
-      imageUrl: "/assets/projects/nvidia-blueprint.jpg",
-      focus: "54% 50%",
-      ambient: "#22c55e",
-      ambientSoft: "#052e16",
-    },
-    installStatus: "failed",
-    runStatus: "error",
-    requirements: {
-      minimum: {
-        cpuCores: 12,
-        ramMb: 49152,
-        vramMb: 22000,
-        diskGb: 220,
-        gpuRequired: true,
-      },
-      recommended: {
-        cpuCores: 24,
-        ramMb: 98304,
-        vramMb: 48000,
-        diskGb: 420,
-        gpuRequired: true,
-      },
-    },
-    editableConfig: {
-      profile: "Blueprint default",
-      branch: "release/2.x",
-      port: 8010,
-      installDirectory: "D:/AIHub/providers/nvidia-blueprint-rag",
-    },
-    lastBenchmark: {
-      headlineMetric: "Service failed",
-      secondaryMetric: "VRAM gate",
-      vramPeakMb: 22600,
-      measuredAt: "2026-05-08T20:10:00.000Z",
-    },
-    lastRunAt: "2026-05-08T20:10:00.000Z",
-  },
-  {
-    id: "embedding-foundry",
-    name: "Embedding Foundry",
-    type: "embedding",
-    repoUrl: "https://github.com/ntc-ai/embedding-foundry",
-    description: "Tạo embedding local, benchmark batch size và quản lý vector profile.",
-    tags: ["embedding", "vector", "batch"],
-    accentColor: "#38bdf8",
-    visual: {
-      imageUrl: "/assets/projects/embedding-foundry.jpg",
-      focus: "64% 48%",
-      ambient: "#31a8de",
-      ambientSoft: "#08283b",
-    },
-    installStatus: "not_installed",
-    runStatus: "stopped",
-    requirements: {
-      minimum: {
-        cpuCores: 4,
-        ramMb: 8192,
-        vramMb: 2048,
-        diskGb: 12,
-        gpuRequired: false,
-      },
-      recommended: {
-        cpuCores: 8,
-        ramMb: 16384,
-        vramMb: 6144,
-        diskGb: 36,
-        gpuRequired: false,
-      },
-    },
-    editableConfig: {
-      profile: "bge-m3 batch 64",
-      branch: "main",
-      port: 8120,
-      installDirectory: "D:/AIHub/providers/embedding-foundry",
-    },
-    lastBenchmark: {
-      headlineMetric: "1.2k vec/s",
-      secondaryMetric: "batch 64",
-      throughput: 1200,
-      vramPeakMb: 3980,
-      measuredAt: "2026-05-07T14:20:00.000Z",
-    },
-    lastRunAt: "2026-05-07T14:20:00.000Z",
-  },
-];
+    {
+        "id":  "pdf-to-podcast",
+        "name":  "PDF to Podcast",
+        "type":  "speech",
+        "repoUrl":  "https://github.com/PhuongHo03/pdf-to-podcast.git",
+        "description":  "PDF-to-podcast pipeline with FastAPI services, local PDF extraction, NVIDIA-backed agent scripting, ElevenLabs TTS, Redis, MinIO, Jaeger and a Gradio frontend.",
+        "tags":  [
+                     "pdf",
+                     "podcast",
+                     "tts",
+                     "gradio",
+                     "nvidia"
+                 ],
+        "accentColor":  "#14b8a6",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/embedding-foundry.jpg",
+                       "focus":  "45% 50%",
+                       "ambient":  "#14b8a6",
+                       "ambientSoft":  "#042f2e"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  8,
+                                             "ramMb":  16384,
+                                             "vramMb":  0,
+                                             "diskGb":  40,
+                                             "gpuRequired":  false,
+                                             "notes":  "Default stack runs with hosted NVIDIA and ElevenLabs APIs. Docker images are large because the PDF model worker is CUDA-capable."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  12,
+                                                 "ramMb":  32768,
+                                                 "vramMb":  12288,
+                                                 "diskGb":  120,
+                                                 "gpuRequired":  false
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "hosted api mode",
+                               "branch":  "main",
+                               "port":  7860,
+                               "installDirectory":  "deploy/pdf-to-podcast"
+                           },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64"
+                                              ],
+                            "frameworks":  [
+                                               "Docker Compose",
+                                               "FastAPI",
+                                               "Gradio",
+                                               "Redis",
+                                               "MinIO",
+                                               "Jaeger",
+                                               "NVIDIA API",
+                                               "ElevenLabs"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Windows: winget install Git.Git. Linux: install git from your package manager."
+                                                  },
+                                                  {
+                                                      "id":  "bash",
+                                                      "label":  "Bash",
+                                                      "command":  "bash --version",
+                                                      "required":  true,
+                                                      "installHint":  "Windows: install Git Bash. Linux: bash is usually preinstalled."
+                                                  },
+                                                  {
+                                                      "id":  "docker",
+                                                      "label":  "Docker",
+                                                      "command":  "docker --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Desktop on Windows/macOS or Docker Engine on Linux."
+                                                  },
+                                                  {
+                                                      "id":  "docker-compose",
+                                                      "label":  "Docker Compose v2",
+                                                      "command":  "docker compose version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Docker Compose v2 plugin or Docker Desktop."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "hosted",
+                                                     "label":  "Hosted API mode",
+                                                     "description":  "Uses hosted NVIDIA endpoints for script generation and ElevenLabs for TTS. API keys are needed for full podcast generation; health checks run without real keys.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  true
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "Install clones the source into deploy/pdf-to-podcast.",
+                                               "Run delegates to the provider setup.sh --up script and records the auto-selected frontend/API ports.",
+                                               "The app defaults to the Gradio frontend on port 7860 when available."
+                                           ]
+                        },
+        "lastBenchmark":  {
+                              "headlineMetric":  "0 jobs/min",
+                              "secondaryMetric":  "not started",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-11T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-11T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  7860,
+                        "healthUrl":  "http://localhost:7860",
+                        "metricsUrl":  "http://localhost:8002/health",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
+    }
+] satisfies Omit<HubProject, "compatibility">[];
 
-type GeneratedProjectDefinition = {
-  id: string;
-  name: string;
-  type: ProjectType;
-  visualType: ProjectType;
-  description: string;
-  tags: string[];
-  accentColor: string;
-  installStatus: HubProject["installStatus"];
-  runStatus: HubProject["runStatus"];
-  cpuCores: number;
-  ramGb: number;
-  vramGb: number;
-  diskGb: number;
-  gpuRequired?: boolean;
-  profile: string;
-  branch?: string;
-  port: number;
-  headlineMetric: string;
-  secondaryMetric: string;
-  throughput?: number;
-  latencyMs?: number;
-  vramPeakGb: number;
-  lastRunAt: string;
-};
-
-type GeneratedProjectTuple = [
-  id: string,
-  name: string,
-  type: ProjectType,
-  visualType: ProjectType,
-  description: string,
-  tags: string[],
-  accentColor: string,
-  installStatus: HubProject["installStatus"],
-  runStatus: HubProject["runStatus"],
-  cpuCores: number,
-  ramGb: number,
-  vramGb: number,
-  diskGb: number,
-  gpuRequired: boolean,
-  profile: string,
-  branch: string | undefined,
-  port: number,
-  headlineMetric: string,
-  secondaryMetric: string,
-  throughput: number | undefined,
-  latencyMs: number | undefined,
-  vramPeakGb: number,
-  lastRunAt: string,
-];
-
-const visualPresets = {
-  llm: {
-    imageUrl: "/assets/projects/local-llm.jpg",
-    focus: "66% 48%",
-    ambient: "#1f8c86",
-    ambientSoft: "#0a2f31",
-  },
-  vision: {
-    imageUrl: "/assets/projects/vision-lab.jpg",
-    focus: "62% 72%",
-    ambient: "#0284c7",
-    ambientSoft: "#061f35",
-  },
-  "spark-llm": {
-    imageUrl: "/assets/projects/spark-llm.jpg",
-    focus: "62% 48%",
-    ambient: "#1d4ed8",
-    ambientSoft: "#071936",
-  },
-  "nvidia-blueprint": {
-    imageUrl: "/assets/projects/nvidia-blueprint.jpg",
-    focus: "54% 50%",
-    ambient: "#22c55e",
-    ambientSoft: "#052e16",
-  },
-  embedding: {
-    imageUrl: "/assets/projects/embedding-foundry.jpg",
-    focus: "64% 48%",
-    ambient: "#31a8de",
-    ambientSoft: "#08283b",
-  },
-  speech: {
-    imageUrl: "/assets/projects/embedding-foundry.jpg",
-    focus: "42% 48%",
-    ambient: "#2563eb",
-    ambientSoft: "#071936",
-  },
-  tooling: {
-    imageUrl: "/assets/projects/local-llm.jpg",
-    focus: "48% 50%",
-    ambient: "#0f766e",
-    ambientSoft: "#062827",
-  },
-} satisfies Record<ProjectType, HubProject["visual"]>;
-
-const typeAccentColors: Record<ProjectType, string[]> = {
-  llm: ["#2dd4bf", "#22c55e", "#38bdf8"],
-  vision: ["#22d3ee", "#0ea5e9", "#2dd4bf"],
-  "spark-llm": ["#2563eb", "#0284c7", "#38bdf8"],
-  "nvidia-blueprint": ["#4ade80", "#22c55e", "#16a34a"],
-  embedding: ["#38bdf8", "#0ea5e9", "#2dd4bf"],
-  speech: ["#60a5fa", "#2563eb", "#38bdf8"],
-  tooling: ["#0f766e", "#0284c7", "#22c55e"],
-};
-
-const generatedProjectDefinitions: GeneratedProjectDefinition[] = ([
-  ["qwen-edge-server", "Qwen Edge Server", "llm", "llm", "Run Qwen edge profiles with OpenAI-compatible routing.", ["qwen", "edge", "api"], "#14b8a6", "installed", "stopped", 8, 24, 10, 42, true, "Qwen2.5 14B edge", "main", 8211, "61 tok/s", "TTFT 520 ms", 61, 520, 9, "2026-05-09T10:12:00.000Z"],
-  ["llama-router-farm", "Llama Router Farm", "llm", "llm", "Route chat traffic across GGUF workers and fallback models.", ["llama", "router", "workers"], "#2dd4bf", "not_installed", "stopped", 10, 32, 12, 64, true, "Router balanced", "main", 8212, "184 req/min", "p95 1.8s", 184, 1800, 11, "2026-05-07T15:22:00.000Z"],
-  ["deepseek-code-bench", "DeepSeek Code Bench", "llm", "llm", "Benchmark coding models against local repo prompts.", ["code", "eval", "deepseek"], "#60a5fa", "installed", "running", 12, 32, 16, 90, true, "Repo coding suite", "stable", 8213, "43 pass@1", "batch 128", 43, undefined, 14, "2026-05-10T08:10:00.000Z"],
-  ["mixtral-quant-lab", "Mixtral Quant Lab", "llm", "llm", "Compare MoE quant profiles before installing full weights.", ["mixtral", "moe", "quant"], "#22c55e", "not_installed", "stopped", 14, 48, 20, 120, true, "MoE Q4 sweep", "main", 8214, "37 tok/s", "VRAM 18 GB", 37, undefined, 18, "2026-05-06T11:40:00.000Z"],
-  ["camera-qa-studio", "Camera QA Studio", "vision", "vision", "Inspect camera frames with detection and caption review loops.", ["camera", "qa", "caption"], "#f97316", "installed", "stopped", 6, 16, 8, 28, true, "Realtime QA", "stable", 8221, "42 FPS", "p95 44 ms", 42, 44, 7, "2026-05-09T13:18:00.000Z"],
-  ["defect-vision-cell", "Defect Vision Cell", "vision", "vision", "Detect small manufacturing defects from batched image folders.", ["defect", "yolo", "batch"], "#f59e0b", "not_installed", "stopped", 8, 24, 10, 60, true, "Factory batch", "main", 8222, "310 img/min", "mAP 0.72", 310, undefined, 9, "2026-05-04T09:25:00.000Z"],
-  ["ocr-layout-forge", "OCR Layout Forge", "vision", "vision", "Parse screenshots and PDF pages into structured OCR regions.", ["ocr", "layout", "pdf"], "#fb923c", "installed", "stopped", 6, 16, 6, 32, true, "Document layout", "main", 8223, "96 pages/min", "p95 620 ms", 96, 620, 5, "2026-05-08T16:11:00.000Z"],
-  ["sam-desk-segmenter", "SAM Desk Segmenter", "vision", "vision", "Segment objects from workstation screenshots and camera stills.", ["sam", "segment", "mask"], "#facc15", "not_installed", "stopped", 8, 24, 12, 72, true, "SAM desktop", "main", 8224, "28 masks/s", "batch 16", 28, undefined, 10, "2026-05-05T18:04:00.000Z"],
-  ["spark-rag-indexer", "Spark RAG Indexer", "spark-llm", "spark-llm", "Build vector indexes from large folders with Spark executors.", ["spark", "rag", "index"], "#8b5cf6", "installed", "stopped", 12, 48, 12, 160, true, "Index workers", "main", 8231, "5.8k docs/min", "8 workers", 5800, undefined, 11, "2026-05-09T19:32:00.000Z"],
-  ["batch-eval-orchestrator", "Batch Eval Orchestrator", "spark-llm", "spark-llm", "Queue prompt eval jobs and compare model output drift.", ["eval", "spark", "queue"], "#a78bfa", "not_installed", "stopped", 12, 48, 16, 140, true, "Eval queue", "main", 8232, "2.4k rows/min", "p95 7.1s", 2400, 7100, 15, "2026-05-03T12:20:00.000Z"],
-  ["dataset-distill-runner", "Dataset Distill Runner", "spark-llm", "spark-llm", "Distill raw corpora into instruction datasets with GPU batches.", ["distill", "dataset", "etl"], "#c084fc", "installed", "running", 16, 64, 20, 220, true, "Distill pass", "stable", 8233, "820 pairs/min", "job p95 11s", 820, 11000, 19, "2026-05-10T07:44:00.000Z"],
-  ["triton-blueprint-serve", "Triton Blueprint Serve", "nvidia-blueprint", "nvidia-blueprint", "Serve TensorRT engines through a Triton blueprint stack.", ["triton", "tensorrt", "serve"], "#84cc16", "not_installed", "stopped", 16, 64, 18, 180, true, "Triton single GPU", "release/1.x", 8241, "710 infer/s", "p95 24 ms", 710, 24, 17, "2026-05-06T20:36:00.000Z"],
-  ["cuda-agent-workshop", "CUDA Agent Workshop", "nvidia-blueprint", "nvidia-blueprint", "Prototype GPU agent tools with CUDA telemetry and queues.", ["cuda", "agent", "telemetry"], "#65a30d", "installed", "stopped", 12, 48, 14, 120, true, "Agent lab", "main", 8242, "94 tasks/min", "VRAM 12 GB", 94, undefined, 12, "2026-05-08T08:45:00.000Z"],
-  ["nemo-guardrail-stack", "NeMo Guardrail Stack", "nvidia-blueprint", "nvidia-blueprint", "Run local guardrail services for LLM policy tests.", ["nemo", "guardrail", "policy"], "#a3e635", "not_installed", "stopped", 10, 32, 10, 96, true, "Policy suite", "main", 8243, "390 checks/min", "p95 180 ms", 390, 180, 9, "2026-05-01T14:08:00.000Z"],
-  ["vector-recall-bench", "Vector Recall Bench", "embedding", "embedding", "Measure recall and latency across local vector stores.", ["vector", "recall", "bench"], "#38bdf8", "installed", "stopped", 6, 16, 4, 44, false, "Recall sweep", "main", 8251, "14k q/min", "recall 0.91", 14000, undefined, 3, "2026-05-07T17:16:00.000Z"],
-  ["reranker-arena", "Reranker Arena", "embedding", "embedding", "Compare local rerankers for RAG answer quality.", ["rerank", "rag", "score"], "#0ea5e9", "not_installed", "stopped", 8, 24, 8, 58, true, "Rerank suite", "main", 8252, "1.1k pairs/s", "nDCG 0.84", 1100, undefined, 7, "2026-05-02T10:05:00.000Z"],
-  ["multilingual-speech-lab", "Multilingual Speech Lab", "speech", "speech", "Transcribe and align multilingual audio batches locally.", ["whisper", "speech", "align"], "#d946ef", "installed", "stopped", 8, 24, 8, 80, true, "Whisper large", "main", 8261, "18x realtime", "WER 7.4", 18, undefined, 7, "2026-05-09T22:10:00.000Z"],
-  ["voice-clone-sandbox", "Voice Clone Sandbox", "speech", "speech", "Experiment with local voice profiles and safety gated export.", ["voice", "tts", "sandbox"], "#e879f9", "not_installed", "stopped", 10, 32, 12, 110, true, "TTS lab", "main", 8262, "31 clips/min", "p95 2.2s", 31, 2200, 11, "2026-05-04T21:34:00.000Z"],
-  ["audio-diarization-node", "Audio Diarization Node", "speech", "speech", "Split speaker turns and export timeline JSON for meetings.", ["diarize", "speaker", "timeline"], "#60a5fa", "installed", "stopped", 8, 16, 6, 48, true, "Speaker timeline", "main", 8263, "9.8x realtime", "DER 6.2", 9.8, undefined, 5, "2026-05-08T23:20:00.000Z"],
-  ["promptops-control-plane", "PromptOps Control Plane", "tooling", "tooling", "Track prompts, model configs, and local endpoint health.", ["promptops", "config", "health"], "#64748b", "installed", "running", 4, 8, 0, 16, false, "Control plane", "main", 8271, "12 endpoints", "live sync", 12, undefined, 1, "2026-05-10T06:28:00.000Z"],
-  ["model-cache-manager", "Model Cache Manager", "tooling", "tooling", "Clean, pin, and move model caches across fast disks.", ["cache", "models", "disk"], "#94a3b8", "installed", "stopped", 4, 8, 0, 20, false, "Cache audit", "main", 8272, "318 GB free", "scan 9s", 318, 9000, 1, "2026-05-10T05:50:00.000Z"],
-  ["agent-runbook-studio", "Agent Runbook Studio", "tooling", "tooling", "Manage repeatable local agent runbooks with health checks.", ["agent", "runbook", "health"], "#0f766e", "not_installed", "stopped", 4, 8, 0, 18, false, "Runbook base", "main", 8273, "42 runs/day", "success 96%", 42, undefined, 1, "2026-05-07T09:42:00.000Z"],
-  ["gpu-observability-lite", "GPU Observability Lite", "tooling", "tooling", "Sample GPU, process, and queue metrics for dashboard panels.", ["gpu", "metrics", "dash"], "#0284c7", "installed", "running", 4, 8, 0, 12, false, "Telemetry agent", "main", 8274, "1s samples", "4 streams", 4, 1000, 1, "2026-05-10T04:18:00.000Z"],
-  ["semantic-cache-proxy", "Semantic Cache Proxy", "embedding", "embedding", "Cache similar prompt responses using local embedding distance.", ["cache", "embedding", "proxy"], "#22c55e", "not_installed", "stopped", 6, 16, 4, 36, false, "Cache proxy", "main", 8253, "87% hits", "p95 42 ms", 87, 42, 3, "2026-05-06T15:27:00.000Z"],
-  ["bluegreen-deploy-gateway", "Bluegreen Deploy Gateway", "tooling", "tooling", "Switch local provider endpoints between blue and green slots.", ["deploy", "gateway", "routing"], "#38bdf8", "installed", "stopped", 4, 8, 0, 24, false, "Bluegreen routes", "main", 8275, "24 routes", "swap 3s", 24, 3000, 1, "2026-05-05T06:35:00.000Z"],
-  ["agentic-commerce-blueprint", "Agentic Commerce Blueprint", "nvidia-blueprint", "nvidia-blueprint", "NVIDIA agentic commerce stack with storefront, APIs, agents and observability.", ["commerce", "agents", "nvidia"], "#22c55e", "not_installed", "stopped", 8, 24, 0, 32, false, "api mode", "main", 8088, "0 req/min", "not started", 0, 0, 0, "2026-05-10T00:00:00.000Z"],
-  ["multi-agent-intelligent-warehouse", "Multi-Agent Intelligent Warehouse", "nvidia-blueprint", "nvidia-blueprint", "NVIDIA warehouse assistant with LangGraph agents, RAG and dashboard runtime.", ["warehouse", "rag", "nvidia"], "#38bdf8", "not_installed", "stopped", 8, 24, 0, 48, false, "dev compose", "main", 8091, "0 q/min", "not started", 0, 0, 0, "2026-05-10T00:00:00.000Z"],
-] satisfies GeneratedProjectTuple[]).map(
-  ([
-    id,
-    name,
-    type,
-    visualType,
-    description,
-    tags,
-    accentColor,
-    installStatus,
-    runStatus,
-    cpuCores,
-    ramGb,
-    vramGb,
-    diskGb,
-    gpuRequired,
-    profile,
-    branch,
-    port,
-    headlineMetric,
-    secondaryMetric,
-    throughput,
-    latencyMs,
-    vramPeakGb,
-    lastRunAt,
-  ]) => ({
-    id,
-    name,
-    type,
-    visualType,
-    description,
-    tags,
-    accentColor,
-    installStatus,
-    runStatus,
-    cpuCores,
-    ramGb,
-    vramGb,
-    diskGb,
-    gpuRequired,
-    profile,
-    branch,
-    port,
-    headlineMetric,
-    secondaryMetric,
-    throughput,
-    latencyMs,
-    vramPeakGb,
-    lastRunAt,
-  }),
-) satisfies GeneratedProjectDefinition[];
-
-const generatedProjects: Omit<HubProject, "compatibility">[] = generatedProjectDefinitions.map((project, index) => ({
-  id: project.id,
-  name: project.name,
-  type: project.type,
-  repoUrl: `https://github.com/ntc-ai/${project.id}`,
-  description: project.description,
-  tags: project.tags,
-  accentColor: typeAccentColors[project.type][index % typeAccentColors[project.type].length],
-  visual: visualPresets[project.visualType],
-  installStatus: project.installStatus,
-  runStatus: project.runStatus,
-  requirements: {
-    minimum: {
-      cpuCores: project.cpuCores,
-      ramMb: project.ramGb * 1024,
-      vramMb: project.vramGb * 1024,
-      diskGb: project.diskGb,
-      gpuRequired: project.gpuRequired ?? true,
-    },
-    recommended: {
-      cpuCores: project.cpuCores + 4,
-      ramMb: project.ramGb * 2048,
-      vramMb: project.vramGb * 2048,
-      diskGb: Math.ceil(project.diskGb * 1.8),
-      gpuRequired: project.gpuRequired ?? true,
-    },
-  },
-  editableConfig: {
-    profile: project.profile,
-    branch: project.branch ?? "main",
-    port: project.port,
-    installDirectory: `D:/AIHub/providers/${project.id}`,
-  },
-  lastBenchmark: {
-    headlineMetric: project.headlineMetric,
-    secondaryMetric: project.secondaryMetric,
-    latencyMs: project.latencyMs,
-    throughput: project.throughput,
-    vramPeakMb: project.vramPeakGb * 1024,
-    measuredAt: project.lastRunAt,
-  },
-  lastRunAt: project.lastRunAt,
-}));
-
-export const hubProjects: HubProject[] = [...projectsSeed, ...generatedProjects].map((project) => ({
+export const hubProjects: HubProject[] = projectsSeed.map((project) => ({
   ...project,
   compatibility: evaluateCompatibility(
     hardwareSnapshot,
@@ -510,81 +1046,9 @@ export const hubProjects: HubProject[] = [...projectsSeed, ...generatedProjects]
   ),
 }));
 
-export const runningTasks: RunningTask[] = [
-  {
-    id: "task-llm-chat",
-    projectId: "local-llm-studio",
-    projectName: "Local LLM Studio",
-    type: "llm",
-    status: "running",
-    startedAt: "2026-05-10T09:42:00.000Z",
-    durationSec: 3120,
-    cpuPercent: 18,
-    gpuPercent: 42,
-    ramMb: 9140,
-    vramMb: 12680,
-    currentStep: "Serving chat endpoint",
-    progressPercent: 100,
-  },
-  {
-    id: "task-vision-cache",
-    projectId: "vision-lab",
-    projectName: "Vision Lab",
-    type: "vision",
-    status: "completed",
-    startedAt: "2026-05-10T08:58:00.000Z",
-    durationSec: 740,
-    cpuPercent: 4,
-    gpuPercent: 0,
-    ramMb: 1200,
-    vramMb: 0,
-    currentStep: "Dataset cache ready",
-    progressPercent: 100,
-  },
-];
+export const runningTasks: RunningTask[] = [];
 
-export const projectLogs: ProjectLog[] = [
-  {
-    id: "log-1",
-    projectId: "local-llm-studio",
-    source: "runtime",
-    level: "info",
-    timestamp: "2026-05-10T09:42:18.000Z",
-    message: "Loaded Qwen 14B Q4_K_M with 32768 context tokens.",
-  },
-  {
-    id: "log-2",
-    projectId: "local-llm-studio",
-    source: "runtime",
-    level: "debug",
-    timestamp: "2026-05-10T09:42:22.000Z",
-    message: "CUDA graph warmup completed in 3.4s.",
-  },
-  {
-    id: "log-3",
-    projectId: "local-llm-studio",
-    source: "runtime",
-    level: "info",
-    timestamp: "2026-05-10T09:44:02.000Z",
-    message: "OpenAI-compatible endpoint available on http://localhost:7860/v1.",
-  },
-  {
-    id: "log-4",
-    projectId: "nvidia-blueprint-rag",
-    source: "install",
-    level: "warn",
-    timestamp: "2026-05-08T20:04:31.000Z",
-    message: "Container image pulled, but recommended VRAM threshold was not met.",
-  },
-  {
-    id: "log-5",
-    projectId: "nvidia-blueprint-rag",
-    source: "runtime",
-    level: "error",
-    timestamp: "2026-05-08T20:10:19.000Z",
-    message: "Reranker service exited after CUDA out-of-memory.",
-  },
-];
+export const projectLogs: ProjectLog[] = [];
 
 export function getProjectById(projectId: string) {
   return hubProjects.find((project) => project.id === projectId);

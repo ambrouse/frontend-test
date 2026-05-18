@@ -3,9 +3,11 @@ $ErrorActionPreference = "Stop"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "pdf-to-podcast" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
-$DeployDir = Join-Path $DeployRoot $Id
+$DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $PortsPath = Join-Path $DeployDir ".auto-ports.env"
-$Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-StringData } else { @{ FRONTEND_PORT = "7860"; API_SERVICE_PORT = "8002" } }
+$DefaultFrontendPort = $env:AIHUB_PORT; if (-not $DefaultFrontendPort) { $DefaultFrontendPort = "7860" }
+$DefaultApiPort = $env:API_SERVICE_PORT; if (-not $DefaultApiPort) { $DefaultApiPort = "8002" }
+$Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-StringData } else { @{ FRONTEND_PORT = $DefaultFrontendPort; API_SERVICE_PORT = $DefaultApiPort } }
 $FrontendPort = [int]$Ports.FRONTEND_PORT
 $ApiPort = [int]$Ports.API_SERVICE_PORT
 $FrontendOk = $false

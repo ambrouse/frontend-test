@@ -1,0 +1,15 @@
+{
+  "profile": "api mode",
+  "branch": "main",
+  "port": 9000,
+  "installDirectory": "deploy/nemotron-voice-agent-provider",
+  "env": {
+    "NVIDIA_API_KEY": "",
+    "NGC_API_KEY": "",
+    "NEMOTRON_PIPELINE_PORT": "7860",
+    "TRANSPORT": "WEBRTC",
+    "ASR_SERVER_URL": "grpc.nvcf.nvidia.com:443",
+    "TTS_SERVER_URL": "grpc.nvcf.nvidia.com:443",
+    "NVIDIA_LLM_URL": "https://integrate.api.nvidia.com/v1"
+  }
+}

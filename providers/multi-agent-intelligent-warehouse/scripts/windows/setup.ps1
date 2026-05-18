@@ -2,28 +2,22 @@ $ErrorActionPreference = "Stop"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "multi-agent-intelligent-warehouse" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
-$DeployDir = Join-Path $DeployRoot $Id
+$DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "3001" }
 $BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "8091" }
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
 $RepoUrl = "https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia"
-function Get-LocalNvidiaApiKey {
-  param([string]$ProviderRoot)
-  try {
-    $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $ProviderRoot "..\.."))
-    $LocalEnvFile = Join-Path $RepoRoot ".env.local"
-    if (!(Test-Path $LocalEnvFile)) { return "" }
-    $Line = Get-Content -Path $LocalEnvFile | Where-Object { $_ -match '^\s*NVIDIA_API_KEY\s*=' } | Select-Object -Last 1
-    if (-not $Line) { return "" }
-    $Value = ($Line -split '=', 2)[1].Trim()
-    if ($Value.StartsWith('"') -and $Value.EndsWith('"') -and $Value.Length -ge 2) {
-      $Value = $Value.Substring(1, $Value.Length - 2)
-    }
-    return $Value
-  } catch {
-    return ""
+$ProviderEnvKeys = @("NVIDIA_API_KEY", "EMBEDDING_API_KEY", "RAIL_API_KEY", "HOST_NGINX_PORT", "HOST_POSTGRES_PORT", "HOST_REDIS_PORT", "HOST_KAFKA_PORT", "HOST_ETCD_PORT", "HOST_MINIO_PORT", "HOST_MINIO_CONSOLE_PORT", "HOST_MILVUS_GRPC_PORT", "HOST_MILVUS_HTTP_PORT")
+
+function Set-EnvValue {
+  param([string]$Text, [string]$Key, [string]$Value)
+  if ($null -eq $Value -or $Value -eq "") { return $Text }
+  if ($Text -match "(?m)^$([regex]::Escape($Key))=") {
+    return ($Text -replace "(?m)^$([regex]::Escape($Key))=.*$", "$Key=$Value")
   }
+  return ($Text.TrimEnd() + "`n$Key=$Value`n")
 }
+
 New-Item -ItemType Directory -Force -Path $DeployRoot, "$Root\logs", "$Root\runtime" | Out-Null
 if ($env:AIHUB_DRY_RUN -eq "1") {
   New-Item -ItemType Directory -Force -Path (Join-Path $DeployDir "deploy\compose") | Out-Null
@@ -44,10 +38,6 @@ if (!(Test-Path $EnvFile)) { Copy-Item "$Root\.env.example" $EnvFile }
 $Text = Get-Content $EnvFile -Raw
 $DefaultText = Get-Content "$Root\.env.example" -Raw
 $ResolvedNvidiaApiKey = $env:NVIDIA_API_KEY
-if (-not $ResolvedNvidiaApiKey) {
-  $ResolvedNvidiaApiKey = Get-LocalNvidiaApiKey -ProviderRoot $Root
-  if ($ResolvedNvidiaApiKey) { $env:NVIDIA_API_KEY = $ResolvedNvidiaApiKey }
-}
 foreach ($Line in ($DefaultText -split "`r?`n")) {
   if ($Line -match '^([A-Za-z_][A-Za-z0-9_]*)=') {
     $Key = $Matches[1]
@@ -66,9 +56,12 @@ if ($Text -notmatch '(?m)^HOST_BACKEND_PORT=') { $Text += "`nHOST_BACKEND_PORT=$
 if ($Text -notmatch '(?m)^FRONTEND_PORT=') { $Text += "`nFRONTEND_PORT=$Port" }
 if ($Text -notmatch '(?m)^HOST_FRONTEND_PORT=') { $Text += "`nHOST_FRONTEND_PORT=$Port" }
 if ($ResolvedNvidiaApiKey) {
-  $Text = $Text -replace '(?m)^NVIDIA_API_KEY=.*$', "NVIDIA_API_KEY=$ResolvedNvidiaApiKey"
-  $Text = $Text -replace '(?m)^EMBEDDING_API_KEY=.*$', "EMBEDDING_API_KEY=$ResolvedNvidiaApiKey"
-  $Text = $Text -replace '(?m)^RAIL_API_KEY=.*$', "RAIL_API_KEY=$ResolvedNvidiaApiKey"
+  $Text = Set-EnvValue -Text $Text -Key "NVIDIA_API_KEY" -Value $ResolvedNvidiaApiKey
+}
+foreach ($Key in $ProviderEnvKeys) {
+  $Value = [Environment]::GetEnvironmentVariable($Key)
+  if (($Key -eq "EMBEDDING_API_KEY" -or $Key -eq "RAIL_API_KEY") -and -not $Value) { $Value = $ResolvedNvidiaApiKey }
+  $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value
 }
 Set-Content -Path $EnvFile -Value $Text -Encoding utf8
 $Status = @{ projectId=$Id; state="installed"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Installed"; progressPercent=100; health=@{ level="ok"; message="Installed" } }

@@ -62,6 +62,13 @@
         "command": "docker compose version",
         "required": true,
         "installHint": "Install Docker Compose v2 plugin or Docker Desktop."
+      },
+      {
+        "id": "docker-daemon",
+        "label": "Docker daemon",
+        "command": "docker info --format {{.ServerVersion}}",
+        "required": true,
+        "installHint": "Start Docker Desktop and wait until the Linux engine is running."
       }
     ],
     "runtimeModes": [

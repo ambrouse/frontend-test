@@ -4,13 +4,14 @@ set -euo pipefail
 ID="${AIHUB_PROVIDER_ID:-pdf-to-podcast}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
-DEPLOY_DIR="$DEPLOY_ROOT/$ID"
+DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-7860}"
 BRANCH="${AIHUB_BRANCH:-main}"
 REPO_URL="https://github.com/PhuongHo03/pdf-to-podcast.git"
 PROVIDER_ENV_KEYS=(
   NVIDIA_API_KEY
   ELEVENLABS_API_KEY
+  API_SERVICE_PORT
   MAX_CONCURRENT_REQUESTS
   MODEL_API_URL
   DEFAULT_VOICE_1
@@ -18,20 +19,6 @@ PROVIDER_ENV_KEYS=(
 )
 
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
-
-local_env_value() {
-  local key="$1"
-  local repo_root local_env line value
-  repo_root="$(cd "$ROOT/../.." && pwd)"
-  local_env="$repo_root/.env.local"
-  [[ -f "$local_env" ]] || return 0
-  line="$(grep -E "^[[:space:]]*${key}=" "$local_env" | tail -n 1 || true)"
-  [[ -n "$line" ]] || return 0
-  value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  printf '%s' "$value"
-}
 
 set_env_value() {
   local path="$1" key="$2" value="$3"
@@ -65,9 +52,6 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
 
   for key in "${PROVIDER_ENV_KEYS[@]}"; do
     value="${!key:-}"
-    if [[ -z "$value" ]]; then
-      value="$(local_env_value "$key")"
-    fi
     set_env_value "$ENV_FILE" "$key" "$value"
   done
 fi

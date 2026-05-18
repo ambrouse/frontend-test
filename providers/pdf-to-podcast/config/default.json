@@ -2,5 +2,14 @@
   "profile": "hosted api mode",
   "branch": "main",
   "port": 7860,
-  "installDirectory": "deploy/pdf-to-podcast"
+  "installDirectory": "deploy/pdf-to-podcast",
+  "env": {
+    "NVIDIA_API_KEY": "",
+    "ELEVENLABS_API_KEY": "",
+    "API_SERVICE_PORT": "8002",
+    "MAX_CONCURRENT_REQUESTS": "",
+    "MODEL_API_URL": "",
+    "DEFAULT_VOICE_1": "",
+    "DEFAULT_VOICE_2": ""
+  }
 }

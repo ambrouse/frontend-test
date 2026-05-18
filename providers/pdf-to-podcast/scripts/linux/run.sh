@@ -4,8 +4,9 @@ set -euo pipefail
 ID="${AIHUB_PROVIDER_ID:-pdf-to-podcast}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
-DEPLOY_DIR="$DEPLOY_ROOT/$ID"
+DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-7860}"
+API_SERVICE_PORT="${API_SERVICE_PORT:-8002}"
 
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
 
@@ -13,12 +14,11 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   if [[ ! -d "$DEPLOY_DIR" ]]; then
     bash "$ROOT/scripts/linux/setup.sh"
   fi
-  (cd "$DEPLOY_DIR" && FRONTEND_PORT="$PORT" bash setup.sh --up)
+  (cd "$DEPLOY_DIR" && FRONTEND_PORT="$PORT" API_SERVICE_PORT="$API_SERVICE_PORT" bash setup.sh --up)
 fi
 
 PORTS_FILE="$DEPLOY_DIR/.auto-ports.env"
 FRONTEND_PORT="$PORT"
-API_SERVICE_PORT="8002"
 if [[ -f "$PORTS_FILE" ]]; then
   # shellcheck disable=SC1090
   source "$PORTS_FILE"

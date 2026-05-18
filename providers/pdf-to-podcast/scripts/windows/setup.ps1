@@ -3,36 +3,19 @@ $ErrorActionPreference = "Stop"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "pdf-to-podcast" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
-$DeployDir = Join-Path $DeployRoot $Id
+$DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "7860" }
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
 $RepoUrl = "https://github.com/PhuongHo03/pdf-to-podcast.git"
 $ProviderEnvKeys = @(
   "NVIDIA_API_KEY",
   "ELEVENLABS_API_KEY",
+  "API_SERVICE_PORT",
   "MAX_CONCURRENT_REQUESTS",
   "MODEL_API_URL",
   "DEFAULT_VOICE_1",
   "DEFAULT_VOICE_2"
 )
-
-function Get-LocalEnvValue {
-  param([string]$ProviderRoot, [string]$Key)
-  try {
-    $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $ProviderRoot "..\.."))
-    $LocalEnvFile = Join-Path $RepoRoot ".env.local"
-    if (!(Test-Path $LocalEnvFile)) { return "" }
-    $Line = Get-Content -Path $LocalEnvFile | Where-Object { $_ -match "^\s*$([regex]::Escape($Key))\s*=" } | Select-Object -Last 1
-    if (-not $Line) { return "" }
-    $Value = ($Line -split '=', 2)[1].Trim()
-    if ($Value.StartsWith('"') -and $Value.EndsWith('"') -and $Value.Length -ge 2) {
-      $Value = $Value.Substring(1, $Value.Length - 2)
-    }
-    return $Value
-  } catch {
-    return ""
-  }
-}
 
 function Set-EnvValue {
   param([string]$Path, [string]$Key, [string]$Value)
@@ -70,7 +53,6 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
 
   foreach ($Key in $ProviderEnvKeys) {
     $Value = [Environment]::GetEnvironmentVariable($Key)
-    if (-not $Value) { $Value = Get-LocalEnvValue -ProviderRoot $Root -Key $Key }
     Set-EnvValue -Path $EnvFile -Key $Key -Value $Value
   }
 }

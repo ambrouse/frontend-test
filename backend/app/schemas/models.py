@@ -223,7 +223,6 @@ class ProviderConfig(BaseModel):
 
 
 class ProviderActionRequest(BaseModel):
-    nvidiaApiKey: str | None = None
     force: bool = False
     dryRun: bool = False
 

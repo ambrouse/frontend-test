@@ -3,8 +3,9 @@ $ErrorActionPreference = "Stop"
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "pdf-to-podcast" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
-$DeployDir = Join-Path $DeployRoot $Id
+$DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "7860" }
+$ApiServicePort = $env:API_SERVICE_PORT; if (-not $ApiServicePort) { $ApiServicePort = "8002" }
 
 function Find-Bash {
   $Candidates = @(
@@ -26,7 +27,7 @@ function Read-PortMap {
   param([string]$DeployPath)
   $Path = Join-Path $DeployPath ".auto-ports.env"
   if (!(Test-Path $Path)) {
-    return @{ FRONTEND_PORT = $Port; API_SERVICE_PORT = "8002" }
+    return @{ FRONTEND_PORT = $Port; API_SERVICE_PORT = $ApiServicePort }
   }
   return Get-Content $Path | ConvertFrom-StringData
 }
@@ -99,6 +100,7 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
 
   $Bash = Find-Bash
   $env:FRONTEND_PORT = $Port
+  $env:API_SERVICE_PORT = $ApiServicePort
   Start-BashScript -Bash $Bash -WorkingDirectory $DeployDir -Arguments @("setup.sh", "--up") -LogName "setup-up"
   Wait-PortMap -Path (Join-Path $DeployDir ".auto-ports.env")
 }

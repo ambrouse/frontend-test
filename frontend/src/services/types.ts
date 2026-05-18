@@ -97,6 +97,10 @@ export type ProviderEnvironment = {
   } | null;
 };
 
+export type ProviderCommandSet = Partial<Record<"setup" | "run" | "stop" | "delete" | "health" | "metrics", string>>;
+
+export type ProviderCommands = Partial<Record<"windows" | "linux", ProviderCommandSet>>;
+
 export type HubProject = {
   id: string;
   name: string;
@@ -140,6 +144,7 @@ export type HubProject = {
     logFile: string;
   };
   environment?: ProviderEnvironment | null;
+  commands?: ProviderCommands;
 };
 
 export type RunningTask = {

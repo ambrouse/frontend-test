@@ -1,8 +1,10 @@
 <div align="center">
 
+![AI Hub banner](banner.jpg)
+
 # AI Hub
 
-**A low-latency local command center for installing, running, observing, and cleaning up AI provider projects from GitHub.**
+**A local command center for installing, running, observing, and cleaning up AI provider projects from GitHub.**
 
 [![CI](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml)
 [![Frontend Artifact](https://github.com/ambrouse/frontend-test/actions/workflows/frontend-release.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/frontend-release.yml)
@@ -12,7 +14,7 @@
 ![Docker](https://img.shields.io/badge/Provider_Runtime-Docker_Compose-2496ED?logo=docker)
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue)
 
-[Quick Start](#quick-start) · [Architecture](#architecture) · [Provider Lifecycle](#provider-lifecycle) · [Verification](#verification) · [License](#license)
+[Quick Start](#quick-start) · [Providers](#active-provider-catalog) · [Architecture](#architecture) · [Verification](#verification) · [Release](#release-and-packaging)
 
 </div>
 
@@ -25,33 +27,43 @@ AI Hub is built for local AI workflows where the UI must stay responsive while p
 It focuses on three things:
 
 - **Real provider execution**: provider source is cloned from GitHub into `deploy/` only when Install is clicked.
-- **Low-latency UX**: backend endpoints are cached and measured, lifecycle actions are queued, and the frontend renders real data without blocking.
+- **Low-latency UX**: backend endpoints are cached and measured, lifecycle actions are queued, and the frontend renders real provider data without blocking.
 - **Cross-platform operations**: Windows and Linux wrapper scripts share one provider contract for setup, run, stop, delete, logs, status, and metrics.
 
-## Current Provider Integrations
+## Active Provider Catalog
 
-| Provider | GitHub source | Port | Mode | Lifecycle |
+AI Hub currently ships exactly seven active provider wrappers:
+
+| Provider ID | Display name | Default port | Runtime mode | Lifecycle |
 | --- | --- | ---: | --- | --- |
-| PDF to Podcast | `PhuongHo03/pdf-to-podcast` | `7860` (frontend) / dynamic API port | Git Bash + Docker Compose + Python/Gradio + NVIDIA/ElevenLabs API | Install, run, logs, metrics, stop, delete |
-| Agentic Commerce Blueprint | `baolnq-ai/Agentic-Commerce-blueprint-provider-` | `8088` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
-| Multi-Agent Intelligent Warehouse | `baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia` | `3001` (frontend) / `8091` (backend API) | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
+| `agentic-commerce-blueprint` | Agentic Commerce Blueprint | `8088` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
+| `ai-virtual-assistant-provider` | AI Virtual Assistant Provider | `13301` UI / `13300` API | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
+| `aiq` | NVIDIA AI-Q Blueprint | `13080` | Docker Compose + NVIDIA AI-Q | Install, run, logs, metrics, stop, delete |
+| `nemotron-voice-agent-provider` | Nemotron Voice Agent Provider | `13100` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
+| `shop-retail-provider` | Shop Retail Provider | provider manifest port | Docker Compose + retail agents | Install, run, logs, metrics, stop, delete |
+| `multi-agent-intelligent-warehouse` | Multi-Agent Intelligent Warehouse | `3001` UI / `8091` API | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
+| `pdf-to-podcast` | PDF to Podcast | `7860` frontend / dynamic API | Git Bash + Docker Compose + Python/Gradio + NVIDIA/ElevenLabs API | Install, run, logs, metrics, stop, delete |
 
-All three providers are tested through the Hub backend by cloning from GitHub into `deploy/{provider_id}` and then running the full lifecycle.
+Removed or archived providers must not appear in the backend registry, frontend fallback data, or provider dispatch scripts.
 
 ## Quick Start
 
-### Windows PowerShell
+### Fresh clone on Windows PowerShell
 
 ```powershell
+git clone https://github.com/ambrouse/frontend-test.git
+cd frontend-test
 .\setup.ps1
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir backend
 cd frontend
 npm run dev
 ```
 
-### Linux or macOS
+### Fresh clone on Linux or macOS
 
 ```bash
+git clone https://github.com/ambrouse/frontend-test.git
+cd frontend-test
 ./setup.sh
 ./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend
 cd frontend
@@ -79,7 +91,13 @@ Open the app at:
 http://localhost:3000
 ```
 
-The setup scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. When a dependency is missing, they ask before installing with the available package manager (`winget`, `apt`, `dnf`, `pacman`, or `brew`). Docker is optional for viewing the Hub but required for real provider install/run.
+The setup scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. Docker is optional for viewing the Hub but required for real provider install/run.
+
+## Provider Install Flow
+
+Provider folders under `providers/` contain the Hub manifest, config defaults, media, and lifecycle wrapper scripts. Install does not use local provider source checked into this repo; it clones the provider source from the provider's GitHub repository into `deploy/{installDirectory}`.
+
+That means provider-source fixes must be committed and pushed to the provider's own repository before fresh install validation. Local-only edits inside `deploy/` are not durable.
 
 ## Architecture
 
@@ -100,11 +118,11 @@ flowchart LR
 
 | Path | Purpose |
 | --- | --- |
-| `frontend/` | Next.js UI, provider cards, detail pages, real API client, tests and production build. |
+| `frontend/` | Next.js UI, provider cards, detail pages, real API client, tests, and production build. |
 | `backend/` | FastAPI API, hardware snapshot, provider registry, task queue, runtime lifecycle, latency tools. |
-| `providers/` | Provider manifests and Windows/Linux lifecycle wrappers. |
+| `providers/` | Seven active provider manifests plus Windows/Linux lifecycle wrappers. |
 | `deploy/` | Ignored runtime clone target for provider source repos. |
-| `docs/` | Provider contract and backend/API notes. |
+| `docs/` | Provider contract, backend/API notes, and task documentation. |
 | `plans/` | Implementation plans and execution phases. |
 | `logs/` | Work logs and task summaries. |
 
@@ -120,15 +138,9 @@ The frontend only talks to the backend. The backend runs provider wrapper script
 | Delete | `DELETE /api/providers/{id}` | Stops and removes deployed source files safely from `deploy/`. |
 | Observe | `GET /api/providers/{id}/logs`, `/status`, `/metrics`, `/config` | Feeds the detail page with real runtime data. |
 
-Each provider manifest can expose:
+Each provider manifest can expose supported operating systems, architectures, required tools, runtime modes, setup notes, and minimum/recommended hardware requirements.
 
-- supported operating systems and architectures;
-- required tools such as Git, Docker, and Docker Compose;
-- framework/runtime notes;
-- API mode or GPU/NIM mode;
-- minimum and recommended hardware requirements.
-
-### Provider Images
+## Provider Images
 
 Provider-specific images live in the Hub provider folder, not in `deploy/`. Put image files in:
 
@@ -137,19 +149,6 @@ providers/{provider_id}/media/
 ```
 
 The backend also accepts `providers/{provider_id}/images/` and `providers/{provider_id}/assets/` as fallback folders. If images exist, the first sorted image becomes the card/banner image and the whole set becomes the detail-page slideshow. If no provider image exists, the manifest `visual.imageUrl` fallback is used.
-
-The frontend renders this readiness data so users can see what the current machine has before installing.
-
-## Performance Targets
-
-The project is tuned for a small local app that should feel immediate:
-
-- provider listing and detail endpoints are warmed and cached;
-- slow provider work happens in background tasks;
-- hardware GPU probes are refreshed asynchronously;
-- latency benchmark gate targets p95 below `100ms`.
-
-Recent local benchmark p95 values were in the low single-digit milliseconds for health, hardware, provider list/detail, logs, and metrics.
 
 ## Verification
 
@@ -178,8 +177,9 @@ npm.cmd run build --prefix frontend
 
 ```powershell
 Get-ChildItem providers -Recurse -Filter *.ps1 | ForEach-Object {
+  $tokens = $null
   $errors = $null
-  [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errors)
+  [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors)
   if ($errors) { throw $errors }
 }
 ```
@@ -190,21 +190,38 @@ bash -lc "bash -n setup.sh && find providers -path '*/scripts/linux/*.sh' -print
 
 ## CI/CD
 
-GitHub Actions currently checks:
+GitHub Actions checks:
 
 - workflow linting with `actionlint`;
-- frontend typecheck, unit tests, and production build on Ubuntu/Windows/macOS;
-- backend lint, format, mypy, pytest, coverage, provider manifest validation, secret scan, dry-run lifecycle, package build, and latency benchmark on Ubuntu/Windows/macOS;
+- frontend typecheck, unit tests, production build, and dependency audit;
+- backend lint, format check, mypy, pytest with coverage gate, provider manifest validation, secret scan, dry-run lifecycle, package build, dependency audit, and latency benchmark;
 - provider wrapper syntax for Bash and PowerShell;
-- frontend and backend production artifact generation.
+- frontend and backend production artifact generation after successful CI.
+
+## Release and Packaging
+
+Version metadata is kept in:
+
+- `backend/pyproject.toml`
+- `frontend/package.json`
+
+Release tags are split by artifact type:
+
+```text
+backend-vX.Y.Z
+frontend-vX.Y.Z
+```
+
+Backend release workflow builds wheel and source distribution from `backend/dist/*`. Frontend release workflow builds a standalone Next.js artifact from `frontend/artifact`.
+
+Before creating a release, run the verification commands above and confirm CI passes on the pushed branch or tag.
 
 ## Operational Notes
 
-- Never commit `.env`, `.env.local`, provider logs, runtime files, or `deploy/` contents.
-- NVIDIA API keys are accepted through setup or lifecycle requests and written only to ignored local files.
+- Never commit `.env`, `.env.local`, provider logs, runtime files, `deploy/` contents, API keys, tokens, or local config secrets.
+- NVIDIA and third-party API keys are accepted through setup or lifecycle requests and written only to ignored local files.
 - Hardware shortages are shown as warnings. Missing required tools are shown clearly and provider scripts fail with actionable messages.
 - Provider source fixes should be made upstream first, pushed to the provider repo, then retested through Hub install from GitHub.
-- PDF to Podcast upstream main is verified at `e336a89` with retry-hardened Python dependency installs for Docker and local setup.
 
 ## License
 

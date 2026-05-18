@@ -1,6 +1,0 @@
-{
-  "profile": "Eval queue",
-  "branch": "main",
-  "port": 8232,
-  "installDirectory": "D:/AIHub/providers/batch-eval-orchestrator"
-}

@@ -1,0 +1,139 @@
+{
+  "id": "aiq",
+  "name": "NVIDIA AI-Q Blueprint",
+  "type": "nvidia-blueprint",
+  "repoUrl": "https://github.com/PhuongHo03/aiq.git",
+  "description": "NVIDIA AI-Q research assistant blueprint with FastAPI async jobs, Knowledge API, LlamaIndex retrieval and a Next.js UI.",
+  "tags": ["research", "agents", "nvidia", "knowledge", "nextjs"],
+  "accentColor": "#76b900",
+  "visual": {
+    "imageUrl": "/assets/projects/nvidia-blueprint.jpg",
+    "focus": "52% 50%",
+    "ambient": "#76b900",
+    "ambientSoft": "#052e16"
+  },
+  "installStatus": "not_installed",
+  "runStatus": "stopped",
+  "requirements": {
+    "minimum": {
+      "cpuCores": 8,
+      "ramMb": 16384,
+      "vramMb": 0,
+      "diskGb": 32,
+      "gpuRequired": false,
+      "notes": "Validated in hosted NVIDIA API mode with local SQLite/Dask and Knowledge API. Full web/paper search requires Tavily and Serper keys."
+    },
+    "recommended": {
+      "cpuCores": 12,
+      "ramMb": 32768,
+      "vramMb": 0,
+      "diskGb": 80,
+      "gpuRequired": false
+    }
+  },
+  "editableConfig": {
+    "profile": "hosted knowledge mode",
+    "branch": "develop",
+    "port": 13080,
+    "installDirectory": "deploy/aiq"
+  },
+  "environment": {
+    "supportedOs": ["windows", "linux"],
+    "architectures": ["x64"],
+    "frameworks": ["Python 3.11+", "NVIDIA Agent Intelligence Toolkit", "FastAPI", "Dask", "LlamaIndex", "Next.js", "NVIDIA API"],
+    "requiredTools": [
+      {
+        "id": "git",
+        "label": "Git",
+        "command": "git --version",
+        "required": true,
+        "installHint": "Windows: winget install Git.Git. Linux: install git from your package manager."
+      },
+      {
+        "id": "bash",
+        "label": "Bash",
+        "command": "bash --version",
+        "required": true,
+        "installHint": "Windows: install Git Bash. Linux: bash is usually preinstalled."
+      },
+      {
+        "id": "python",
+        "label": "Python 3.11-3.13",
+        "command": "python --version",
+        "required": true,
+        "installHint": "Install Python 3.11, 3.12 or 3.13. Windows launcher py -3.11 is supported."
+      },
+      {
+        "id": "node",
+        "label": "Node.js",
+        "command": "node --version",
+        "required": true,
+        "installHint": "Install Node.js 20+."
+      },
+      {
+        "id": "npm",
+        "label": "npm",
+        "command": "npm --version",
+        "required": true,
+        "installHint": "npm ships with Node.js."
+      }
+    ],
+    "runtimeModes": [
+      {
+        "id": "hosted_knowledge",
+        "label": "Hosted knowledge mode",
+        "description": "Uses NVIDIA hosted endpoints, local SQLite/Dask and the built-in Knowledge API. NVIDIA_API_KEY is required.",
+        "requiresGpu": false,
+        "requiresNvidiaKey": true
+      },
+      {
+        "id": "full_sources",
+        "label": "Full source mode",
+        "description": "Also enables Tavily web search and Serper paper search when TAVILY_API_KEY and SERPER_API_KEY are available.",
+        "requiresGpu": false,
+        "requiresNvidiaKey": true
+      }
+    ],
+    "setupNotes": [
+      "Install clones branch develop from PhuongHo03/aiq.git into deploy/aiq.",
+      "Hub applies a tested lifecycle patch during install because direct upstream push is currently blocked by GitHub permissions.",
+      "Default Hub run path disables optional Docker support services and uses local SQLite/Dask."
+    ]
+  },
+  "lastBenchmark": {
+    "headlineMetric": "not started",
+    "secondaryMetric": "no runtime sample",
+    "latencyMs": 0,
+    "throughput": 0,
+    "vramPeakMb": 0,
+    "measuredAt": "2026-05-12T00:00:00.000Z"
+  },
+  "lastRunAt": "2026-05-12T00:00:00.000Z",
+  "runtime": {
+    "defaultPort": 13080,
+    "healthUrl": "http://localhost:18080/health",
+    "metricsUrl": "http://localhost:18080/v1/jobs/async/agents",
+    "statusFile": "runtime/status.json",
+    "metricsFile": "runtime/metrics.json",
+    "pidFile": "runtime/provider.pid",
+    "logFile": "logs/runtime.log"
+  },
+  "commands": {
+    "windows": {
+      "setup": "scripts/windows/setup.ps1",
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "delete": "scripts/windows/delete.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
+    },
+    "linux": {
+      "setup": "scripts/linux/setup.sh",
+      "run": "scripts/linux/run.sh",
+      "stop": "scripts/linux/stop.sh",
+      "delete": "scripts/linux/delete.sh",
+      "health": "scripts/linux/health.sh",
+      "metrics": "scripts/linux/collect-metrics.sh"
+    }
+  }
+}

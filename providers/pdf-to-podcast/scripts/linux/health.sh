@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
-DEPLOY_DIR="$DEPLOY_ROOT/pdf-to-podcast"
+DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/pdf-to-podcast}"
 FRONTEND_PORT="${AIHUB_PORT:-7860}"
-API_SERVICE_PORT="8002"
+API_SERVICE_PORT="${API_SERVICE_PORT:-8002}"
 if [[ -f "$DEPLOY_DIR/.auto-ports.env" ]]; then
   # shellcheck disable=SC1090
   source "$DEPLOY_DIR/.auto-ports.env"

@@ -1,6 +1,0 @@
-{
-  "profile": "Control plane",
-  "branch": "main",
-  "port": 8271,
-  "installDirectory": "D:/AIHub/providers/promptops-control-plane"
-}

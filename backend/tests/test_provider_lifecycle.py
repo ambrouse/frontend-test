@@ -4,6 +4,7 @@ from time import sleep
 
 from fastapi.testclient import TestClient
 
+from app.core.paths import repo_root
 from app.main import app
 
 client = TestClient(app)
@@ -46,8 +47,31 @@ def test_provider_dry_run_lifecycle() -> None:
 
 
 def test_provider_config_reports_port_conflict() -> None:
+    local_config = repo_root() / "providers/agentic-commerce-blueprint/runtime/config.local.json"
+    local_config.unlink(missing_ok=True)
     response = client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 1})
     assert response.status_code == 200
     config = response.json()
     assert config["port"] == 1
+    assert local_config.exists()
     client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 8088})
+    local_config.unlink(missing_ok=True)
+
+
+def test_provider_config_persists_local_env_without_touching_defaults() -> None:
+    local_config = repo_root() / "providers/pdf-to-podcast/runtime/config.local.json"
+    local_config.unlink(missing_ok=True)
+    default_config_path = repo_root() / "providers/pdf-to-podcast/config/default.json"
+    default_config = default_config_path.read_text(encoding="utf-8")
+
+    response = client.patch(
+        "/api/providers/pdf-to-podcast/config",
+        json={"env": {"NVIDIA_API_KEY": "test-key", "API_SERVICE_PORT": "8012"}},
+    )
+
+    assert response.status_code == 200
+    config = response.json()
+    assert config["env"]["NVIDIA_API_KEY"] == "test-key"
+    assert config["env"]["API_SERVICE_PORT"] == "8012"
+    assert default_config_path.read_text(encoding="utf-8") == default_config
+    local_config.unlink(missing_ok=True)

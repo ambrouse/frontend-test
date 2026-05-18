@@ -1,6 +1,0 @@
-{
-  "profile": "Qwen2.5 14B edge",
-  "branch": "main",
-  "port": 8211,
-  "installDirectory": "D:/AIHub/providers/qwen-edge-server"
-}

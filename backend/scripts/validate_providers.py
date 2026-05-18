@@ -5,13 +5,21 @@ import sys
 
 from app.core.paths import providers_root
 from app.schemas.models import HubProject
+from app.services.provider_seed import OFFICIAL_PROVIDER_IDS
 
 
 def main() -> int:
     failures: list[str] = []
     manifests = sorted(providers_root().glob("*/aihub.provider.json"))
-    if not manifests:
-        failures.append("No provider manifests found")
+    provider_ids = {manifest_path.parent.name for manifest_path in manifests}
+    expected_provider_ids = set(OFFICIAL_PROVIDER_IDS)
+    if provider_ids != expected_provider_ids:
+        missing = sorted(expected_provider_ids - provider_ids)
+        extra = sorted(provider_ids - expected_provider_ids)
+        if missing:
+            failures.append(f"Missing official providers: {', '.join(missing)}")
+        if extra:
+            failures.append(f"Unexpected providers: {', '.join(extra)}")
 
     for manifest_path in manifests:
         try:

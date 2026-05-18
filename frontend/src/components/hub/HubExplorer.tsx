@@ -46,11 +46,10 @@ function readHubCache() {
 }
 
 export function HubExplorer() {
-  const [initialCache] = useState<HubCachePayload | null>(() => readHubCache());
   const [activeType, setActiveType] = useState<ProjectType | "all">("all");
   const [query, setQuery] = useState("");
-  const [projects, setProjects] = useState<HubProject[]>(() => initialCache?.providers ?? []);
-  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>(() => initialCache?.featuredProjects ?? []);
+  const [projects, setProjects] = useState<HubProject[]>([]);
+  const [featuredProjects, setFeaturedProjects] = useState<HubProject[]>([]);
   const [activeSlide, setActiveSlide] = useState(0);
   const [previousProject, setPreviousProject] = useState<HubProject | null>(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -95,8 +94,11 @@ export function HubExplorer() {
 
   useEffect(() => {
     const controller = new AbortController();
-
-    const hasCachedData = Boolean(initialCache?.providers.length || initialCache?.featuredProjects.length);
+    const cached = readHubCache();
+    if (cached) {
+      setProjects(cached.providers);
+      setFeaturedProjects(cached.featuredProjects);
+    }
 
     void Promise.all([
       fetchProviders({ signal: controller.signal }),
@@ -120,13 +122,13 @@ export function HubExplorer() {
         });
       })
       .catch(() => {
-        if (!hasCachedData) {
+        if (!cached?.providers.length && !cached?.featuredProjects.length) {
           setIsOffline(true);
         }
       });
 
     return () => controller.abort();
-  }, [initialCache]);
+  }, []);
 
   useEffect(() => {
     if (featuredProjects.length === 0) {
