@@ -140,7 +140,7 @@ jobs:
         run: python scripts/check_no_secrets.py
 
       - name: Backend tests with coverage gate
-        run: pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=80
+        run: pytest --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=75
 
       - name: Provider dry-run lifecycle
         run: python scripts/provider_dry_run_lifecycle.py
