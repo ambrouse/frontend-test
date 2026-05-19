@@ -13,15 +13,40 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
     $ComposeText = Get-Content -LiteralPath $ComposeFile -Raw
     $ComposeText = $ComposeText -replace "(?m)^\s*container_name:\s*.+\r?\n", ""
     $ComposeText = $ComposeText -replace "(?m)^\s*name:\s*retail-shopping-assistant_shopping-network\r?\n", ""
-    Set-Content -LiteralPath $ComposeFile -Value $ComposeText -Encoding utf8
+    [System.IO.File]::WriteAllText($ComposeFile, $ComposeText, [System.Text.UTF8Encoding]::new($false))
+  }
+  $NginxFile = Join-Path $DeployDir "nginx.conf"
+  if (Test-Path -LiteralPath $NginxFile) {
+    $NginxText = Get-Content -LiteralPath $NginxFile -Raw
+    if ($NginxText -notmatch "proxy_read_timeout") {
+      $NginxText = $NginxText -replace "(?m)^(\s*proxy_cache off;\s*)$", "`$1`n            proxy_read_timeout 600s;`n            proxy_send_timeout 600s;"
+    }
+    [System.IO.File]::WriteAllText($NginxFile, $NginxText, [System.Text.UTF8Encoding]::new($false))
+  }
+  $UiConfigFile = Join-Path $DeployDir "ui\src\config\config.ts"
+  if (Test-Path -LiteralPath $UiConfigFile) {
+    $UiConfigText = Get-Content -LiteralPath $UiConfigFile -Raw
+    $UiConfigText = $UiConfigText -replace "defaultState:\s*true", "defaultState: false"
+    [System.IO.File]::WriteAllText($UiConfigFile, $UiConfigText, [System.Text.UTF8Encoding]::new($false))
   }
   Copy-EnvIfMissing -Source (Join-Path $DeployDir ".env.example") -Target (Join-Path $DeployDir ".env")
   $EnvFile = Join-Path $DeployDir ".env"
   $Text = Get-Content -LiteralPath $EnvFile -Raw
-  $NvidiaKey = $env:NVIDIA_API_KEY
+  $LocalEnvFile = Join-Path (Resolve-Path "$Root\..\..") ".env.local"
+  $LocalEnv = @{}
+  if (Test-Path -LiteralPath $LocalEnvFile) {
+    Get-Content -LiteralPath $LocalEnvFile | ForEach-Object {
+      if ($_ -match "^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$") {
+        $LocalEnv[$Matches[1]] = $Matches[2].Trim('"', "'")
+      }
+    }
+  }
+  $NvidiaKey = [Environment]::GetEnvironmentVariable("NVIDIA_API_KEY")
+  if (-not $NvidiaKey -and $LocalEnv.ContainsKey("NVIDIA_API_KEY")) { $NvidiaKey = $LocalEnv["NVIDIA_API_KEY"] }
   if (-not $env:NGC_API_KEY -and $NvidiaKey) { $env:NGC_API_KEY = $NvidiaKey }
   foreach ($Key in @("NVIDIA_API_KEY","NGC_API_KEY","LLM_API_KEY","EMBED_API_KEY","RAIL_API_KEY")) {
     $Value = [Environment]::GetEnvironmentVariable($Key)
+    if (-not $Value -and $LocalEnv.ContainsKey($Key)) { $Value = $LocalEnv[$Key] }
     if (($Key -in @("LLM_API_KEY","EMBED_API_KEY","RAIL_API_KEY","NGC_API_KEY")) -and -not $Value) { $Value = $NvidiaKey }
     $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value
   }

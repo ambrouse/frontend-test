@@ -51,6 +51,8 @@ No secrets, API keys, runtime local config, provider logs, Docker volumes, or de
 - Validation after port-collision fix: provider manifests passed, backend provider tests passed with 15 tests, frontend typecheck passed, seven-provider Windows setup-delete passed, and `deploy/` was clean.
 - Shop Retail Docker collision follow-up: isolated Compose project/container/network names, moved secondary service ports to the `181xx/190xx/12379` range, changed provider delete cleanup to remove Compose images with `--rmi all`, and verified Shop Retail setup/run/delete on Windows.
 - Validation after Shop Retail fix: PowerShell syntax passed, Linux dispatch syntax passed, Shop Retail JSON validation passed, frontend typecheck passed, backend provider lifecycle/registry tests passed with 8 tests, Shop Retail run passed, and delete removed `aihub-shop-retail-provider-*` images.
+- All-provider image cleanup follow-up: verified Windows cleanup uses the shared `--rmi all` helper, changed remaining Linux direct delete scripts for Agentic Commerce, AI-Q, Warehouse, and PDF to Podcast from `--rmi local` to `--rmi all`, and confirmed no provider script still uses `--rmi local`.
+- Shop Retail chat follow-up: found setup wrote empty API-key values when keys lived only in root `.env.local`; setup now reads `.env.local` without logging values, rewrites patched deploy files as UTF-8 without BOM, defaults the UI guardrails toggle off, increases nginx proxy timeouts, and verified chat succeeds with guardrails off and on.
 
 ## Next
 

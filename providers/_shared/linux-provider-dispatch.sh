@@ -77,6 +77,13 @@ wait_http() {
 setup_provider() {
   clone_or_update
   [[ "${AIHUB_DRY_RUN:-}" == "1" ]] && { write_status installed "Installed"; return; }
+  local local_env_file="${ROOT}/../../.env.local"
+  if [[ -f "$local_env_file" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$local_env_file"
+    set +a
+  fi
   local nvidia="${NVIDIA_API_KEY:-}" ngc="${NGC_API_KEY:-${NVIDIA_API_KEY:-}}"
   case "$PROVIDER_ID" in
     shop-retail-provider)
@@ -87,6 +94,25 @@ path = pathlib.Path(sys.argv[1])
 text = path.read_text(encoding="utf-8")
 text = re.sub(r"(?m)^\s*container_name:\s*.+\n", "", text)
 text = re.sub(r"(?m)^\s*name:\s*retail-shopping-assistant_shopping-network\n", "", text)
+path.write_text(text, encoding="utf-8")
+PY
+      fi
+      if [[ -f "$DEPLOY_DIR/nginx.conf" ]]; then
+        python3 - "$DEPLOY_DIR/nginx.conf" <<'PY'
+import pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+if "proxy_read_timeout" not in text:
+    text = re.sub(r"(?m)^(\s*proxy_cache off;\s*)$", r"\1\n            proxy_read_timeout 600s;\n            proxy_send_timeout 600s;", text)
+path.write_text(text, encoding="utf-8")
+PY
+      fi
+      if [[ -f "$DEPLOY_DIR/ui/src/config/config.ts" ]]; then
+        python3 - "$DEPLOY_DIR/ui/src/config/config.ts" <<'PY'
+import pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+text = re.sub(r"defaultState:\s*true", "defaultState: false", text)
 path.write_text(text, encoding="utf-8")
 PY
       fi

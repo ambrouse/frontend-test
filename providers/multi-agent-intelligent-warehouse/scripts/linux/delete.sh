@@ -7,7 +7,7 @@ DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 COMPOSE_DIR="$DEPLOY_DIR/deploy/compose"
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" && -d "$DEPLOY_DIR" ]]; then
   if [[ -f "$COMPOSE_DIR/.env" && -f "$COMPOSE_DIR/docker-compose.dev.yaml" ]]; then
-    (cd "$DEPLOY_DIR" && docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml down --volumes --remove-orphans --rmi local || true)
+    (cd "$DEPLOY_DIR" && docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml down --volumes --remove-orphans --rmi all || true)
   fi
   case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
     "$(cd "$DEPLOY_ROOT" && pwd)"/*) rm -rf "$DEPLOY_DIR" ;;

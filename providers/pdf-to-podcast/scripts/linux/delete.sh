@@ -7,7 +7,7 @@ DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 "$ROOT/scripts/linux/stop.sh" >/dev/null || true
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" && -d "$DEPLOY_DIR" ]]; then
   if [[ -f "$DEPLOY_DIR/docker-compose.yml" ]]; then
-    (cd "$DEPLOY_DIR" && docker compose -f docker-compose.yml down --volumes --remove-orphans --rmi local || true)
+    (cd "$DEPLOY_DIR" && docker compose -f docker-compose.yml down --volumes --remove-orphans --rmi all || true)
   fi
   case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
     "$(cd "$DEPLOY_ROOT" && pwd)"/*) rm -rf "$DEPLOY_DIR" ;;
