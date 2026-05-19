@@ -49,6 +49,8 @@ No secrets, API keys, runtime local config, provider logs, Docker volumes, or de
 - Frontend install crash follow-up: identified remaining risk as provider UI port collisions with Hub dev ports `3000`/`3001`; moved Shop Retail to `13000`, AI Virtual Assistant to `13001`, Warehouse to `13002`, and Warehouse nginx to `13003`.
 - Added backend reserved-port guard and regression test so provider lifecycle scripts fail before execution if a local config attempts to use `3000` or `3001`.
 - Validation after port-collision fix: provider manifests passed, backend provider tests passed with 15 tests, frontend typecheck passed, seven-provider Windows setup-delete passed, and `deploy/` was clean.
+- Shop Retail Docker collision follow-up: isolated Compose project/container/network names, moved secondary service ports to the `181xx/190xx/12379` range, changed provider delete cleanup to remove Compose images with `--rmi all`, and verified Shop Retail setup/run/delete on Windows.
+- Validation after Shop Retail fix: PowerShell syntax passed, Linux dispatch syntax passed, Shop Retail JSON validation passed, frontend typecheck passed, backend provider lifecycle/registry tests passed with 8 tests, Shop Retail run passed, and delete removed `aihub-shop-retail-provider-*` images.
 
 ## Next
 

@@ -80,6 +80,16 @@ setup_provider() {
   local nvidia="${NVIDIA_API_KEY:-}" ngc="${NGC_API_KEY:-${NVIDIA_API_KEY:-}}"
   case "$PROVIDER_ID" in
     shop-retail-provider)
+      if [[ -f "$DEPLOY_DIR/docker-compose.yaml" ]]; then
+        python3 - "$DEPLOY_DIR/docker-compose.yaml" <<'PY'
+import pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+text = re.sub(r"(?m)^\s*container_name:\s*.+\n", "", text)
+text = re.sub(r"(?m)^\s*name:\s*retail-shopping-assistant_shopping-network\n", "", text)
+path.write_text(text, encoding="utf-8")
+PY
+      fi
       cp -n "$DEPLOY_DIR/.env.example" "$DEPLOY_DIR/.env"
       for key in NVIDIA_API_KEY NGC_API_KEY LLM_API_KEY EMBED_API_KEY RAIL_API_KEY; do
         val="${!key:-}"
@@ -87,10 +97,22 @@ setup_provider() {
         set_env_value "$DEPLOY_DIR/.env" "$key" "$val"
       done
       set_env_value "$DEPLOY_DIR/.env" CONFIG_OVERRIDE config-build.yaml
+      set_env_value "$DEPLOY_DIR/.env" COMPOSE_PROJECT_NAME aihub-shop-retail-provider
       set_env_value "$DEPLOY_DIR/.env" HTTP_HOST_PORT "$PORT"
+      declare -A default_ports=(
+        [CHAIN_SERVER_PORT]=18109
+        [CATALOG_RETRIEVER_PORT]=18110
+        [MEMORY_RETRIEVER_PORT]=18111
+        [GUARDRAILS_PORT]=18112
+        [MILVUS_PORT]=19531
+        [MILVUS_HEALTH_PORT]=19091
+        [MINIO_PORT]=19000
+        [MINIO_CONSOLE_PORT]=19001
+        [ETCD_PORT]=12379
+      )
       for key in CHAIN_SERVER_PORT CATALOG_RETRIEVER_PORT MEMORY_RETRIEVER_PORT GUARDRAILS_PORT MILVUS_PORT MILVUS_HEALTH_PORT MINIO_PORT MINIO_CONSOLE_PORT ETCD_PORT; do
-        val="${!key:-}"
-        [[ -n "$val" ]] && set_env_value "$DEPLOY_DIR/.env" "$key" "$val"
+        val="${!key:-${default_ports[$key]}}"
+        set_env_value "$DEPLOY_DIR/.env" "$key" "$val"
       done
       ;;
     nemotron-voice-agent-provider)
@@ -155,17 +177,17 @@ cleanup_provider() {
   [[ -d "$DEPLOY_DIR" && "${AIHUB_DRY_RUN:-}" != "1" ]] || return 0
   case "$PROVIDER_ID" in
     shop-retail-provider)
-      [[ -f "$DEPLOY_DIR/.env" && -f "$DEPLOY_DIR/docker-compose.yaml" ]] && (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yaml down --volumes --remove-orphans --rmi local || true)
+      [[ -f "$DEPLOY_DIR/.env" && -f "$DEPLOY_DIR/docker-compose.yaml" ]] && (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yaml down --volumes --remove-orphans --rmi all || true)
       ;;
     nemotron-voice-agent-provider)
-      [[ -f "$DEPLOY_DIR/.env" && -f "$DEPLOY_DIR/docker-compose.yml" ]] && (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml down --volumes --remove-orphans --rmi local || true)
+      [[ -f "$DEPLOY_DIR/.env" && -f "$DEPLOY_DIR/docker-compose.yml" ]] && (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml down --volumes --remove-orphans --rmi all || true)
       ;;
     ai-virtual-assistant-provider)
       if [[ -f "$DEPLOY_DIR/deploy/compose/docker-compose.yaml" ]]; then
         local args=(--env-file .env -f deploy/compose/docker-compose.yaml)
         [[ -f "$DEPLOY_DIR/.runtime/docker-compose.aihub.yaml" ]] && args+=(-f .runtime/docker-compose.aihub.yaml)
         [[ -f "$DEPLOY_DIR/.runtime/docker-compose.cpu.yaml" ]] && args+=(-f .runtime/docker-compose.cpu.yaml)
-        (cd "$DEPLOY_DIR" && docker compose "${args[@]}" down --volumes --remove-orphans --rmi local || true)
+        (cd "$DEPLOY_DIR" && docker compose "${args[@]}" down --volumes --remove-orphans --rmi all || true)
       fi
       ;;
   esac

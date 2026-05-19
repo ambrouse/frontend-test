@@ -719,7 +719,7 @@ const projectsSeed = [
         "runtime":  {
                         "defaultPort":  13000,
                         "healthUrl":  "http://localhost:13000/api/health",
-                        "metricsUrl":  "http://localhost:8009/health",
+                        "metricsUrl":  "http://localhost:18109/health",
                         "statusFile":  "runtime/status.json",
                         "metricsFile":  "runtime/metrics.json",
                         "pidFile":  "runtime/provider.pid",

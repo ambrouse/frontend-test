@@ -101,8 +101,9 @@ function Invoke-DockerComposeCleanup {
   $PreviousPreference = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
   try {
-    & docker compose @ComposeArgs down --volumes --remove-orphans --rmi local
+    & docker compose @ComposeArgs down --volumes --remove-orphans --rmi all
     if ($LASTEXITCODE -ne 0) { throw "docker compose cleanup failed with exit code $LASTEXITCODE" }
+    & docker builder prune --force --filter "label=com.docker.compose.project" | Out-Null
   } finally {
     $ErrorActionPreference = $PreviousPreference
     Pop-Location
