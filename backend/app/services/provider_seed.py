@@ -15,6 +15,7 @@ OFFICIAL_PROVIDER_IDS = (
     "shop-retail-provider",
     "multi-agent-intelligent-warehouse",
     "pdf-to-podcast",
+    "web-agent",
 )
 
 SEED_HARDWARE = {
