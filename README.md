@@ -1,6 +1,6 @@
 <div align="center">
 
-![AI Hub banner](banner.jpg)
+![AI Hub interactive banner](banner.gif)
 
 # AI Hub
 
