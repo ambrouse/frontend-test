@@ -686,6 +686,27 @@ Testing gate:
   - Web Agent: search chat with sources, session history, Tavily key manager fallback state, Ops Dashboard LLM health, Hub logs/status.
 - Secret scan was run after evidence cleanup; generated runtime/log copies of the NVIDIA key were redacted while leaving `.env.local` available for future local testing.
 
+## Post-Push Pipeline Validation - 2026-05-22
+
+- Status: complete after the requested clean deploy reset, Hub push, and fresh frontend validation loop.
+- Pre-run cleanup: stopped provider-owned runtime containers/processes and removed stale provider deploy clones before retesting.
+- Hub push-before-test checkpoint: `710e2fd feat: add provider service log validation evidence 2026-05-22`.
+- Additional Hub fix/push loop for Warehouse wrapper/env handling: latest pushed commit `bdef5c5 fix: pass warehouse env values into compose 2026-05-22`.
+- Post-push evidence root: `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+- In-scope providers retested through real Hub lifecycle and frontend:
+  - `agentic-commerce-blueprint`: catalog, native commerce UI state, Apps SDK search results, Hub running status, service logs.
+  - `ai-virtual-assistant-provider`: customer data, customer selector, delivery-status chat answer, Hub running status, service logs.
+  - `aiq`: data-source UI, README upload, composer attachment, file-grounded chat answer with README citation, Hub running status, service logs.
+  - `shop-retail-provider`: storefront/chat ready state and retail product search answer, Hub running status, service logs.
+  - `multi-agent-intelligent-warehouse`: login/dashboard, forklift maintenance chat output after Hub fix, Hub running status, service logs.
+  - `web-agent`: frontend search chat output with visible sources through SearXNG fallback, Hub running status, service logs.
+- Explicitly skipped by user scope: `nemotron-voice-agent-provider`, `pdf-to-podcast`.
+- Provider source repos changed during this post-push run: none. The failing Warehouse path was fixed in Hub wrapper/env handling, pushed to Hub, then freshly retested.
+- Evidence cleanup: kept only `.png` screenshots and `.md` reports; removed debug, duplicate, prompt-only, no-output, raw `.txt`, raw `.json`, and raw log evidence.
+- Remaining key limitations under the accepted existing-key scope:
+  - `aiq`: Tavily/Serper paths not validated because those keys were not present; file-grounded frontend flow passed.
+  - `web-agent`: Tavily-specific path not validated; SearXNG fallback plus LLM summary with visible sources passed.
+
 ## Risks and Mitigations
 
 - Docker Compose logs can be slow or huge.
