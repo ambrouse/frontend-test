@@ -181,6 +181,12 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
     $env:HOST_BACKEND_PORT = $BackendPort
     $env:FRONTEND_PORT = $Port
     $env:HOST_FRONTEND_PORT = $Port
+    foreach ($Key in @("NVIDIA_API_KEY", "EMBEDDING_API_KEY", "RAIL_API_KEY", "LLM_MODEL", "LLM_NIM_URL", "EMBEDDING_MODEL")) {
+      $Value = Get-ComposeEnvValue -Path "deploy/compose/.env" -Key $Key -Default ""
+      if (-not [string]::IsNullOrWhiteSpace($Value) -and $Value -notmatch "^\s*\[REDACTED") {
+        Set-Item -Path "Env:$Key" -Value $Value
+      }
+    }
     docker compose --env-file deploy/compose/.env -f deploy/compose/docker-compose.dev.yaml up -d --build --wait --wait-timeout 600
     if ($LASTEXITCODE -ne 0) { throw "docker compose up failed with exit code $LASTEXITCODE" }
     Ensure-WarehouseDatabase -BackendPort $BackendPort
