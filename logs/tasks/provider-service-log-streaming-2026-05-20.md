@@ -231,7 +231,7 @@ Skipped by updated scope:
 
 Evidence root:
 
-- `test/provider-functional-evidence-2026-05-21/`
+- `test/provider-post-push-pipeline-evidence-2026-05-22/`
 
 Provider source fixes pushed before fresh reinstall:
 

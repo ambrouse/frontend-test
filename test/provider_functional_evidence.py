@@ -11,7 +11,9 @@ from playwright.sync_api import Page, sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = ROOT / "test" / "provider-functional-evidence-2026-05-21"
+# Legacy smoke harness output is intentionally transient. Curated, reviewable
+# evidence lives under test/provider-post-push-pipeline-evidence-2026-05-22.
+BASE = ROOT / "test-results" / "provider-functional-smoke"
 API_BASE = "http://127.0.0.1:8000"
 UI_BASE = "http://127.0.0.1:3000"
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"

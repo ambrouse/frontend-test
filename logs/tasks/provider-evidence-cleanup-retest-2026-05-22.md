@@ -9,7 +9,7 @@
 ## Initial Audit
 
 - Found one exact duplicate screenshot pair in `web-agent/function`.
-- Found technical evidence files under `test/provider-functional-evidence-2026-05-21` (`.json`, `.txt`, `.log`) that should be replaced by README reports.
+- Found technical evidence files under the earlier `test/provider-functional-evidence-2026-05-21` folder (`.json`, `.txt`, `.log`) that should be replaced by README reports.
 - `agentic-commerce-blueprint` needs stronger frontend search proof.
 
 ## Agentic Commerce Retest Finding
@@ -114,7 +114,7 @@
 
 ## Evidence Packaging
 
-- Removed technical evidence files from `test/provider-functional-evidence-2026-05-21`; final evidence tree contains only `.png` screenshots and `.md` reports.
+- Removed technical evidence files from the earlier evidence folder; the final kept evidence tree contains only `.png` screenshots and `.md` reports.
 - Generated README reports for the evidence root, each provider folder, and each provider subfolder (`app`, `function`, `lifecycle`, `logs`) using the repo README style direction.
 - Duplicate image hash scan returned no duplicates.
 - Secret scan for `nvapi-...` under `test`, `logs`, `plans`, and `providers` returned no matches.

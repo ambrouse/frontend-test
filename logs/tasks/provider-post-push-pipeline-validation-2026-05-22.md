@@ -61,3 +61,11 @@ Final checks performed after evidence cleanup:
 - Secret pattern scan.
 - Git status review before staging.
 
+## Latest-Only Test Folder Cleanup
+
+Time: 2026-05-22
+
+- Removed superseded evidence folder `test/provider-functional-evidence-2026-05-21/`.
+- Kept latest curated evidence folder `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+- Removed local ignored `test/__pycache__/`.
+- Updated the legacy smoke helper to write transient output under `test-results/provider-functional-smoke/` so it cannot recreate stale curated evidence under `test/`.

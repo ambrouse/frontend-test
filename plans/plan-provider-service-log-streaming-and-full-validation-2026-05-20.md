@@ -664,7 +664,7 @@ Testing gate:
 - Status: complete for the updated six-provider scope.
 - Real frontend validation completed for: `agentic-commerce-blueprint`, `ai-virtual-assistant-provider`, `aiq`, `shop-retail-provider`, `multi-agent-intelligent-warehouse`, and `web-agent`.
 - Explicitly skipped by user scope: `nemotron-voice-agent-provider`, `pdf-to-podcast`.
-- Evidence root: `test/provider-functional-evidence-2026-05-21/`.
+- Evidence root: `test/provider-post-push-pipeline-evidence-2026-05-22/`.
 - Evidence is split per provider into `app/`, `function/`, `lifecycle/`, and `logs/`; stale/no-output screenshots were removed.
 - AIQ blocker status: resolved for current scope by retesting the frontend file-upload flow first, then asking the file-grounded question and capturing the answer output.
 - Source provider fixes pushed before fresh reinstall:
@@ -703,6 +703,7 @@ Testing gate:
 - Explicitly skipped by user scope: `nemotron-voice-agent-provider`, `pdf-to-podcast`.
 - Provider source repos changed during this post-push run: none. The failing Warehouse path was fixed in Hub wrapper/env handling, pushed to Hub, then freshly retested.
 - Evidence cleanup: kept only `.png` screenshots and `.md` reports; removed debug, duplicate, prompt-only, no-output, raw `.txt`, raw `.json`, and raw log evidence.
+- Test evidence cleanup: removed superseded `test/provider-functional-evidence-2026-05-21/`; the latest kept evidence set is `test/provider-post-push-pipeline-evidence-2026-05-22/`.
 - Remaining key limitations under the accepted existing-key scope:
   - `aiq`: Tavily/Serper paths not validated because those keys were not present; file-grounded frontend flow passed.
   - `web-agent`: Tavily-specific path not validated; SearXNG fallback plus LLM summary with visible sources passed.
