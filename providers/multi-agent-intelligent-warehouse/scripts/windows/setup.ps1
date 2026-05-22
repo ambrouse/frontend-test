@@ -66,7 +66,17 @@ $Text = $Text -replace '(?m)^BACKEND_PORT=.*$', "BACKEND_PORT=$BackendPort"
 $Text = $Text -replace '(?m)^HOST_BACKEND_PORT=.*$', "HOST_BACKEND_PORT=$BackendPort"
 $Text = $Text -replace '(?m)^FRONTEND_PORT=.*$', "FRONTEND_PORT=$Port"
 $Text = $Text -replace '(?m)^HOST_FRONTEND_PORT=.*$', "HOST_FRONTEND_PORT=$Port"
-$Text = $Text -replace '(?m)^LLM_MODEL=meta/llama-3\.1-70b-instruct$', "LLM_MODEL=nvidia/llama-3.3-nemotron-super-49b-v1.5"
+$PreferredHostedModel = "nvidia/llama-3.1-nemotron-nano-8b-v1"
+$ExplicitModel = $env:LLM_MODEL
+if (-not (Test-UsableSecret $ExplicitModel) -and $LocalEnv.ContainsKey("LLM_MODEL")) {
+  $ExplicitModel = $LocalEnv["LLM_MODEL"]
+}
+if (Test-UsableSecret $ExplicitModel) {
+  $Text = Set-EnvValue -Text $Text -Key "LLM_MODEL" -Value $ExplicitModel
+} else {
+  $Text = $Text -replace '(?m)^LLM_MODEL=(meta/llama-3\.1-70b-instruct|nvidia/llama-3\.3-nemotron-super-49b-v1\.5)$', "LLM_MODEL=$PreferredHostedModel"
+  if ($Text -notmatch '(?m)^LLM_MODEL=') { $Text += "`nLLM_MODEL=$PreferredHostedModel" }
+}
 if ($Text -notmatch '(?m)^BACKEND_PORT=') { $Text += "`nBACKEND_PORT=$BackendPort" }
 if ($Text -notmatch '(?m)^HOST_BACKEND_PORT=') { $Text += "`nHOST_BACKEND_PORT=$BackendPort" }
 if ($Text -notmatch '(?m)^FRONTEND_PORT=') { $Text += "`nFRONTEND_PORT=$Port" }
