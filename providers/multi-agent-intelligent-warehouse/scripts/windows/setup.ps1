@@ -71,7 +71,8 @@ $ExplicitModel = $env:LLM_MODEL
 if (-not (Test-UsableSecret $ExplicitModel) -and $LocalEnv.ContainsKey("LLM_MODEL")) {
   $ExplicitModel = $LocalEnv["LLM_MODEL"]
 }
-if (Test-UsableSecret $ExplicitModel) {
+$UnsupportedHostedModels = @("meta/llama-3.1-70b-instruct", "nvidia/llama-3.3-nemotron-super-49b-v1.5")
+if (Test-UsableSecret $ExplicitModel -and $UnsupportedHostedModels -notcontains $ExplicitModel) {
   $Text = Set-EnvValue -Text $Text -Key "LLM_MODEL" -Value $ExplicitModel
 } else {
   $Text = $Text -replace '(?m)^LLM_MODEL=(meta/llama-3\.1-70b-instruct|nvidia/llama-3\.3-nemotron-super-49b-v1\.5)$', "LLM_MODEL=$PreferredHostedModel"
