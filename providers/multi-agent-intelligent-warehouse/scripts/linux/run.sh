@@ -15,7 +15,28 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
     [[ -f "$SETUP_SCRIPT" ]] || { echo "deploy directory missing and setup script is unavailable" >&2; exit 2; }
     bash "$SETUP_SCRIPT"
   fi
-  (cd "$DEPLOY_DIR" && BACKEND_PORT="$BACKEND_PORT" HOST_BACKEND_PORT="$BACKEND_PORT" FRONTEND_PORT="$PORT" HOST_FRONTEND_PORT="$PORT" bash scripts/run_all_services.sh)
+  (
+    cd "$DEPLOY_DIR"
+    for env_file in deploy/compose/.env .env; do
+      for kv in "BACKEND_PORT=$BACKEND_PORT" "HOST_BACKEND_PORT=$BACKEND_PORT" "FRONTEND_PORT=$PORT" "HOST_FRONTEND_PORT=$PORT"; do
+        key="${kv%%=*}"
+        value="${kv#*=}"
+        if grep -qE "^${key}=" "$env_file"; then
+          python - "$env_file" "$key" "$value" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+key, value = sys.argv[2], sys.argv[3]
+lines = path.read_text(encoding="utf-8").splitlines()
+path.write_text("\n".join(f"{key}={value}" if line.startswith(f"{key}=") else line for line in lines) + "\n", encoding="utf-8")
+PY
+        else
+          printf '%s=%s\n' "$key" "$value" >> "$env_file"
+        fi
+      done
+    done
+    BACKEND_PORT="$BACKEND_PORT" HOST_BACKEND_PORT="$BACKEND_PORT" FRONTEND_PORT="$PORT" HOST_FRONTEND_PORT="$PORT" bash scripts/run_all_services.sh
+  )
 fi
 python - "$STATUS" "$ID" "$PORT" <<'PY'
 import json, sys

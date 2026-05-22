@@ -33,7 +33,7 @@ def test_providers_contract() -> None:
     response = client.get("/api/providers")
     assert response.status_code == 200
     body = response.json()
-    assert body["total"] == 7
+    assert body["total"] == 8
     provider_ids = {provider["id"] for provider in body["providers"]}
     assert provider_ids == {
         "agentic-commerce-blueprint",
@@ -43,6 +43,7 @@ def test_providers_contract() -> None:
         "shop-retail-provider",
         "multi-agent-intelligent-warehouse",
         "pdf-to-podcast",
+        "web-agent",
     }
     first_provider = body["providers"][0]
     assert {"id", "name", "type", "requirements", "compatibility", "lastBenchmark"} <= set(first_provider)

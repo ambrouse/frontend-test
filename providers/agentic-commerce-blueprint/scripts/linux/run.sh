@@ -39,7 +39,17 @@ for _ in range(300):
     time.sleep(2)
 raise SystemExit(f"gateway health check did not become ready at {url} within timeout")
 PY
-    docker compose -f docker-compose.infra.yml -f docker-compose.yml --profile seed run --rm milvus-seeder
+    seeder_ready=0
+    for attempt in 1 2 3 4 5; do
+      if docker compose -f docker-compose.infra.yml -f docker-compose.yml --profile seed run --rm milvus-seeder; then
+        seeder_ready=1
+        break
+      fi
+      sleep $((10 * attempt))
+    done
+    if [[ "$seeder_ready" != "1" ]]; then
+      echo "WARNING: milvus seeder failed after retries; continuing because the commerce stack is running" >&2
+    fi
   )
 fi
 python - "$STATUS" "$ID" "$PORT" <<'PY'

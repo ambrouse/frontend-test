@@ -29,12 +29,23 @@ function Stop-PortProcess {
 }
 
 function Stop-UiOrphans {
+  param([int[]]$Ports)
   $UiDir = Join-Path $DeployDir "frontends\ui"
   if (!(Test-Path $UiDir)) { return }
   $ResolvedUiDir = [System.IO.Path]::GetFullPath($UiDir)
   Get-CimInstance Win32_Process |
-    Where-Object { $_.CommandLine -and $_.CommandLine.Contains($ResolvedUiDir) } |
+    Where-Object { $_.CommandLine -and $_.CommandLine.IndexOf($ResolvedUiDir, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+  foreach ($Port in $Ports) {
+    Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+      Select-Object -ExpandProperty OwningProcess -Unique |
+      ForEach-Object {
+        $Process = Get-CimInstance Win32_Process -Filter "ProcessId = $_" -ErrorAction SilentlyContinue
+        if ($Process -and $Process.Name -eq "node.exe" -and $Process.CommandLine -and $Process.CommandLine.Contains("server.js")) {
+          Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue
+        }
+      }
+  }
 }
 
 if (Test-Path $DeployDir) {
@@ -54,7 +65,7 @@ $Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-String
 Stop-PortProcess -Port ([int]$Ports.FRONTEND_PORT) -DeployPath $DeployDir
 Stop-PortProcess -Port ([int]$Ports.NEXT_INTERNAL_PORT) -DeployPath $DeployDir
 Stop-PortProcess -Port ([int]$Ports.BACKEND_PORT) -DeployPath $DeployDir
-Stop-UiOrphans
+Stop-UiOrphans -Ports @([int]$Ports.FRONTEND_PORT, [int]$Ports.NEXT_INTERNAL_PORT)
 
 New-Item -ItemType Directory -Force -Path "$Root\runtime" | Out-Null
 $Status = @{ projectId=$Id; state="stopped"; pid=$null; port=[int]$Ports.FRONTEND_PORT; platform="windows"; startedAt=$null; uptimeSec=0; currentStep="Stopped"; progressPercent=100; health=@{ level="unknown"; message="Stopped"; backendPort=[int]$Ports.BACKEND_PORT } }

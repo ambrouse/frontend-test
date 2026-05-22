@@ -18,10 +18,21 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
     if ($Value) { $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value }
   }
   Set-Content -LiteralPath $EnvFile -Value $Text -Encoding utf8
+  Get-Content -LiteralPath $EnvFile | ForEach-Object {
+    if ($_ -match "^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$") {
+      Set-Item -Path "Env:$($Matches[1])" -Value $Matches[2].Trim('"', "'")
+    }
+  }
   $OverrideDir = Join-Path $DeployDir ".runtime"
   New-Item -ItemType Directory -Force -Path $OverrideDir | Out-Null
   @"
 services:
+  agent-chain-server:
+    environment:
+      GRAPH_TIMEOUT_IN_SEC: ${GRAPH_TIMEOUT_IN_SEC:-240}
+  api-gateway-server:
+    environment:
+      REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-320}
   pgadmin:
     volumes:
       - pgadmin_data:/var/lib/pgadmin

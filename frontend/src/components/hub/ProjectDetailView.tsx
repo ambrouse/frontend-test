@@ -4,12 +4,15 @@ import clsx from "clsx";
 import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Loader2, Play, RotateCcw, Save, Square, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  clearProviderServiceLogs,
   fetchHardwareSnapshot,
   fetchActiveTasks,
   fetchProviderConfig,
   fetchProviderDetail,
   fetchProviderLogs,
   fetchProviderMetrics,
+  fetchProviderServiceLogs,
+  fetchProviderServiceLogSources,
   fetchProviderStatus,
   patchProviderConfig,
   providerAction,
@@ -17,13 +20,24 @@ import {
   resolveApiAssetUrl,
 } from "@/services/apiClient";
 import { emptyHardwareSnapshot } from "@/services/emptyState";
-import type { HardwareSnapshot, HubProject, LogLevel, ProjectLog, ProviderConfig, ProviderMetrics, ProviderStatus, RunningTask } from "@/services/types";
+import type {
+  HardwareSnapshot,
+  HubProject,
+  LogLevel,
+  ProjectLog,
+  ProviderConfig,
+  ProviderMetrics,
+  ProviderServiceLogEntry,
+  ProviderServiceLogSource,
+  ProviderStatus,
+  RunningTask,
+} from "@/services/types";
 import { formatMemory, formatProjectType } from "@/utils/format";
 import { CompatibilityPing } from "./CompatibilityPing";
 
 const logLevels: Array<LogLevel | "all"> = ["all", "info", "warn", "error", "debug"];
 type ProviderLifecycleAction = "install" | "run" | "stop" | "delete";
-type LogPanelTab = "progress" | "details";
+type LogPanelTab = "progress" | "services" | "details";
 
 const actionLabels: Record<ProviderLifecycleAction, { idle: string; active: string }> = {
   install: { idle: "Install", active: "Installing" },
@@ -43,6 +57,12 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const [config, setConfig] = useState<ProviderConfig | null>(null);
   const [draftConfig, setDraftConfig] = useState<ProviderConfig | null>(null);
   const [logs, setLogs] = useState<ProjectLog[]>([]);
+  const [serviceLogSources, setServiceLogSources] = useState<ProviderServiceLogSource[]>([]);
+  const [serviceLogs, setServiceLogs] = useState<ProviderServiceLogEntry[]>([]);
+  const [activeServiceSourceId, setActiveServiceSourceId] = useState<string>("");
+  const [serviceLogQuery, setServiceLogQuery] = useState("");
+  const [isServiceLogPaused, setIsServiceLogPaused] = useState(false);
+  const [serviceLogMessage, setServiceLogMessage] = useState("");
   const [activeTasks, setActiveTasks] = useState<RunningTask[]>([]);
   const [pendingAction, setPendingAction] = useState<ProviderLifecycleAction | null>(null);
   const [queuedAction, setQueuedAction] = useState<{ taskId: string; action: ProviderLifecycleAction; queuedAt: number } | null>(null);
@@ -58,6 +78,15 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const visibleLogs = useMemo(() => {
     return activeLogLevel === "all" ? logs : logs.filter((log) => log.level === activeLogLevel);
   }, [activeLogLevel, logs]);
+  const visibleServiceLogs = useMemo(() => {
+    return activeLogLevel === "all" ? serviceLogs : serviceLogs.filter((log) => log.level === activeLogLevel);
+  }, [activeLogLevel, serviceLogs]);
+  const activeServiceSource = useMemo(() => {
+    return serviceLogSources.find((source) => source.id === activeServiceSourceId) ?? serviceLogSources[0] ?? null;
+  }, [activeServiceSourceId, serviceLogSources]);
+  const defaultServiceSources = useMemo(() => {
+    return serviceLogSources.filter((source) => source.default || source.available).slice(0, 8);
+  }, [serviceLogSources]);
 
   const availableRamMb = Math.max(0, hardware.ram.totalMb - hardware.ram.usedMb);
   const availableVramMb = Math.max(0, hardware.gpu.vramTotalMb - hardware.gpu.vramUsedMb);
@@ -169,6 +198,12 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       void fetchProviderMetrics(projectId, { signal: controller.signal }).then(setMetrics).catch(() => {});
       void fetchProviderConfig(projectId, { signal: controller.signal }).then(setConfig).catch(() => {});
       void fetchProviderLogs(projectId, { signal: controller.signal }).then((response) => setLogs(response.logs)).catch(() => {});
+      void fetchProviderServiceLogSources(projectId, { signal: controller.signal })
+        .then((response) => {
+          setServiceLogSources(response.sources);
+          setActiveServiceSourceId((current) => current || response.sources.find((source) => source.default)?.id || response.sources[0]?.id || "");
+        })
+        .catch(() => {});
       void fetchActiveTasks({ signal: controller.signal, timeoutMs: 1200 }).then((response) => setActiveTasks(response.tasks)).catch(() => {});
     };
     load();
@@ -213,7 +248,31 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   }, [activeTasks, projectId, queuedAction]);
 
   useEffect(() => {
-    const latestLog = logs.at(-1);
+    if (!activeServiceSourceId || isServiceLogPaused) {
+      return;
+    }
+    const controller = new AbortController();
+    const loadServiceLogs = () => {
+      void fetchProviderServiceLogs(projectId, {
+        signal: controller.signal,
+        timeoutMs: 2500,
+        source: activeServiceSourceId,
+        level: activeLogLevel,
+        query: serviceLogQuery,
+      })
+        .then((response) => setServiceLogs(response.logs))
+        .catch(() => {});
+    };
+    loadServiceLogs();
+    const interval = window.setInterval(loadServiceLogs, runState === "running" || isLifecycleBusy ? 2500 : 6000);
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+    };
+  }, [activeLogLevel, activeServiceSourceId, isLifecycleBusy, isServiceLogPaused, projectId, runState, serviceLogQuery]);
+
+  useEffect(() => {
+    const latestLog = activeLogTab === "services" ? serviceLogs.at(-1) : logs.at(-1);
     const fingerprint = latestLog ? `${logs.length}:${latestLog.timestamp}:${latestLog.level}:${latestLog.message}` : "empty";
     if (fingerprint === latestLogFingerprintRef.current) {
       return;
@@ -222,7 +281,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     latestLogFingerprintRef.current = fingerprint;
     setLastLogChangeAt(Date.now());
     setIsLogFeedActive(Boolean(latestLog));
-  }, [logs]);
+  }, [activeLogTab, logs, serviceLogs]);
 
   useEffect(() => {
     if (!isLogFeedActive) {
@@ -248,7 +307,20 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       return;
     }
     frame.scrollTop = frame.scrollHeight;
-  }, [isLogFeedActive, logs]);
+  }, [isLogFeedActive, logs, serviceLogs]);
+
+  const clearActiveServiceLogs = async () => {
+    if (!activeServiceSource) return;
+    try {
+      const response = await clearProviderServiceLogs(projectId, activeServiceSource.id);
+      setServiceLogMessage(response.message);
+      if (response.mode === "files") {
+        setServiceLogs([]);
+      }
+    } catch (error) {
+      setServiceLogMessage(error instanceof Error ? error.message : "Clear logs failed");
+    }
+  };
 
   const saveConfig = async () => {
     if (!effectiveConfig) return null;
@@ -572,6 +644,15 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
           <button
             type="button"
             role="tab"
+            aria-selected={activeLogTab === "services"}
+            className={activeLogTab === "services" ? "is-active" : undefined}
+            onClick={() => setActiveLogTab("services")}
+          >
+            Service logs
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={activeLogTab === "details"}
             className={activeLogTab === "details" ? "is-active" : undefined}
             onClick={() => setActiveLogTab("details")}
@@ -580,7 +661,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
           </button>
         </div>
 
-        {activeLogTab === "details" ? (
+        {activeLogTab !== "progress" ? (
           <div className="log-filter" aria-label="Log filter">
             {logLevels.map((level) => (
               <button
@@ -608,6 +689,56 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
               ))
             )}
           </div>
+        ) : activeLogTab === "services" ? (
+          <>
+            <div className="service-log-toolbar" aria-label="Service log controls">
+              <div className="service-source-list" aria-label="Service log sources">
+                {(defaultServiceSources.length ? defaultServiceSources : serviceLogSources).map((source) => (
+                  <button
+                    key={source.id}
+                    type="button"
+                    className={activeServiceSourceId === source.id ? "is-active" : undefined}
+                    onClick={() => {
+                      setActiveServiceSourceId(source.id);
+                      setServiceLogMessage("");
+                    }}
+                  >
+                    {source.label}
+                    <span>{source.kind}</span>
+                  </button>
+                ))}
+              </div>
+              <label className="service-log-search">
+                Search service logs
+                <input value={serviceLogQuery} onChange={(event) => setServiceLogQuery(event.target.value)} placeholder="error, ready, port..." />
+              </label>
+              <div className="service-log-actions">
+                <button type="button" onClick={() => setIsServiceLogPaused((paused) => !paused)}>
+                  {isServiceLogPaused ? "Resume" : "Pause"}
+                </button>
+                <button type="button" onClick={() => void clearActiveServiceLogs()} disabled={!activeServiceSource}>
+                  Clear view/log
+                </button>
+              </div>
+            </div>
+            <div className="terminal-frame service-terminal" ref={terminalRef} role="tabpanel" aria-label="Service logs">
+              {visibleServiceLogs.length === 0 ? (
+                <p className="empty-log">No service logs for this source yet.</p>
+              ) : (
+                visibleServiceLogs.map((log) => (
+                  <div key={log.id} className={clsx("log-line", `log-${log.level}`)}>
+                    <span>{new Date(log.timestamp).toLocaleTimeString("vi-VN")}</span>
+                    <strong>{log.level}</strong>
+                    <small>{log.sourceLabel}</small>
+                    <p>{log.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+            <p className="log-follow-state">
+              {serviceLogMessage || (isServiceLogPaused ? "Service logs paused." : activeServiceSource ? `Showing ${activeServiceSource.label}.` : "No service log source configured.")}
+            </p>
+          </>
         ) : (
           <>
             <div
@@ -630,7 +761,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
                 <p className="empty-log">No logs for this filter.</p>
               ) : (
                 visibleLogs.map((log) => (
-                  <div key={log.id} className={clsx("log-line", `log-${log.level}`)}>
+                  <div key={log.id} className={clsx("log-line", "log-line-simple", `log-${log.level}`)}>
                     <span>{new Date(log.timestamp).toLocaleTimeString("vi-VN")}</span>
                     <strong>{log.level}</strong>
                     <p>{log.message}</p>
@@ -642,9 +773,9 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
           </>
         )}
 
-        {activeLogTab === "details" ? null : (
+        {activeLogTab === "progress" ? (
           <p className="log-follow-state">{isLifecycleBusy ? "Progress is following the active provider task." : "Progress is idle."}</p>
-        )}
+        ) : null}
       </section>
     </div>
   );

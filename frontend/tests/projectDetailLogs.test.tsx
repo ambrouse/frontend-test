@@ -1,7 +1,16 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProjectDetailView } from "@/components/hub/ProjectDetailView";
-import type { HardwareSnapshot, HubProject, ProviderConfig, ProviderLogsResponse, ProviderMetrics, ProviderStatus } from "@/services/types";
+import type {
+  HardwareSnapshot,
+  HubProject,
+  ProviderConfig,
+  ProviderLogsResponse,
+  ProviderMetrics,
+  ProviderServiceLogSourcesResponse,
+  ProviderServiceLogsResponse,
+  ProviderStatus,
+} from "@/services/types";
 
 const project: HubProject = {
   id: "pdf-to-podcast",
@@ -74,6 +83,31 @@ const config: ProviderConfig = {
   warnings: [],
 };
 
+const serviceLogSourcesResponse: ProviderServiceLogSourcesResponse = {
+  mode: "hybrid",
+  sources: [
+    { id: "api-service", label: "API service", kind: "compose", category: "app", stream: null, default: true, available: true },
+    { id: "gradio", label: "Gradio frontend", kind: "file", category: "ui", stream: "stdout", default: false, available: true },
+  ],
+};
+
+const serviceLogsResponse: ProviderServiceLogsResponse = {
+  cursor: null,
+  logs: [
+    {
+      id: "service-log-1",
+      projectId: "pdf-to-podcast",
+      sourceId: "api-service",
+      sourceLabel: "API service",
+      service: "api-service",
+      stream: "stdout",
+      level: "info",
+      timestamp: "2026-05-12T00:00:03.000Z",
+      message: "API service ready",
+    },
+  ],
+};
+
 const logsResponse: ProviderLogsResponse = {
   cursor: 2,
   logs: [
@@ -96,6 +130,10 @@ const logsResponse: ProviderLogsResponse = {
   ],
 };
 
+afterEach(() => {
+  cleanup();
+});
+
 vi.mock("@/services/apiClient", () => ({
   fetchHardwareSnapshot: vi.fn(() => Promise.resolve(hardware)),
   fetchActiveTasks: vi.fn(() => Promise.resolve({ tasks: [], total: 0 })),
@@ -103,8 +141,11 @@ vi.mock("@/services/apiClient", () => ({
   fetchProviderDetail: vi.fn(() => Promise.resolve(project)),
   fetchProviderLogs: vi.fn(() => Promise.resolve(logsResponse)),
   fetchProviderMetrics: vi.fn(() => Promise.resolve(metrics)),
+  fetchProviderServiceLogs: vi.fn(() => Promise.resolve(serviceLogsResponse)),
+  fetchProviderServiceLogSources: vi.fn(() => Promise.resolve(serviceLogSourcesResponse)),
   fetchProviderStatus: vi.fn(() => Promise.resolve(status)),
   patchProviderConfig: vi.fn((_: string, patch: Partial<ProviderConfig>) => Promise.resolve({ ...config, ...patch })),
+  clearProviderServiceLogs: vi.fn(() => Promise.resolve({ cleared: ["api-service"], mode: "view", message: "Docker logs use clear-view only" })),
   providerAction: vi.fn(() => Promise.resolve({ taskId: "task-1", status: "running", warnings: [] })),
   readSelectedProvider: vi.fn(() => null),
   resolveApiAssetUrl: vi.fn((url: string) => url),
@@ -119,9 +160,19 @@ describe("ProjectDetailView provider activity", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Detailed logs" }));
 
-    expect(screen.getByRole("tab", { name: "Detailed logs" })).toHaveAttribute("aria-selected", "true");
+    await waitFor(() => expect(screen.getByRole("tab", { name: "Detailed logs" })).toHaveAttribute("aria-selected", "true"));
     expect(screen.getByLabelText("Log filter")).toBeInTheDocument();
     expect(screen.getByText("Detailed runtime error")).toBeInTheDocument();
+  });
+
+  it("shows service log sources and live service output", async () => {
+    render(<ProjectDetailView projectId="pdf-to-podcast" project={project} />);
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Service logs" }));
+
+    expect(await screen.findByText("API service")).toBeInTheDocument();
+    expect(await screen.findByText("API service ready")).toBeInTheDocument();
+    expect(screen.getByLabelText("Service log controls")).toBeInTheDocument();
   });
 
   it("shows editable provider env config fields", async () => {

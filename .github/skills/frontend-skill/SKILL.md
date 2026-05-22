@@ -1,4 +1,4 @@
----
+﻿---
 name: frontend-skill
 description: 'Những quy tắt bắt buộc khi viết code frontend.'
 argument-hint: 'tuân thủ các quy tắc đã đề ra.'
@@ -32,7 +32,7 @@ Những quy tắt bắt buộc khi viết code frontend:
 - Tuân thủ các nguyên tắc SOLID và các mẫu thiết kế (design patterns)
 - Viết các bài kiểm tra (tests) để đảm bảo chất lượng code.
 - Sử dụng các công cụ kiểm tra chất lượng code (linters) để duy trì tiêu chuẩn mã nguồn.
-- Đảm bảo mã nguồn được kiểm tra và review trước khi merge vào nhánh chính. 
+- Đảm bảo mã nguồn được kiểm tra và review trước khi merge vào nhánh chính.
 - Sử dụng hệ thống quản lý phiên bản (version control) như Git để theo dõi lịch sử thay đổi của mã nguồn.
 - Đảm bảo mã nguồn được tối ưu hóa về hiệu suất và bảo mật.
 - Sử dụng các công cụ giám sát và logging để theo dõi hoạt động của ứng dụng và phát hiện lỗi kịp thời.

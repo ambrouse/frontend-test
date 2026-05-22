@@ -89,6 +89,31 @@ class Requirements(BaseModel):
     recommended: RequirementProfile
 
 
+class ServiceLogFileSource(BaseModel):
+    id: str
+    label: str
+    path: str
+    category: str = "files"
+    stream: str = "stdout"
+    default: bool = False
+
+
+class ServiceLogComposeSource(BaseModel):
+    id: str
+    label: str
+    service: str
+    category: str = "app"
+    default: bool = False
+
+
+class ServiceLogConfig(BaseModel):
+    mode: Literal["docker_compose", "process_files", "hybrid"]
+    composeFiles: list[str] = Field(default_factory=list)
+    composeProjectName: str | None = None
+    services: list[ServiceLogComposeSource] = Field(default_factory=list)
+    files: list[ServiceLogFileSource] = Field(default_factory=list)
+
+
 class ProviderRuntime(BaseModel):
     defaultPort: int
     healthUrl: str | None = None
@@ -97,6 +122,7 @@ class ProviderRuntime(BaseModel):
     metricsFile: str = "runtime/metrics.json"
     pidFile: str = "runtime/provider.pid"
     logFile: str = "logs/runtime.log"
+    serviceLogs: ServiceLogConfig | None = None
 
 
 class ProviderCommands(BaseModel):
@@ -236,6 +262,44 @@ class ProviderActionResponse(BaseModel):
 class ProviderLogsResponse(BaseModel):
     logs: list[ProjectLog]
     cursor: int
+
+
+class ProviderServiceLogSource(BaseModel):
+    id: str
+    label: str
+    kind: Literal["compose", "file"]
+    category: str
+    stream: str | None = None
+    default: bool = False
+    available: bool = False
+
+
+class ProviderServiceLogSourcesResponse(BaseModel):
+    mode: Literal["docker_compose", "process_files", "hybrid", "none"]
+    sources: list[ProviderServiceLogSource]
+
+
+class ProviderServiceLogEntry(BaseModel):
+    id: str
+    projectId: str
+    sourceId: str
+    sourceLabel: str
+    service: str | None = None
+    stream: str | None = None
+    level: LogLevel
+    timestamp: str
+    message: str
+
+
+class ProviderServiceLogsResponse(BaseModel):
+    logs: list[ProviderServiceLogEntry]
+    cursor: int | None = None
+
+
+class ProviderClearServiceLogsResponse(BaseModel):
+    cleared: list[str]
+    mode: str
+    message: str
 
 
 class TaskListResponse(BaseModel):

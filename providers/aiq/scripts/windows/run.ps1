@@ -16,7 +16,7 @@ function Find-Bash {
 
 function Read-PortMap {
   $Path = Join-Path $DeployDir ".runtime\ports.env"
-  if (!(Test-Path $Path)) { return @{ FRONTEND_PORT = $FrontendPort; BACKEND_PORT = "18080"; NEXT_INTERNAL_PORT = "13081" } }
+  if (!(Test-Path $Path)) { return @{ FRONTEND_PORT = $FrontendPort; BACKEND_PORT = "18081"; NEXT_INTERNAL_PORT = "13081" } }
   return Get-Content $Path | ConvertFrom-StringData
 }
 

@@ -21,11 +21,23 @@ function Stop-ByPort {
   foreach ($PidValue in $Pids) { Stop-Process -Id $PidValue -Force -ErrorAction SilentlyContinue }
 }
 
+function Stop-ProviderProcesses {
+  $DeployFullPath = [System.IO.Path]::GetFullPath($DeployDir)
+  Get-CimInstance Win32_Process | Where-Object {
+    $_.CommandLine -and $_.CommandLine.Contains($DeployFullPath)
+  } | ForEach-Object {
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+  }
+}
+
 $LogDir = Join-Path $DeployDir "logs"
 Stop-ByPidFile -PidFile (Join-Path $LogDir "backend.pid")
 Stop-ByPidFile -PidFile (Join-Path $LogDir "frontend.pid")
+Stop-ProviderProcesses
 Stop-ByPort -Port ([int]$BackendPort)
 Stop-ByPort -Port ([int]$FrontendPort)
+Start-Sleep -Seconds 1
+Stop-ProviderProcesses
 
 $Status = @{ projectId=$Id; state="stopped"; pid=$null; port=0; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Stopped Web Agent"; progressPercent=100; health=@{ level="ok"; message="Stopped" } }
 New-Item -ItemType Directory -Force -Path "$Root\runtime" | Out-Null

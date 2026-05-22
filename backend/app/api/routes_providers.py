@@ -5,20 +5,26 @@ from app.schemas.models import (
     HubProject,
     ProviderActionRequest,
     ProviderActionResponse,
+    ProviderClearServiceLogsResponse,
     ProviderConfig,
     ProviderListResponse,
     ProviderLogsResponse,
     ProviderMetrics,
+    ProviderServiceLogSourcesResponse,
+    ProviderServiceLogsResponse,
     ProviderStatus,
 )
 from app.services.provider_registry import IMAGE_EXTENSIONS, provider_registry
 from app.services.provider_runtime import (
+    clear_provider_service_logs,
     delete_provider,
     install_provider,
     patch_provider_config,
     provider_config,
     provider_logs,
     provider_metrics,
+    provider_service_log_sources,
+    provider_service_logs,
     provider_status,
     run_provider,
     stop_provider,
@@ -91,6 +97,30 @@ def logs(
     level: str | None = Query(default=None),
 ) -> ProviderLogsResponse:
     return _provider_call(lambda: provider_logs(provider_id, tail=tail, cursor=cursor, level=level))
+
+
+@router.get("/{provider_id}/service-logs/sources", response_model=ProviderServiceLogSourcesResponse)
+def service_log_sources(provider_id: str) -> ProviderServiceLogSourcesResponse:
+    return _provider_call(lambda: provider_service_log_sources(provider_id))
+
+
+@router.get("/{provider_id}/service-logs", response_model=ProviderServiceLogsResponse)
+def service_logs(
+    provider_id: str,
+    source: str | None = Query(default=None),
+    tail: int = Query(default=200, ge=1, le=1000),
+    cursor: int | None = Query(default=None, ge=0),
+    level: str | None = Query(default=None),
+    q: str | None = Query(default=None, max_length=120),
+) -> ProviderServiceLogsResponse:
+    return _provider_call(
+        lambda: provider_service_logs(provider_id, source_id=source, tail=tail, cursor=cursor, level=level, query=q)
+    )
+
+
+@router.delete("/{provider_id}/service-logs", response_model=ProviderClearServiceLogsResponse)
+def clear_service_logs(provider_id: str, source: str | None = Query(default=None)) -> ProviderClearServiceLogsResponse:
+    return _provider_call(lambda: clear_provider_service_logs(provider_id, source_id=source))
 
 
 @router.get("/{provider_id}/config", response_model=ProviderConfig)

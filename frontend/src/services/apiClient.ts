@@ -3,8 +3,11 @@ import type {
   HubProject,
   ProviderActionResponse,
   ProviderConfig,
+  ProviderClearServiceLogsResponse,
   ProviderLogsResponse,
   ProviderMetrics,
+  ProviderServiceLogSourcesResponse,
+  ProviderServiceLogsResponse,
   ProviderStatus,
   ProviderSummary,
   RunningTask,
@@ -110,6 +113,30 @@ export async function fetchProviderLogs(
   if (typeof options?.cursor === "number") params.set("cursor", `${options.cursor}`);
   const suffix = params.size ? `?${params.toString()}` : "";
   return fetchJson<ProviderLogsResponse>(`/api/providers/${providerId}/logs${suffix}`, options);
+}
+
+export async function fetchProviderServiceLogSources(providerId: string, options?: { signal?: AbortSignal; timeoutMs?: number }) {
+  return fetchJson<ProviderServiceLogSourcesResponse>(`/api/providers/${providerId}/service-logs/sources`, options);
+}
+
+export async function fetchProviderServiceLogs(
+  providerId: string,
+  options?: { signal?: AbortSignal; timeoutMs?: number; source?: string; level?: string; cursor?: number; query?: string },
+) {
+  const params = new URLSearchParams();
+  if (options?.source) params.set("source", options.source);
+  if (options?.level && options.level !== "all") params.set("level", options.level);
+  if (typeof options?.cursor === "number") params.set("cursor", `${options.cursor}`);
+  if (options?.query) params.set("q", options.query);
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return fetchJson<ProviderServiceLogsResponse>(`/api/providers/${providerId}/service-logs${suffix}`, options);
+}
+
+export async function clearProviderServiceLogs(providerId: string, source?: string) {
+  const params = new URLSearchParams();
+  if (source) params.set("source", source);
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return fetchJson<ProviderClearServiceLogsResponse>(`/api/providers/${providerId}/service-logs${suffix}`, { method: "DELETE", timeoutMs: 1500 });
 }
 
 export async function fetchProviderConfig(providerId: string, options?: { signal?: AbortSignal; timeoutMs?: number }) {

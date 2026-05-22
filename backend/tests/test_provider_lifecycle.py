@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from time import sleep
 
 from fastapi.testclient import TestClient
@@ -90,3 +91,72 @@ def test_provider_config_persists_local_env_without_touching_defaults() -> None:
     assert config["env"]["API_SERVICE_PORT"] == "8012"
     assert default_config_path.read_text(encoding="utf-8") == default_config
     local_config.unlink(missing_ok=True)
+
+
+def test_provider_service_log_sources_include_web_agent_process_files() -> None:
+    response = client.get("/api/providers/web-agent/service-logs/sources")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mode"] == "process_files"
+    source_ids = {source["id"] for source in data["sources"]}
+    assert {"backend", "frontend", "backend-err", "frontend-err"}.issubset(source_ids)
+
+
+def test_provider_service_logs_tail_and_clear_whitelisted_file() -> None:
+    log_path = repo_root() / "deploy/web-agent/logs/backend.dev.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text("server ready\nERROR failed request\n", encoding="utf-8")
+
+    response = client.get("/api/providers/web-agent/service-logs", params={"source": "backend", "level": "error"})
+    assert response.status_code == 200
+    logs = response.json()["logs"]
+    assert len(logs) == 1
+    assert logs[0]["level"] == "error"
+    assert "failed request" in logs[0]["message"]
+
+    clear = client.delete("/api/providers/web-agent/service-logs", params={"source": "backend"})
+    assert clear.status_code == 200
+    assert clear.json()["mode"] == "files"
+    assert log_path.read_text(encoding="utf-8") == ""
+    log_path.unlink(missing_ok=True)
+
+
+def test_active_provider_delete_scripts_remove_images() -> None:
+    providers_root = repo_root() / "providers"
+    provider_ids = {
+        "agentic-commerce-blueprint",
+        "ai-virtual-assistant-provider",
+        "aiq",
+        "nemotron-voice-agent-provider",
+        "shop-retail-provider",
+        "multi-agent-intelligent-warehouse",
+        "pdf-to-podcast",
+        "web-agent",
+    }
+    delete_scripts: list[Path] = []
+    for provider_id in provider_ids:
+        provider_dir = providers_root / provider_id
+        delete_scripts.extend(provider_dir.glob("scripts/windows/delete.ps1"))
+        delete_scripts.extend(provider_dir.glob("scripts/linux/delete.sh"))
+    delete_scripts.append(providers_root / "_shared/linux-provider-dispatch.sh")
+
+    stale = [
+        str(path.relative_to(repo_root()))
+        for path in delete_scripts
+        if "--rmi local" in path.read_text(encoding="utf-8")
+    ]
+    weak = []
+    for path in delete_scripts:
+        text = path.read_text(encoding="utf-8")
+        if "docker compose" not in text:
+            continue
+        if (
+            "--rmi all" not in text
+            and "Invoke-DockerComposeCleanup" not in text
+            and "linux-provider-dispatch.sh" not in text
+        ):
+            weak.append(str(path.relative_to(repo_root())))
+
+    assert not stale
+    assert not weak

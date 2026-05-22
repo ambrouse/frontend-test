@@ -84,7 +84,7 @@ ensure_tool() {
 
 resolve_python() {
   for candidate in python3.12 python3.11 python3 python; do
-    if command -v "${candidate}" >/dev/null 2>&1 && "${candidate}" - <<'PY'
+    if command -v "${candidate}" >/dev/null 2>&1 && "${candidate}" - 2>/dev/null <<'PY'
 import sys
 raise SystemExit(0 if sys.version_info >= (3, 11) else 1)
 PY
@@ -93,6 +93,24 @@ PY
       return 0
     fi
   done
+
+  if is_windows_bash && command -v py >/dev/null 2>&1; then
+    for version in -3.12 -3.11 -3; do
+      if py "${version}" - 2>/dev/null <<'PY'
+import sys
+raise SystemExit(0 if sys.version_info >= (3, 11) else 1)
+PY
+      then
+        local executable
+        executable="$(py "${version}" -c 'import sys; print(sys.executable)' 2>/dev/null)"
+        if command -v cygpath >/dev/null 2>&1; then
+          executable="$(cygpath -u "${executable}")"
+        fi
+        printf '%s\n' "${executable}"
+        return 0
+      fi
+    done
+  fi
 
   if is_windows_bash; then
     echo "Python 3.11+ is required. On Windows, run setup.ps1 from PowerShell." >&2
@@ -109,7 +127,7 @@ PY
   fi
 
   for candidate in python3.12 python3.11 python3 python; do
-    if command -v "${candidate}" >/dev/null 2>&1 && "${candidate}" - <<'PY'
+    if command -v "${candidate}" >/dev/null 2>&1 && "${candidate}" - 2>/dev/null <<'PY'
 import sys
 raise SystemExit(0 if sys.version_info >= (3, 11) else 1)
 PY
@@ -118,6 +136,23 @@ PY
       return 0
     fi
   done
+  if is_windows_bash && command -v py >/dev/null 2>&1; then
+    for version in -3.12 -3.11 -3; do
+      if py "${version}" - 2>/dev/null <<'PY'
+import sys
+raise SystemExit(0 if sys.version_info >= (3, 11) else 1)
+PY
+      then
+        local executable
+        executable="$(py "${version}" -c 'import sys; print(sys.executable)' 2>/dev/null)"
+        if command -v cygpath >/dev/null 2>&1; then
+          executable="$(cygpath -u "${executable}")"
+        fi
+        printf '%s\n' "${executable}"
+        return 0
+      fi
+    done
+  fi
   echo "Python 3.11+ is still unavailable. Install it manually, then rerun setup.sh." >&2
   return 1
 }
@@ -245,6 +280,9 @@ ensure_docker
 
 NVIDIA_API_KEY_INPUT=""
 read -r -p "NVIDIA API key (optional, press Enter to skip): " NVIDIA_API_KEY_INPUT || true
+NVIDIA_API_KEY_INPUT="${NVIDIA_API_KEY_INPUT//$'\r'/}"
+NVIDIA_API_KEY_INPUT="${NVIDIA_API_KEY_INPUT#"${NVIDIA_API_KEY_INPUT%%[![:space:]]*}"}"
+NVIDIA_API_KEY_INPUT="${NVIDIA_API_KEY_INPUT%"${NVIDIA_API_KEY_INPUT##*[![:space:]]}"}"
 
 if [[ -n "${NVIDIA_API_KEY_INPUT}" ]]; then
   {

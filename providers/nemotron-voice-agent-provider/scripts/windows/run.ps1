@@ -10,9 +10,9 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   & "$Root\scripts\windows\setup.ps1"
   Push-Location $DeployDir
   try {
-    docker compose --env-file .env -f docker-compose.yml up -d --build --no-deps python-app
+    docker compose --env-file .env -f docker-compose.yml -f .aihub-hosted.compose.yml up -d --build --no-deps python-app
     if ($LASTEXITCODE -ne 0) { throw "docker compose python-app failed" }
-    docker compose --env-file .env -f docker-compose.yml up -d --build --no-deps ui-app
+    docker compose --env-file .env -f docker-compose.yml -f .aihub-hosted.compose.yml up -d --build --no-deps ui-app
     if ($LASTEXITCODE -ne 0) { throw "docker compose ui-app failed" }
   } finally { Pop-Location }
   Wait-Http -Url "http://127.0.0.1:$PipelinePort/docs" -Name "Nemotron pipeline" -TimeoutSec 600

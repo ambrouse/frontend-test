@@ -1,6 +1,6 @@
 # Backend API Notes
 
-Date: 2026-05-10
+Date: 2026-05-20
 
 ## Purpose
 
@@ -17,6 +17,9 @@ The backend provides low-latency cached data for the frontend. Requests should r
 - `GET /api/providers/{provider_id}/status`
 - `GET /api/providers/{provider_id}/metrics`
 - `GET /api/providers/{provider_id}/logs`
+- `GET /api/providers/{provider_id}/service-logs/sources`
+- `GET /api/providers/{provider_id}/service-logs`
+- `DELETE /api/providers/{provider_id}/service-logs`
 - `GET /api/providers/{provider_id}/config`
 - `PATCH /api/providers/{provider_id}/config`
 - `POST /api/providers/{provider_id}/install`
@@ -35,6 +38,7 @@ The backend provides low-latency cached data for the frontend. Requests should r
 - Frontend uses lightweight loading/offline states first and fetches backend data with a short timeout; provider/task/hardware data must come from the backend when it is online.
 - Provider lifecycle actions are queued in a backend task store. Request handlers return immediately with a task id; long clone, setup, run, stop, or delete work stays off the request path.
 - Provider config/status/log/metrics files live under each `providers/{id}/` folder and are small JSON or log files so the UI can poll cheaply.
+- Service-log endpoints expose allowlisted Docker Compose services and provider-owned process log files. Docker logs are read-only/clear-view; file logs can be truncated only when they are whitelisted provider-owned files.
 - Real deploy clones are created only under `deploy/{provider_id}` during install and are removed during delete.
 - Warm API latency is guarded by `backend/scripts/benchmark_latency.py`; local p95 is currently under 5 ms for the hot paths.
 - Real provider wrappers were tested against fresh GitHub clones into `deploy/`, including install, run, health ping, logs, stop, delete, and install again.

@@ -7,12 +7,30 @@ $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Reso
 $DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "develop" }
 $FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "13080" }
-$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "18080" }
+$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "18081" }
 $NextInternalPort = $env:AIHUB_NEXT_INTERNAL_PORT; if (-not $NextInternalPort) { $NextInternalPort = ([int]$FrontendPort + 1).ToString() }
 $PostgresPort = $env:AIHUB_POSTGRES_PORT; if (-not $PostgresPort) { $PostgresPort = "15432" }
 $RepoUrl = "https://github.com/PhuongHo03/aiq.git"
 $PatchPath = Join-Path $Root "patches\windows-lifecycle.patch"
 $ProviderEnvKeys = @("NVIDIA_API_KEY", "TAVILY_API_KEY", "SERPER_API_KEY")
+
+function Read-LocalEnv {
+  $LocalEnvFile = Join-Path (Resolve-Path "$Root\..\..") ".env.local"
+  $LocalEnv = @{}
+  if (Test-Path -LiteralPath $LocalEnvFile) {
+    Get-Content -LiteralPath $LocalEnvFile | ForEach-Object {
+      if ($_ -match "^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$") {
+        $LocalEnv[$Matches[1]] = $Matches[2].Trim('"', "'")
+      }
+    }
+  }
+  return $LocalEnv
+}
+
+function Test-PlaceholderSecret {
+  param([string]$Value)
+  return ($Value -match "^\[REDACTED_" -or $Value -match "^(changeme|your_|example|placeholder)$")
+}
 
 function Write-Utf8NoBom {
   param([string]$Path, [string]$Text)
@@ -68,14 +86,66 @@ function Ensure-FrontendHostBinding {
   }
 }
 
+function Ensure-PortableShellBuiltins {
+  $SetupScript = Join-Path $DeployDir "setup.sh"
+  if (!(Test-Path $SetupScript)) { return }
+  $Text = Get-Content -LiteralPath $SetupScript -Raw
+  $Updated = $Text.Replace('  touch "$BOOTSTRAP_MARKER"', '  : > "$BOOTSTRAP_MARKER"')
+  $Updated = $Updated.Replace(
+    "    source `"`$VENV_DIR/bin/activate`"`r`n    return",
+    "    source `"`$VENV_DIR/bin/activate`"`r`n    export PATH=`"/usr/bin:/bin:`$PATH`"`r`n    return"
+  )
+  $Updated = $Updated.Replace(
+    "    source `"`$VENV_DIR/bin/activate`"`n    return",
+    "    source `"`$VENV_DIR/bin/activate`"`n    export PATH=`"/usr/bin:/bin:`$PATH`"`n    return"
+  )
+  $Updated = $Updated.Replace(
+    "    source `"`$VENV_DIR/Scripts/activate`"`r`n    return",
+    "    source `"`$VENV_DIR/Scripts/activate`"`r`n    export PATH=`"/usr/bin:/bin:`$PATH`"`r`n    return"
+  )
+  $Updated = $Updated.Replace(
+    "    source `"`$VENV_DIR/Scripts/activate`"`n    return",
+    "    source `"`$VENV_DIR/Scripts/activate`"`n    export PATH=`"/usr/bin:/bin:`$PATH`"`n    return"
+  )
+  $Updated = $Updated.Replace(
+    '  for _ in $(seq 1 "$attempts"); do',
+    '  local attempt=0' + "`n" + '  while [ "$attempt" -lt "$attempts" ]; do' + "`n" + '    attempt=$((attempt + 1))'
+  )
+  $PortFallback = @'
+  if command -v powershell.exe >/dev/null 2>&1; then
+    AIQ_CHECK_PORT="$port" powershell.exe -NoProfile -Command 'try { $c = Get-NetTCPConnection -LocalPort ([int]$env:AIQ_CHECK_PORT) -State Listen -ErrorAction Stop | Select-Object -First 1; if ($c) { exit 0 } } catch {}; exit 1' >/dev/null 2>&1
+    return $?
+  fi
+
+  # Fallback: if we cannot check, assume free to avoid false blocks.
+  return 1
+'@
+  if ($Updated -notmatch "AIQ_CHECK_PORT") {
+    $Updated = $Updated.Replace(
+      "  # Fallback: if we cannot check, assume free to avoid false blocks.`r`n  return 1",
+      $PortFallback.Replace("`n", "`r`n").TrimEnd("`r", "`n")
+    )
+    $Updated = $Updated.Replace(
+      "  # Fallback: if we cannot check, assume free to avoid false blocks.`n  return 1",
+      $PortFallback.TrimEnd("`r", "`n")
+    )
+  }
+  if ($Updated -ne $Text) {
+    Write-Utf8NoBom -Path $SetupScript -Text $Updated
+  }
+}
+
 function Sync-ProviderEnv {
   $EnvDir = Join-Path $DeployDir "deploy"
   $EnvFile = Join-Path $EnvDir ".env"
   $Example = Join-Path $EnvDir ".env.example"
   if (!(Test-Path $EnvFile)) { Copy-Item $Example $EnvFile }
+  $LocalEnv = Read-LocalEnv
 
   foreach ($Key in $ProviderEnvKeys) {
     $Value = [Environment]::GetEnvironmentVariable($Key)
+    if ((-not $Value -or (Test-PlaceholderSecret $Value)) -and $LocalEnv.ContainsKey($Key)) { $Value = $LocalEnv[$Key] }
+    if ($Value) { Set-Item -Path "Env:$Key" -Value $Value }
     Set-EnvValue -Path $EnvFile -Key $Key -Value $Value
   }
 
@@ -111,6 +181,7 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   Apply-ProviderPatch
   Ensure-ServiceTimeout
   Ensure-FrontendHostBinding
+  Ensure-PortableShellBuiltins
   Sync-ProviderEnv
 }
 

@@ -41,18 +41,25 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
       }
     }
   }
+  function Test-UsableSecret([string]$Value) {
+    return -not [string]::IsNullOrWhiteSpace($Value) -and $Value -notmatch "^\s*\[REDACTED"
+  }
   $NvidiaKey = [Environment]::GetEnvironmentVariable("NVIDIA_API_KEY")
-  if (-not $NvidiaKey -and $LocalEnv.ContainsKey("NVIDIA_API_KEY")) { $NvidiaKey = $LocalEnv["NVIDIA_API_KEY"] }
-  if (-not $env:NGC_API_KEY -and $NvidiaKey) { $env:NGC_API_KEY = $NvidiaKey }
+  if (-not (Test-UsableSecret $NvidiaKey) -and $LocalEnv.ContainsKey("NVIDIA_API_KEY")) { $NvidiaKey = $LocalEnv["NVIDIA_API_KEY"] }
+  if (-not (Test-UsableSecret $env:NGC_API_KEY) -and (Test-UsableSecret $NvidiaKey)) { $env:NGC_API_KEY = $NvidiaKey }
   foreach ($Key in @("NVIDIA_API_KEY","NGC_API_KEY","LLM_API_KEY","EMBED_API_KEY","RAIL_API_KEY")) {
     $Value = [Environment]::GetEnvironmentVariable($Key)
-    if (-not $Value -and $LocalEnv.ContainsKey($Key)) { $Value = $LocalEnv[$Key] }
-    if (($Key -in @("LLM_API_KEY","EMBED_API_KEY","RAIL_API_KEY","NGC_API_KEY")) -and -not $Value) { $Value = $NvidiaKey }
+    if (-not (Test-UsableSecret $Value) -and $LocalEnv.ContainsKey($Key)) { $Value = $LocalEnv[$Key] }
+    if (($Key -in @("LLM_API_KEY","EMBED_API_KEY","RAIL_API_KEY","NGC_API_KEY")) -and -not (Test-UsableSecret $Value)) { $Value = $NvidiaKey }
     $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value
+    if (Test-UsableSecret $Value) { Set-Item -Path "Env:$Key" -Value $Value }
   }
   $Text = Set-EnvValue -Text $Text -Key "CONFIG_OVERRIDE" -Value "config-build.yaml"
+  Set-Item -Path "Env:CONFIG_OVERRIDE" -Value "config-build.yaml"
   $Text = Set-EnvValue -Text $Text -Key "COMPOSE_PROJECT_NAME" -Value "aihub-shop-retail-provider"
+  Set-Item -Path "Env:COMPOSE_PROJECT_NAME" -Value "aihub-shop-retail-provider"
   $Text = Set-EnvValue -Text $Text -Key "HTTP_HOST_PORT" -Value $Port
+  Set-Item -Path "Env:HTTP_HOST_PORT" -Value $Port
   $DefaultPorts = @{
     CHAIN_SERVER_PORT = "18109"
     CATALOG_RETRIEVER_PORT = "18110"
@@ -68,6 +75,7 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
     $Value = [Environment]::GetEnvironmentVariable($Key)
     if (-not $Value) { $Value = $DefaultPorts[$Key] }
     $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value
+    Set-Item -Path "Env:$Key" -Value $Value
   }
   Set-Content -LiteralPath $EnvFile -Value $Text -Encoding utf8
 }

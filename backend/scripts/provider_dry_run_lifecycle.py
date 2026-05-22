@@ -10,7 +10,14 @@ from fastapi.testclient import TestClient
 from app.core.paths import deploy_root
 from app.main import app
 
-PROVIDERS = ("agentic-commerce-blueprint", "multi-agent-intelligent-warehouse", "pdf-to-podcast")
+PROVIDERS = (
+    "agentic-commerce-blueprint",
+    "ai-virtual-assistant-provider",
+    "aiq",
+    "shop-retail-provider",
+    "multi-agent-intelligent-warehouse",
+    "web-agent",
+)
 
 
 def wait_task(client: TestClient, task_id: str, timeout: float = 60) -> dict:

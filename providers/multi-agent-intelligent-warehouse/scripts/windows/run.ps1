@@ -21,6 +21,22 @@ function Get-ComposeEnvValue {
   if ($Value) { return $Value }
   return $Default
 }
+function Set-ComposeEnvValue {
+  param([string]$Path, [string]$Key, [string]$Value)
+  $Lines = if (Test-Path $Path) { Get-Content -Path $Path } else { @() }
+  $Pattern = "^\s*$([regex]::Escape($Key))\s*="
+  $Found = $false
+  $Updated = $Lines | ForEach-Object {
+    if ($_ -match $Pattern) {
+      $Found = $true
+      "$Key=$Value"
+    } else {
+      $_
+    }
+  }
+  if (-not $Found) { $Updated += "$Key=$Value" }
+  Set-Content -Path $Path -Value $Updated -Encoding utf8
+}
 function Invoke-WarehouseCompose {
   param([string[]]$ComposeArgs)
   & docker compose --env-file "deploy/compose/.env" -f "deploy/compose/docker-compose.dev.yaml" @ComposeArgs
@@ -155,6 +171,12 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   $PreviousErrorActionPreference = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
   try {
+    foreach ($EnvPath in @("deploy/compose/.env", ".env")) {
+      Set-ComposeEnvValue -Path $EnvPath -Key "BACKEND_PORT" -Value $BackendPort
+      Set-ComposeEnvValue -Path $EnvPath -Key "HOST_BACKEND_PORT" -Value $BackendPort
+      Set-ComposeEnvValue -Path $EnvPath -Key "FRONTEND_PORT" -Value $Port
+      Set-ComposeEnvValue -Path $EnvPath -Key "HOST_FRONTEND_PORT" -Value $Port
+    }
     $env:BACKEND_PORT = $BackendPort
     $env:HOST_BACKEND_PORT = $BackendPort
     $env:FRONTEND_PORT = $Port

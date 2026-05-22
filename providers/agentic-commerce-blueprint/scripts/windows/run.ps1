@@ -35,10 +35,20 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   $PreviousErrorActionPreference = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
   try {
+    $EnvFile = Join-Path $DeployDir ".env"
+    if (Test-Path -LiteralPath $EnvFile) {
+      Get-Content -LiteralPath $EnvFile | ForEach-Object {
+        if ($_ -match "^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$") {
+          $Key = $Matches[1]
+          $Value = $Matches[2].Trim('"', "'")
+          if ($Value) { Set-Item -Path "Env:$Key" -Value $Value }
+        }
+      }
+    }
     $env:HTTP_HOST_PORT = $Port
     docker compose -f docker-compose.infra.yml -f docker-compose.yml build promotion-agent
     if ($LASTEXITCODE -ne 0) { throw "docker compose build promotion-agent failed with exit code $LASTEXITCODE" }
-    docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d
+    docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d --force-recreate
     if ($LASTEXITCODE -ne 0) { throw "docker compose up failed with exit code $LASTEXITCODE" }
     $HealthUrl = "http://127.0.0.1:$Port/api/health"
     $Ready = $false
@@ -54,8 +64,16 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
       Start-Sleep -Seconds 2
     }
     if (-not $Ready) { throw "gateway health check did not become ready at $HealthUrl within timeout" }
-    docker compose -f docker-compose.infra.yml -f docker-compose.yml --profile seed run --rm milvus-seeder
-    if ($LASTEXITCODE -ne 0) { throw "milvus seeder failed with exit code $LASTEXITCODE" }
+    $SeederReady = $false
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+      docker compose -f docker-compose.infra.yml -f docker-compose.yml --profile seed run --rm milvus-seeder
+      if ($LASTEXITCODE -eq 0) {
+        $SeederReady = $true
+        break
+      }
+      Start-Sleep -Seconds (10 * $attempt)
+    }
+    if (-not $SeederReady) { Write-Warning "milvus seeder failed after retries; continuing because the commerce stack is running" }
   } finally {
     $ErrorActionPreference = $PreviousErrorActionPreference
     Pop-Location

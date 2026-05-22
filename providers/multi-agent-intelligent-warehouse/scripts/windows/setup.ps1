@@ -38,7 +38,22 @@ New-Item -ItemType Directory -Force -Path (Split-Path $EnvFile) | Out-Null
 if (!(Test-Path $EnvFile)) { Copy-Item "$Root\.env.example" $EnvFile }
 $Text = Get-Content $EnvFile -Raw
 $DefaultText = Get-Content "$Root\.env.example" -Raw
+$LocalEnvFile = Join-Path (Resolve-Path "$Root\..\..") ".env.local"
+$LocalEnv = @{}
+if (Test-Path -LiteralPath $LocalEnvFile) {
+  Get-Content -LiteralPath $LocalEnvFile | ForEach-Object {
+    if ($_ -match "^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$") {
+      $LocalEnv[$Matches[1]] = $Matches[2].Trim('"', "'")
+    }
+  }
+}
+function Test-UsableSecret([string]$Value) {
+  return -not [string]::IsNullOrWhiteSpace($Value) -and $Value -notmatch "^\s*\[REDACTED"
+}
 $ResolvedNvidiaApiKey = $env:NVIDIA_API_KEY
+if (-not (Test-UsableSecret $ResolvedNvidiaApiKey) -and $LocalEnv.ContainsKey("NVIDIA_API_KEY")) {
+  $ResolvedNvidiaApiKey = $LocalEnv["NVIDIA_API_KEY"]
+}
 foreach ($Line in ($DefaultText -split "`r?`n")) {
   if ($Line -match '^([A-Za-z_][A-Za-z0-9_]*)=') {
     $Key = $Matches[1]
@@ -56,13 +71,16 @@ if ($Text -notmatch '(?m)^BACKEND_PORT=') { $Text += "`nBACKEND_PORT=$BackendPor
 if ($Text -notmatch '(?m)^HOST_BACKEND_PORT=') { $Text += "`nHOST_BACKEND_PORT=$BackendPort" }
 if ($Text -notmatch '(?m)^FRONTEND_PORT=') { $Text += "`nFRONTEND_PORT=$Port" }
 if ($Text -notmatch '(?m)^HOST_FRONTEND_PORT=') { $Text += "`nHOST_FRONTEND_PORT=$Port" }
-if ($ResolvedNvidiaApiKey) {
+if (Test-UsableSecret $ResolvedNvidiaApiKey) {
   $Text = Set-EnvValue -Text $Text -Key "NVIDIA_API_KEY" -Value $ResolvedNvidiaApiKey
+  Set-Item -Path "Env:NVIDIA_API_KEY" -Value $ResolvedNvidiaApiKey
 }
 foreach ($Key in $ProviderEnvKeys) {
   $Value = [Environment]::GetEnvironmentVariable($Key)
-  if (($Key -eq "EMBEDDING_API_KEY" -or $Key -eq "RAIL_API_KEY") -and -not $Value) { $Value = $ResolvedNvidiaApiKey }
+  if (-not (Test-UsableSecret $Value) -and $LocalEnv.ContainsKey($Key)) { $Value = $LocalEnv[$Key] }
+  if (($Key -eq "EMBEDDING_API_KEY" -or $Key -eq "RAIL_API_KEY") -and -not (Test-UsableSecret $Value)) { $Value = $ResolvedNvidiaApiKey }
   $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value
+  if (Test-UsableSecret $Value) { Set-Item -Path "Env:$Key" -Value $Value }
 }
 Set-Content -Path $EnvFile -Value $Text -Encoding utf8
 $Status = @{ projectId=$Id; state="installed"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Installed"; progressPercent=100; health=@{ level="ok"; message="Installed" } }

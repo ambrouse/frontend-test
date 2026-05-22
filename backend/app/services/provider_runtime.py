@@ -15,12 +15,18 @@ from pathlib import Path
 from app.core.paths import repo_root
 from app.schemas.models import (
     HubProject,
+    LogLevel,
     ProjectLog,
     ProviderActionRequest,
     ProviderActionResponse,
+    ProviderClearServiceLogsResponse,
     ProviderConfig,
     ProviderLogsResponse,
     ProviderMetrics,
+    ProviderServiceLogEntry,
+    ProviderServiceLogSource,
+    ProviderServiceLogSourcesResponse,
+    ProviderServiceLogsResponse,
     ProviderStatus,
 )
 from app.services.provider_registry import provider_registry
@@ -38,6 +44,219 @@ CONFIG_KEYS = ("profile", "branch", "port", "installDirectory")
 LOCAL_CONFIG_PATH = "runtime/config.local.json"
 ENV_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 RESERVED_HUB_FRONTEND_PORTS = {3000, 3001}
+SERVICE_LOG_CONFIGS: dict[str, dict] = {
+    "agentic-commerce-blueprint": {
+        "mode": "docker_compose",
+        "composeFiles": ["docker-compose.infra.yml", "docker-compose.yml"],
+        "services": [
+            {"id": "nginx", "label": "Gateway", "service": "nginx", "category": "app", "default": True},
+            {"id": "merchant", "label": "Merchant API", "service": "merchant", "category": "app", "default": True},
+            {"id": "psp", "label": "PSP", "service": "psp", "category": "app", "default": True},
+            {"id": "apps-sdk", "label": "Apps SDK", "service": "apps-sdk", "category": "app", "default": True},
+            {
+                "id": "promotion-agent",
+                "label": "Promotion agent",
+                "service": "promotion-agent",
+                "category": "agent",
+                "default": True,
+            },
+            {
+                "id": "post-purchase-agent",
+                "label": "Post-purchase agent",
+                "service": "post-purchase-agent",
+                "category": "agent",
+                "default": True,
+            },
+            {"id": "ui", "label": "UI", "service": "ui", "category": "ui", "default": True},
+        ],
+    },
+    "ai-virtual-assistant-provider": {
+        "mode": "docker_compose",
+        "composeFiles": [
+            "deploy/compose/docker-compose.yaml",
+            ".runtime/docker-compose.aihub.yaml",
+            ".runtime/docker-compose.cpu.yaml",
+        ],
+        "services": [
+            {
+                "id": "api-gateway-server",
+                "label": "API gateway",
+                "service": "api-gateway-server",
+                "category": "app",
+                "default": True,
+            },
+            {
+                "id": "agent-chain-server",
+                "label": "Agent chain",
+                "service": "agent-chain-server",
+                "category": "agent",
+                "default": True,
+            },
+            {
+                "id": "agent-frontend",
+                "label": "Frontend",
+                "service": "agent-frontend",
+                "category": "ui",
+                "default": True,
+            },
+            {"id": "analytics-server", "label": "Analytics", "service": "analytics-server", "category": "app"},
+            {"id": "redis", "label": "Redis", "service": "redis", "category": "infra"},
+            {"id": "minio", "label": "MinIO", "service": "minio", "category": "infra"},
+            {"id": "milvus", "label": "Milvus", "service": "milvus", "category": "infra"},
+        ],
+    },
+    "aiq": {
+        "mode": "hybrid",
+        "composeFiles": ["deploy/compose/docker-compose.yaml"],
+        "services": [
+            {"id": "aiq-agent", "label": "AIQ agent", "service": "aiq-agent", "category": "app"},
+            {"id": "frontend", "label": "Frontend", "service": "frontend", "category": "ui"},
+            {"id": "postgres", "label": "Postgres", "service": "postgres", "category": "infra"},
+        ],
+        "files": [
+            {
+                "id": "backend-log",
+                "label": "Backend log",
+                "path": ".runtime/backend.log",
+                "category": "app",
+                "default": True,
+            },
+            {
+                "id": "frontend-log",
+                "label": "Frontend log",
+                "path": ".runtime/frontend.log",
+                "category": "ui",
+                "default": True,
+            },
+        ],
+    },
+    "nemotron-voice-agent-provider": {
+        "mode": "docker_compose",
+        "composeFiles": ["docker-compose.yml", ".aihub-hosted.compose.yml"],
+        "services": [
+            {"id": "python-app", "label": "Pipeline", "service": "python-app", "category": "app", "default": True},
+            {"id": "ui-app", "label": "UI", "service": "ui-app", "category": "ui", "default": True},
+            {"id": "tts-service", "label": "TTS NIM", "service": "tts-service", "category": "model"},
+            {"id": "asr-service", "label": "ASR NIM", "service": "asr-service", "category": "model"},
+            {"id": "nvidia-llm", "label": "LLM NIM", "service": "nvidia-llm", "category": "model"},
+        ],
+    },
+    "shop-retail-provider": {
+        "mode": "docker_compose",
+        "composeFiles": ["docker-compose.yaml"],
+        "composeProjectName": "aihub-shop-retail-provider",
+        "services": [
+            {"id": "nginx", "label": "Gateway", "service": "nginx", "category": "app", "default": True},
+            {
+                "id": "chain-server",
+                "label": "Chain server",
+                "service": "chain-server",
+                "category": "agent",
+                "default": True,
+            },
+            {"id": "frontend", "label": "Frontend", "service": "frontend", "category": "ui", "default": True},
+            {
+                "id": "catalog-retriever",
+                "label": "Catalog retriever",
+                "service": "catalog-retriever",
+                "category": "agent",
+                "default": True,
+            },
+            {
+                "id": "memory-retriever",
+                "label": "Memory retriever",
+                "service": "memory-retriever",
+                "category": "agent",
+                "default": True,
+            },
+            {"id": "rails", "label": "Guardrails", "service": "rails", "category": "agent", "default": True},
+            {"id": "milvus", "label": "Milvus", "service": "milvus", "category": "infra"},
+        ],
+    },
+    "multi-agent-intelligent-warehouse": {
+        "mode": "docker_compose",
+        "composeFiles": ["deploy/compose/docker-compose.dev.yaml"],
+        "services": [
+            {"id": "backend", "label": "Backend", "service": "backend", "category": "app", "default": True},
+            {"id": "frontend", "label": "Frontend", "service": "frontend", "category": "ui", "default": True},
+            {"id": "nginx", "label": "Nginx", "service": "nginx", "category": "app", "default": True},
+            {"id": "timescaledb", "label": "TimescaleDB", "service": "timescaledb", "category": "infra"},
+            {"id": "redis", "label": "Redis", "service": "redis", "category": "infra"},
+            {"id": "kafka", "label": "Kafka", "service": "kafka", "category": "infra"},
+            {"id": "milvus", "label": "Milvus", "service": "milvus", "category": "infra"},
+        ],
+    },
+    "pdf-to-podcast": {
+        "mode": "hybrid",
+        "composeFiles": ["docker-compose.yaml", ".auto-ports.compose.yaml"],
+        "services": [
+            {"id": "api-service", "label": "API service", "service": "api-service", "category": "app", "default": True},
+            {
+                "id": "agent-service",
+                "label": "Agent service",
+                "service": "agent-service",
+                "category": "agent",
+                "default": True,
+            },
+            {"id": "pdf-service", "label": "PDF service", "service": "pdf-service", "category": "app", "default": True},
+            {"id": "tts-service", "label": "TTS service", "service": "tts-service", "category": "app", "default": True},
+            {"id": "redis", "label": "Redis", "service": "redis", "category": "infra"},
+            {"id": "minio", "label": "MinIO", "service": "minio", "category": "infra"},
+        ],
+        "files": [
+            {
+                "id": "gradio",
+                "label": "Gradio frontend",
+                "path": "frontend/output.log",
+                "category": "ui",
+                "default": True,
+            },
+            {"id": "setup-up-out", "label": "Setup stdout", "path": "logs/setup-up.out.log", "category": "files"},
+            {
+                "id": "setup-up-err",
+                "label": "Setup stderr",
+                "path": "logs/setup-up.err.log",
+                "category": "files",
+                "stream": "stderr",
+            },
+        ],
+    },
+    "web-agent": {
+        "mode": "process_files",
+        "files": [
+            {"id": "backend", "label": "Backend", "path": "logs/backend.dev.log", "category": "app"},
+            {"id": "frontend", "label": "Frontend", "path": "logs/frontend.dev.log", "category": "ui"},
+            {
+                "id": "backend-out",
+                "label": "Backend stdout",
+                "path": "logs/backend.dev.out.log",
+                "category": "app",
+                "default": True,
+            },
+            {
+                "id": "backend-err",
+                "label": "Backend stderr",
+                "path": "logs/backend.dev.err.log",
+                "category": "app",
+                "stream": "stderr",
+            },
+            {
+                "id": "frontend-out",
+                "label": "Frontend stdout",
+                "path": "logs/frontend.dev.out.log",
+                "category": "ui",
+                "default": True,
+            },
+            {
+                "id": "frontend-err",
+                "label": "Frontend stderr",
+                "path": "logs/frontend.dev.err.log",
+                "category": "ui",
+                "stream": "stderr",
+            },
+        ],
+    },
+}
 
 
 def provider_status(provider_id: str) -> ProviderStatus:
@@ -141,6 +360,84 @@ def provider_logs(
     if level and level != "all":
         logs = [log for log in logs if log.level == level]
     return ProviderLogsResponse(logs=logs, cursor=next_cursor)
+
+
+def provider_service_log_sources(provider_id: str) -> ProviderServiceLogSourcesResponse:
+    provider = _require_provider(provider_id)
+    config = _service_log_config(provider.id)
+    install_path = _provider_install_path(provider)
+    sources: list[ProviderServiceLogSource] = []
+    for service in config.get("services", []):
+        sources.append(
+            ProviderServiceLogSource(
+                id=service["id"],
+                label=service["label"],
+                kind="compose",
+                category=service.get("category", "app"),
+                default=bool(service.get("default")),
+                available=_compose_source_available(install_path, config),
+            )
+        )
+    for source in config.get("files", []):
+        path = _resolve_service_log_file(provider, source)
+        sources.append(
+            ProviderServiceLogSource(
+                id=source["id"],
+                label=source["label"],
+                kind="file",
+                category=source.get("category", "files"),
+                stream=source.get("stream", "stdout"),
+                default=bool(source.get("default")),
+                available=path.exists(),
+            )
+        )
+    return ProviderServiceLogSourcesResponse(mode=config.get("mode", "none"), sources=sources)
+
+
+def provider_service_logs(
+    provider_id: str,
+    source_id: str | None = None,
+    tail: int = 200,
+    cursor: int | None = None,
+    level: str | None = None,
+    query: str | None = None,
+) -> ProviderServiceLogsResponse:
+    provider = _require_provider(provider_id)
+    config = _service_log_config(provider.id)
+    source = _select_service_log_source(config, source_id)
+    if source is None:
+        return ProviderServiceLogsResponse(logs=[], cursor=cursor)
+    if "service" in source:
+        logs = _read_compose_service_logs(provider, config, source, tail)
+        next_cursor = None
+    else:
+        logs, next_cursor = _read_file_service_logs(provider, source, tail, cursor)
+    if level and level != "all":
+        logs = [log for log in logs if log.level == level]
+    if query:
+        needle = query.lower()
+        logs = [log for log in logs if needle in log.message.lower() or needle in log.sourceLabel.lower()]
+    return ProviderServiceLogsResponse(logs=logs[-tail:], cursor=next_cursor)
+
+
+def clear_provider_service_logs(provider_id: str, source_id: str | None = None) -> ProviderClearServiceLogsResponse:
+    provider = _require_provider(provider_id)
+    config = _service_log_config(provider.id)
+    cleared: list[str] = []
+    for source in config.get("files", []):
+        if source_id and source["id"] != source_id:
+            continue
+        path = _resolve_service_log_file(provider, source)
+        if not path.exists():
+            continue
+        path.write_text("", encoding="utf-8")
+        cleared.append(source["id"])
+    has_compose = any(not source_id or service["id"] == source_id for service in config.get("services", []))
+    if has_compose and not cleared:
+        return ProviderClearServiceLogsResponse(
+            cleared=[], mode="view", message="Docker logs use clear-view only and were not truncated"
+        )
+    return ProviderClearServiceLogsResponse(cleared=cleared, mode="files", message="Cleared provider-owned file logs")
 
 
 def install_provider(provider_id: str, request: ProviderActionRequest) -> ProviderActionResponse:
@@ -271,6 +568,134 @@ def _run_action(task_id: str, provider: HubProject, command_name: str, request: 
     provider_registry.refresh(force=True)
 
 
+def _service_log_config(provider_id: str) -> dict:
+    return SERVICE_LOG_CONFIGS.get(provider_id, {"mode": "none", "services": [], "files": [], "composeFiles": []})
+
+
+def _select_service_log_source(config: dict, source_id: str | None) -> dict | None:
+    sources = [*config.get("services", []), *config.get("files", [])]
+    if source_id:
+        return next((source for source in sources if source.get("id") == source_id), None)
+    return next((source for source in sources if source.get("default")), sources[0] if sources else None)
+
+
+def _compose_source_available(install_path: Path, config: dict) -> bool:
+    return install_path.exists() and any(
+        (install_path / compose_file).exists() for compose_file in config.get("composeFiles", [])
+    )
+
+
+def _resolve_service_log_file(provider: HubProject, source: dict) -> Path:
+    raw_path = str(source.get("path", ""))
+    if Path(raw_path).is_absolute() or ".." in Path(raw_path).parts:
+        raise ValueError("Invalid provider log path")
+    install_path = _provider_install_path(provider).resolve()
+    provider_root = _provider_file(provider, ".").resolve()
+    relative_path = Path(raw_path)
+    candidates = [(install_path / relative_path).resolve(), (provider_root / relative_path).resolve()]
+    for candidate in candidates:
+        if _is_relative_to(candidate, install_path) or _is_relative_to(candidate, provider_root):
+            return candidate
+    raise ValueError("Invalid provider log path")
+
+
+def _read_file_service_logs(
+    provider: HubProject, source: dict, tail: int, cursor: int | None
+) -> tuple[list[ProviderServiceLogEntry], int]:
+    path = _resolve_service_log_file(provider, source)
+    if not path.exists():
+        return [], 0
+    file_size = path.stat().st_size
+    start = cursor if cursor is not None and cursor <= file_size else max(0, file_size - 256 * 1024)
+    with path.open("rb") as log_file:
+        log_file.seek(start)
+        lines = log_file.read().decode("utf-8", errors="replace").splitlines()
+        next_cursor = log_file.tell()
+    return [
+        _service_log_entry(provider.id, source, index, line) for index, line in enumerate(lines[-tail:])
+    ], next_cursor
+
+
+def _read_compose_service_logs(
+    provider: HubProject, config: dict, source: dict, tail: int
+) -> list[ProviderServiceLogEntry]:
+    install_path = _provider_install_path(provider).resolve()
+    if not install_path.exists():
+        return []
+    command = ["docker", "compose"]
+    project_name = config.get("composeProjectName")
+    if project_name:
+        command.extend(["-p", project_name])
+    for compose_file in config.get("composeFiles", []):
+        path = (install_path / compose_file).resolve()
+        if _is_relative_to(path, install_path) and path.exists():
+            command.extend(["-f", str(path)])
+    if "-f" not in command:
+        return []
+    command.extend(["logs", "--no-color", "--timestamps", "--tail", str(tail), source["service"]])
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=install_path,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=8,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    output = completed.stdout or completed.stderr
+    return [
+        _service_log_entry(provider.id, source, index, line) for index, line in enumerate(output.splitlines()[-tail:])
+    ]
+
+
+def _service_log_entry(provider_id: str, source: dict, index: int, line: str) -> ProviderServiceLogEntry:
+    timestamp = datetime.now(UTC).isoformat()
+    message = line.strip()
+    timestamp_match = re.match(r"^(\d{4}-\d{2}-\d{2}T\S+)\s+(.*)$", message)
+    if timestamp_match:
+        timestamp = timestamp_match.group(1)
+        message = timestamp_match.group(2)
+    level = _detect_log_level(message, source.get("stream"))
+    return ProviderServiceLogEntry(
+        id=f"{source['id']}-{index}-{abs(hash(message))}",
+        projectId=provider_id,
+        sourceId=source["id"],
+        sourceLabel=source["label"],
+        service=source.get("service"),
+        stream=source.get("stream", "stdout"),
+        level=level,
+        timestamp=timestamp,
+        message=message[-4000:],
+    )
+
+
+def _detect_log_level(message: str, stream: str | None = None) -> LogLevel:
+    if stream == "stderr":
+        return "error"
+    lowered = message.lower()
+    if lowered.startswith("error") or any(
+        token in lowered for token in ("fatal", "traceback", "exception", " error", "[error]")
+    ):
+        return "error"
+    if any(token in lowered for token in (" warn", "warning", "[warn]")):
+        return "warn"
+    if "debug" in lowered:
+        return "debug"
+    return "info"
+
+
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
 def _run_script(
     provider: HubProject,
     command: str,
@@ -285,7 +710,9 @@ def _run_script(
     env["AIHUB_PROVIDER_ROOT"] = str(provider_root)
     config = provider_config(provider.id)
     if config.port in RESERVED_HUB_FRONTEND_PORTS:
-        return ScriptResult(returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub frontend dev server")
+        return ScriptResult(
+            returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub frontend dev server"
+        )
     install_path = _provider_install_path(provider, config)
     env["AIHUB_DEPLOY_ROOT"] = str(install_path.parent)
     env["AIHUB_INSTALL_DIRECTORY"] = str(install_path)
@@ -386,7 +813,9 @@ def _run_utility_script(provider: HubProject, command_name: str, *, timeout_seco
     env["AIHUB_PROVIDER_ROOT"] = str(provider_root)
     config = provider_config(provider.id)
     if config.port in RESERVED_HUB_FRONTEND_PORTS:
-        return ScriptResult(returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub frontend dev server")
+        return ScriptResult(
+            returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub frontend dev server"
+        )
     install_path = _provider_install_path(provider, config)
     env["AIHUB_DEPLOY_ROOT"] = str(install_path.parent)
     env["AIHUB_INSTALL_DIRECTORY"] = str(install_path)

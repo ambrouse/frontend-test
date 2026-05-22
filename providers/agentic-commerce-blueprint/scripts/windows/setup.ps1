@@ -58,14 +58,27 @@ if (!(Test-Path $EnvFile)) {
 }
 $Text = Get-Content $EnvFile -Raw
 $Text = $Text -replace '(?m)^HTTP_HOST_PORT=.*$', "HTTP_HOST_PORT=$Port"
+$LocalEnvFile = Join-Path (Resolve-Path "$Root\..\..") ".env.local"
+$LocalEnv = @{}
+if (Test-Path -LiteralPath $LocalEnvFile) {
+  Get-Content -LiteralPath $LocalEnvFile | ForEach-Object {
+    if ($_ -match "^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$") {
+      $LocalEnv[$Matches[1]] = $Matches[2].Trim('"', "'")
+    }
+  }
+}
 $ResolvedNvidiaApiKey = $env:NVIDIA_API_KEY
+if (-not $ResolvedNvidiaApiKey -and $LocalEnv.ContainsKey("NVIDIA_API_KEY")) { $ResolvedNvidiaApiKey = $LocalEnv["NVIDIA_API_KEY"] }
 if ($ResolvedNvidiaApiKey) {
   $Text = Set-EnvValue -Text $Text -Key "NVIDIA_API_KEY" -Value $ResolvedNvidiaApiKey
+  Set-Item -Path "Env:NVIDIA_API_KEY" -Value $ResolvedNvidiaApiKey
 }
 foreach ($Key in $ProviderEnvKeys) {
   $Value = [Environment]::GetEnvironmentVariable($Key)
+  if (-not $Value -and $LocalEnv.ContainsKey($Key)) { $Value = $LocalEnv[$Key] }
   if ($Key -eq "NGC_API_KEY" -and -not $Value) { $Value = $ResolvedNvidiaApiKey }
   $Text = Set-EnvValue -Text $Text -Key $Key -Value $Value
+  if ($Value) { Set-Item -Path "Env:$Key" -Value $Value }
 }
 Set-Content -Path $EnvFile -Value $Text -Encoding utf8
 $Status = @{ projectId=$Id; state="installed"; pid=$null; port=[int]$Port; platform="windows"; startedAt=(Get-Date).ToUniversalTime().ToString("o"); uptimeSec=0; currentStep="Installed"; progressPercent=100; health=@{ level="ok"; message="Installed" } }

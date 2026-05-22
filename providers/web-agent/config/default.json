@@ -1,0 +1,6 @@
+{
+  "profile": "local dev",
+  "branch": "main",
+  "port": 3005,
+  "installDirectory": "deploy/web-agent"
+}

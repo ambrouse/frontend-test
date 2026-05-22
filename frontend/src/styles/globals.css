@@ -2151,6 +2151,71 @@ button {
   background: color-mix(in srgb, var(--project-accent) 24%, var(--surface));
 }
 
+.service-log-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.8fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 16px;
+}
+
+.service-source-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.service-source-list button,
+.service-log-actions button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.service-source-list button.is-active {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--project-accent) 44%, var(--border));
+  background: color-mix(in srgb, var(--project-accent) 18%, var(--surface));
+}
+
+.service-source-list span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.service-log-search {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.service-log-search input {
+  min-height: 36px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: var(--surface-soft);
+  padding: 0 10px;
+}
+
+.service-log-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .progress-feed {
   display: grid;
   gap: 10px;
@@ -2232,7 +2297,7 @@ button {
 
 .log-line {
   display: grid;
-  grid-template-columns: minmax(72px, max-content) minmax(58px, max-content) minmax(0, 1fr);
+  grid-template-columns: minmax(72px, max-content) minmax(58px, max-content) minmax(84px, max-content) minmax(0, 1fr);
   gap: 12px;
   align-items: start;
   min-height: 28px;
@@ -2255,6 +2320,17 @@ button {
 .log-line strong {
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.log-line small {
+  color: #a5b4fc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-line-simple {
+  grid-template-columns: minmax(72px, max-content) minmax(58px, max-content) minmax(0, 1fr);
 }
 
 .log-line p {
@@ -2311,6 +2387,22 @@ button {
 }
 
 @media (max-width: 1120px) {
+  .service-log-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .service-log-actions {
+    justify-content: flex-start;
+  }
+
+  .log-line {
+    grid-template-columns: minmax(68px, max-content) minmax(52px, max-content) minmax(0, 1fr);
+  }
+
+  .log-line small {
+    grid-column: 1 / -1;
+  }
+
   .home-hero,
   .hub-header,
   .hub-carousel,

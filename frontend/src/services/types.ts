@@ -223,3 +223,41 @@ export type ProviderLogsResponse = {
   logs: ProjectLog[];
   cursor: number;
 };
+
+export type ProviderServiceLogSource = {
+  id: string;
+  label: string;
+  kind: "compose" | "file";
+  category: string;
+  stream: string | null;
+  default: boolean;
+  available: boolean;
+};
+
+export type ProviderServiceLogSourcesResponse = {
+  mode: "docker_compose" | "process_files" | "hybrid" | "none";
+  sources: ProviderServiceLogSource[];
+};
+
+export type ProviderServiceLogEntry = {
+  id: string;
+  projectId: string;
+  sourceId: string;
+  sourceLabel: string;
+  service: string | null;
+  stream: string | null;
+  level: LogLevel;
+  timestamp: string;
+  message: string;
+};
+
+export type ProviderServiceLogsResponse = {
+  logs: ProviderServiceLogEntry[];
+  cursor: number | null;
+};
+
+export type ProviderClearServiceLogsResponse = {
+  cleared: string[];
+  mode: string;
+  message: string;
+};

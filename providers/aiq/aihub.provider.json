@@ -111,8 +111,8 @@
   "lastRunAt": "2026-05-12T00:00:00.000Z",
   "runtime": {
     "defaultPort": 13080,
-    "healthUrl": "http://localhost:18080/health",
-    "metricsUrl": "http://localhost:18080/v1/jobs/async/agents",
+    "healthUrl": "http://localhost:18081/health",
+    "metricsUrl": "http://localhost:18081/v1/jobs/async/agents",
     "statusFile": "runtime/status.json",
     "metricsFile": "runtime/metrics.json",
     "pidFile": "runtime/provider.pid",

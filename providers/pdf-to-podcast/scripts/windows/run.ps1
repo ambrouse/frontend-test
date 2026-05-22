@@ -14,6 +14,9 @@ function Find-Bash {
     "bash"
   )
   foreach ($Candidate in $Candidates) {
+    if ([System.IO.Path]::IsPathRooted($Candidate) -and (Test-Path -LiteralPath $Candidate)) {
+      return $Candidate
+    }
     try {
       $Command = Get-Command $Candidate -ErrorAction Stop
       return $Command.Source
@@ -45,20 +48,37 @@ function Wait-Http {
   throw "$Name did not become ready at $Url"
 }
 
-function Start-BashScript {
+function Invoke-BashScript {
   param(
     [Parameter(Mandatory = $true)][string]$Bash,
     [Parameter(Mandatory = $true)][string]$WorkingDirectory,
-    [Parameter(Mandatory = $true)][string[]]$Arguments,
-    [Parameter(Mandatory = $true)][string]$LogName
+    [Parameter(Mandatory = $true)][string]$ScriptPath,
+    [Parameter(Mandatory = $true)][string[]]$ScriptArguments,
+    [Parameter(Mandatory = $true)][string]$LogName,
+    [int]$TimeoutSeconds = 7200
   )
   $OutPath = Join-Path $Root "logs\$LogName.out.log"
   $ErrPath = Join-Path $Root "logs\$LogName.err.log"
   Remove-Item -LiteralPath $OutPath, $ErrPath -ErrorAction SilentlyContinue
-  $ArgumentText = $Arguments -join " "
-  $Command = "start `"`" /min cmd.exe /c `" `"$Bash`" $ArgumentText > `"$OutPath`" 2> `"$ErrPath`" `""
-  Start-Process -FilePath "cmd.exe" -ArgumentList @("/c", $Command) -WorkingDirectory $WorkingDirectory -WindowStyle Hidden | Out-Null
-  Write-Output "Started PDF to Podcast bootstrap process."
+  $Command = "export PATH=/usr/bin:/bin:/c/Program\ Files/Git/usr/bin:/c/Program\ Files/Git/bin:`$PATH; bash './$(Split-Path -Leaf $ScriptPath)' $($ScriptArguments -join ' ')"
+  Push-Location $WorkingDirectory
+  $PreviousNativePreference = $ErrorActionPreference
+  $PreviousPath = $env:PATH
+  try {
+    Write-Output "Started PDF to Podcast bootstrap process."
+    $env:PATH = "C:\Program Files\Git\usr\bin;C:\Program Files\Git\bin;C:\Program Files\Docker\Docker\resources\bin;C:\Users\Admin\.local\bin;C:\Users\Admin\AppData\Local\Programs\Python\Python311;C:\Users\Admin\AppData\Local\Programs\Python\Python311\Scripts;$PreviousPath"
+    $ErrorActionPreference = "Continue"
+    & $Bash -c $Command > $OutPath 2> $ErrPath
+    $ExitCode = $LASTEXITCODE
+  } finally {
+    $env:PATH = $PreviousPath
+    $ErrorActionPreference = $PreviousNativePreference
+    Pop-Location
+  }
+  if ($ExitCode -ne 0) {
+    Write-BashScriptLog -LogName $LogName
+    throw "PDF to Podcast bootstrap failed with exit code $ExitCode"
+  }
 }
 
 function Write-BashScriptLog {
@@ -101,7 +121,7 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   $Bash = Find-Bash
   $env:FRONTEND_PORT = $Port
   $env:API_SERVICE_PORT = $ApiServicePort
-  Start-BashScript -Bash $Bash -WorkingDirectory $DeployDir -Arguments @("setup.sh", "--up") -LogName "setup-up"
+  Invoke-BashScript -Bash $Bash -WorkingDirectory $DeployDir -ScriptPath "setup.sh" -ScriptArguments @("--up") -LogName "setup-up"
   Wait-PortMap -Path (Join-Path $DeployDir ".auto-ports.env")
 }
 

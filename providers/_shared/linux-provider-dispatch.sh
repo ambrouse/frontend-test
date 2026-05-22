@@ -144,7 +144,26 @@ PY
     nemotron-voice-agent-provider)
       cp -n "$DEPLOY_DIR/config/env.example" "$DEPLOY_DIR/.env"
       set_env_value "$DEPLOY_DIR/.env" UI_PORT "$PORT"
-      for key in NVIDIA_API_KEY NGC_API_KEY TRANSPORT ASR_SERVER_URL TTS_SERVER_URL NVIDIA_LLM_URL; do
+      [[ -z "${TRANSPORT:-}" ]] && set_env_value "$DEPLOY_DIR/.env" TRANSPORT WEBSOCKET
+      [[ -z "${ASR_SERVER_URL:-}" ]] && set_env_value "$DEPLOY_DIR/.env" ASR_SERVER_URL grpc.nvcf.nvidia.com:443
+      [[ -z "${TTS_SERVER_URL:-}" ]] && set_env_value "$DEPLOY_DIR/.env" TTS_SERVER_URL grpc.nvcf.nvidia.com:443
+      [[ -z "${NVIDIA_LLM_URL:-}" ]] && set_env_value "$DEPLOY_DIR/.env" NVIDIA_LLM_URL https://integrate.api.nvidia.com/v1
+      [[ -z "${NVIDIA_LLM_MODEL:-}" ]] && set_env_value "$DEPLOY_DIR/.env" NVIDIA_LLM_MODEL nvidia/nemotron-3-nano-30b-a3b
+      cat > "$DEPLOY_DIR/.aihub-hosted.compose.yml" <<'EOF'
+services:
+  python-app:
+    depends_on: []
+    environment:
+      - ASR_SERVER_URL=${ASR_SERVER_URL:-grpc.nvcf.nvidia.com:443}
+      - TTS_SERVER_URL=${TTS_SERVER_URL:-grpc.nvcf.nvidia.com:443}
+      - NVIDIA_LLM_URL=${NVIDIA_LLM_URL:-https://integrate.api.nvidia.com/v1}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+  ui-app:
+    depends_on:
+      python-app:
+        condition: service_healthy
+EOF
+      for key in NVIDIA_API_KEY NGC_API_KEY TRANSPORT ASR_SERVER_URL TTS_SERVER_URL NVIDIA_LLM_URL NVIDIA_LLM_MODEL; do
         val="${!key:-}"
         [[ "$key" == "NGC_API_KEY" && -z "$val" ]] && val="$ngc"
         [[ -n "$val" ]] && set_env_value "$DEPLOY_DIR/.env" "$key" "$val"
@@ -175,8 +194,8 @@ run_provider() {
     nemotron-voice-agent-provider)
       local pipeline="${NEMOTRON_PIPELINE_PORT:-7860}"
       setup_provider
-      (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml up -d --build --no-deps python-app)
-      (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml up -d --build --no-deps ui-app)
+      (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml -f .aihub-hosted.compose.yml up -d --build --no-deps python-app)
+      (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml -f .aihub-hosted.compose.yml up -d --build --no-deps ui-app)
       wait_http "http://127.0.0.1:${pipeline}/docs" 600
       wait_http "http://127.0.0.1:${PORT}" 300
       ;;
