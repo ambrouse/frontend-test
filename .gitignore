@@ -32,6 +32,8 @@ providers/**/runtime/*
 !providers/**/runtime/.gitkeep
 providers/**/logs/*
 !providers/**/logs/.gitkeep
+logs/hub/*
+!logs/hub/.gitkeep
 sua-loi-provider/
 source-github-provider/
 deploy/*

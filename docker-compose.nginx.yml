@@ -4,10 +4,10 @@ services:
     container_name: ai-hub-nginx
     restart: unless-stopped
     ports:
-      - "${AIHUB_NGINX_PORT:-8080}:80"
+      - "${AIHUB_NGINX_PORT:-6900}:80"
     environment:
-      AIHUB_FRONTEND_UPSTREAM: "${AIHUB_FRONTEND_UPSTREAM:-host.docker.internal:3000}"
-      AIHUB_BACKEND_UPSTREAM: "${AIHUB_BACKEND_UPSTREAM:-host.docker.internal:8000}"
+      AIHUB_FRONTEND_UPSTREAM: "${AIHUB_FRONTEND_UPSTREAM:-host.docker.internal:6901}"
+      AIHUB_BACKEND_UPSTREAM: "${AIHUB_BACKEND_UPSTREAM:-host.docker.internal:6902}"
       AIHUB_CLIENT_MAX_BODY_SIZE: "${AIHUB_CLIENT_MAX_BODY_SIZE:-100m}"
     extra_hosts:
       - "host.docker.internal:host-gateway"

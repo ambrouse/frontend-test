@@ -4,7 +4,13 @@
   "type": "speech",
   "repoUrl": "https://github.com/PhuongHo03/pdf-to-podcast.git",
   "description": "PDF-to-podcast pipeline with FastAPI services, local PDF extraction, NVIDIA-backed agent scripting, ElevenLabs TTS, Redis, MinIO, Jaeger and a Gradio frontend.",
-  "tags": ["pdf", "podcast", "tts", "gradio", "nvidia"],
+  "tags": [
+    "pdf",
+    "podcast",
+    "tts",
+    "gradio",
+    "nvidia"
+  ],
   "accentColor": "#14b8a6",
   "visual": {
     "imageUrl": "/assets/projects/embedding-foundry.jpg",
@@ -34,13 +40,27 @@
   "editableConfig": {
     "profile": "hosted api mode",
     "branch": "main",
-    "port": 7860,
+    "port": 6923,
     "installDirectory": "deploy/pdf-to-podcast"
   },
   "environment": {
-    "supportedOs": ["windows", "linux"],
-    "architectures": ["x64"],
-    "frameworks": ["Docker Compose", "FastAPI", "Gradio", "Redis", "MinIO", "Jaeger", "NVIDIA API", "ElevenLabs"],
+    "supportedOs": [
+      "windows",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "frameworks": [
+      "Docker Compose",
+      "FastAPI",
+      "Gradio",
+      "Redis",
+      "MinIO",
+      "Jaeger",
+      "NVIDIA API",
+      "ElevenLabs"
+    ],
     "requiredTools": [
       {
         "id": "git",
@@ -83,7 +103,7 @@
     "setupNotes": [
       "Install clones the source into deploy/pdf-to-podcast.",
       "Run delegates to the provider setup.sh --up script and records the auto-selected frontend/API ports.",
-      "The app defaults to the Gradio frontend on port 7860 when available."
+      "The app defaults to the Gradio frontend on port 6923 when available."
     ]
   },
   "lastBenchmark": {
@@ -96,9 +116,9 @@
   },
   "lastRunAt": "2026-05-11T00:00:00.000Z",
   "runtime": {
-    "defaultPort": 7860,
-    "healthUrl": "http://localhost:7860",
-    "metricsUrl": "http://localhost:8002/health",
+    "defaultPort": 6923,
+    "healthUrl": "http://localhost:6923",
+    "metricsUrl": "http://localhost:6924/health",
     "statusFile": "runtime/status.json",
     "metricsFile": "runtime/metrics.json",
     "pidFile": "runtime/provider.pid",

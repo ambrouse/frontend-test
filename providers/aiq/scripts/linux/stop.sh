@@ -12,6 +12,6 @@ fi
 
 mkdir -p "$ROOT/runtime"
 cat > "$ROOT/runtime/status.json" <<EOF
-{"projectId":"$ID","state":"stopped","pid":null,"port":13080,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Stopped","progressPercent":100,"health":{"level":"unknown","message":"Stopped"}}
+{"projectId":"$ID","state":"stopped","pid":null,"port":6917,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Stopped","progressPercent":100,"health":{"level":"unknown","message":"Stopped"}}
 EOF
 printf '{"state":"stopped"}\n'

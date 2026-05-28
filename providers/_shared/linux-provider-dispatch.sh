@@ -6,7 +6,7 @@ ACTION="${2:?action required}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../${PROVIDER_ID}" && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "${ROOT}/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-${DEPLOY_ROOT}/${PROVIDER_ID}}"
-PORT="${AIHUB_PORT:-3000}"
+PORT="${AIHUB_PORT:-6903}"
 BRANCH="${AIHUB_BRANCH:-main}"
 
 repo_url() {
@@ -143,15 +143,15 @@ PY
       set_env_value "$DEPLOY_DIR/.env" COMPOSE_PROJECT_NAME aihub-shop-retail-provider
       set_env_value "$DEPLOY_DIR/.env" HTTP_HOST_PORT "$PORT"
       declare -A default_ports=(
-        [CHAIN_SERVER_PORT]=18109
-        [CATALOG_RETRIEVER_PORT]=18110
-        [MEMORY_RETRIEVER_PORT]=18111
-        [GUARDRAILS_PORT]=18112
-        [MILVUS_PORT]=19531
-        [MILVUS_HEALTH_PORT]=19091
-        [MINIO_PORT]=19000
-        [MINIO_CONSOLE_PORT]=19001
-        [ETCD_PORT]=12379
+        [CHAIN_SERVER_PORT]=6908
+        [CATALOG_RETRIEVER_PORT]=6909
+        [MEMORY_RETRIEVER_PORT]=6910
+        [GUARDRAILS_PORT]=6911
+        [MILVUS_PORT]=6912
+        [MILVUS_HEALTH_PORT]=6913
+        [MINIO_PORT]=6914
+        [MINIO_CONSOLE_PORT]=6915
+        [ETCD_PORT]=6916
       )
       for key in CHAIN_SERVER_PORT CATALOG_RETRIEVER_PORT MEMORY_RETRIEVER_PORT GUARDRAILS_PORT MILVUS_PORT MILVUS_HEALTH_PORT MINIO_PORT MINIO_CONSOLE_PORT ETCD_PORT; do
         val="${!key:-${default_ports[$key]}}"
@@ -221,7 +221,7 @@ run_provider() {
       wait_http "http://127.0.0.1:${PORT}/api/health" 600
       ;;
     nemotron-voice-agent-provider)
-      local pipeline="${NEMOTRON_PIPELINE_PORT:-7860}"
+      local pipeline="${NEMOTRON_PIPELINE_PORT:-6922}"
       setup_provider
       (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml -f .aihub-hosted.compose.yml up -d --build --no-deps python-app)
       (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yml -f .aihub-hosted.compose.yml up -d --build --no-deps ui-app)

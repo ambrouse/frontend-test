@@ -4,18 +4,18 @@ ID="${AIHUB_PROVIDER_ID:-multi-agent-intelligent-warehouse}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
-PORT="${AIHUB_PORT:-6009}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-6008}"
+PORT="${AIHUB_PORT:-6929}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6928}"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
 [[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
-if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [[ "$PORT" -lt 6000 || "$PORT" -gt 6050 ]]; then
-  PORT="6009"
+if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [[ "$PORT" -lt 6900 || "$PORT" -gt 6950 ]]; then
+  PORT="6929"
 fi
-if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [[ "$BACKEND_PORT" -lt 6000 || "$BACKEND_PORT" -gt 6050 ]]; then
-  BACKEND_PORT="6008"
+if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [[ "$BACKEND_PORT" -lt 6900 || "$BACKEND_PORT" -gt 6950 ]]; then
+  BACKEND_PORT="6928"
 fi
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   if [[ ! -d "$DEPLOY_DIR" ]]; then

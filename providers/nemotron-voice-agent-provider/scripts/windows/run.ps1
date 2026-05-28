@@ -2,8 +2,8 @@
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "nemotron-voice-agent-provider" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "9000" }
-$PipelinePort = $env:NEMOTRON_PIPELINE_PORT; if (-not $PipelinePort) { $PipelinePort = "7860" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "6921" }
+$PipelinePort = $env:NEMOTRON_PIPELINE_PORT; if (-not $PipelinePort) { $PipelinePort = "6922" }
 New-Item -ItemType Directory -Force -Path "$Root\logs", "$Root\runtime" | Out-Null
 if ($env:AIHUB_DRY_RUN -ne "1") {
   if (!(Test-Path -LiteralPath $DeployDir)) { & "$Root\scripts\windows\setup.ps1" }

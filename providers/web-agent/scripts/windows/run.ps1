@@ -4,9 +4,9 @@ $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "web-agent" }
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
 $DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
-$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "3005" }
-$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "8011" }
-$SearxngPort = $env:AIHUB_SEARXNG_PORT; if (-not $SearxngPort) { $SearxngPort = "18080" }
+$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "6925" }
+$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "6926" }
+$SearxngPort = $env:AIHUB_SEARXNG_PORT; if (-not $SearxngPort) { $SearxngPort = "6927" }
 
 function Set-EnvValueNoBom {
   param([string]$Path, [string]$Key, [string]$Value)

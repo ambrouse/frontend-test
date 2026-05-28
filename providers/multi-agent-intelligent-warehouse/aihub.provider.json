@@ -4,7 +4,11 @@
   "type": "nvidia-blueprint",
   "repoUrl": "https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia",
   "description": "NVIDIA Blueprint-aligned warehouse assistant with LangGraph agents, RAG, Milvus, monitoring and React dashboard.",
-  "tags": ["warehouse", "rag", "nvidia"],
+  "tags": [
+    "warehouse",
+    "rag",
+    "nvidia"
+  ],
   "accentColor": "#38bdf8",
   "visual": {
     "imageUrl": "/assets/projects/nvidia-blueprint.jpg",
@@ -34,13 +38,30 @@
   "editableConfig": {
     "profile": "dev compose",
     "branch": "main",
-    "port": 6009,
+    "port": 6929,
     "installDirectory": "deploy/multi-agent-intelligent-warehouse"
   },
   "environment": {
-    "supportedOs": ["windows", "linux"],
-    "architectures": ["x64", "arm64"],
-    "frameworks": ["Docker Compose", "Python 3.11 containers", "Node 20 containers", "FastAPI", "React", "LangGraph", "Milvus", "TimescaleDB", "Redis", "Kafka"],
+    "supportedOs": [
+      "windows",
+      "linux"
+    ],
+    "architectures": [
+      "x64",
+      "arm64"
+    ],
+    "frameworks": [
+      "Docker Compose",
+      "Python 3.11 containers",
+      "Node 20 containers",
+      "FastAPI",
+      "React",
+      "LangGraph",
+      "Milvus",
+      "TimescaleDB",
+      "Redis",
+      "Kafka"
+    ],
     "requiredTools": [
       {
         "id": "git",
@@ -82,8 +103,8 @@
     ],
     "setupNotes": [
       "Install clones the source into deploy/multi-agent-intelligent-warehouse.",
-      "Default Hub run path publishes frontend UI on the configured port (default 6009) and keeps backend API on host port 6008.",
-      "Frontend provider UI is exposed by the source stack on port 6009 and nginx on 6010 when running standalone."
+      "Default Hub run path publishes frontend UI on the configured port (default 6929) and keeps backend API on host port 6928.",
+      "Frontend provider UI is exposed by the source stack on port 6929 and nginx on 6930 when running standalone."
     ]
   },
   "lastBenchmark": {
@@ -96,9 +117,9 @@
   },
   "lastRunAt": "2026-05-10T00:00:00.000Z",
   "runtime": {
-    "defaultPort": 6009,
-    "healthUrl": "http://localhost:6008/api/v1/health",
-    "metricsUrl": "http://localhost:6008/metrics",
+    "defaultPort": 6929,
+    "healthUrl": "http://localhost:6928/api/v1/health",
+    "metricsUrl": "http://localhost:6928/metrics",
     "statusFile": "runtime/status.json",
     "metricsFile": "runtime/metrics.json",
     "pidFile": "runtime/provider.pid",

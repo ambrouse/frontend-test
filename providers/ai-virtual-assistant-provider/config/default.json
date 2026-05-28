@@ -1,13 +1,13 @@
 {
   "profile": "hosted api mode",
   "branch": "main",
-  "port": 13001,
+  "port": 6904,
   "installDirectory": "deploy/aiva",
   "env": {
     "NVIDIA_API_KEY": "",
     "NGC_API_KEY": "",
-    "API_GATEWAY_PORT": "9000",
-    "PGADMIN_PORT": "5050",
+    "API_GATEWAY_PORT": "6905",
+    "PGADMIN_PORT": "6906",
     "USE_LOCAL_NIM": "false",
     "USE_CPU_MILVUS": "true",
     "PGADMIN_DEFAULT_EMAIL": "pgadmin4@pgadmin.org",

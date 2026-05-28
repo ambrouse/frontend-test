@@ -2,7 +2,7 @@
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "pdf-to-podcast" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "7860" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "6923" }
 if (Test-Path -LiteralPath (Join-Path $DeployDir "docker-compose.yml")) {
   Invoke-DockerComposeCleanup -WorkingDirectory $DeployDir -ComposeArgs @("-f", "docker-compose.yml")
 }

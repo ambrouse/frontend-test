@@ -4,8 +4,8 @@ ID="${AIHUB_PROVIDER_ID:-multi-agent-intelligent-warehouse}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
-PORT="${AIHUB_PORT:-6009}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-6008}"
+PORT="${AIHUB_PORT:-6929}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6928}"
 REPO_URL="https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
@@ -13,11 +13,11 @@ METRICS="$ROOT/runtime/metrics.json"
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
 [[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
-if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [[ "$PORT" -lt 6000 || "$PORT" -gt 6050 ]]; then
-  PORT="6009"
+if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [[ "$PORT" -lt 6900 || "$PORT" -gt 6950 ]]; then
+  PORT="6929"
 fi
-if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [[ "$BACKEND_PORT" -lt 6000 || "$BACKEND_PORT" -gt 6050 ]]; then
-  BACKEND_PORT="6008"
+if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [[ "$BACKEND_PORT" -lt 6900 || "$BACKEND_PORT" -gt 6950 ]]; then
+  BACKEND_PORT="6928"
 fi
 export AIHUB_PORT="$PORT"
 export AIHUB_BACKEND_PORT="$BACKEND_PORT"
@@ -82,8 +82,8 @@ for line in defaults:
             text += "\n" + line
             existing.add(key)
 updates = {
-    "BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "6008"),
-    "HOST_BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "6008"),
+    "BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "6928"),
+    "HOST_BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "6928"),
     "FRONTEND_PORT": port,
     "HOST_FRONTEND_PORT": port,
     "NVIDIA_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
@@ -106,7 +106,7 @@ for line in text.splitlines():
         lines.append(f"{key}={updates[key]}")
         seen.add(key)
     elif key in {"BACKEND_PORT", "HOST_BACKEND_PORT"}:
-        lines.append(f"{key}={os.environ.get('AIHUB_BACKEND_PORT', '6008')}")
+        lines.append(f"{key}={os.environ.get('AIHUB_BACKEND_PORT', '6928')}")
         seen.add(key)
     elif key in {"FRONTEND_PORT", "HOST_FRONTEND_PORT"}:
         lines.append(f"{key}={port}")

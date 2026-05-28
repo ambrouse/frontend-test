@@ -4,7 +4,13 @@
   "type": "nvidia-blueprint",
   "repoUrl": "https://github.com/PhuongHo03/aiq.git",
   "description": "NVIDIA AI-Q research assistant blueprint with FastAPI async jobs, Knowledge API, LlamaIndex retrieval and a Next.js UI.",
-  "tags": ["research", "agents", "nvidia", "knowledge", "nextjs"],
+  "tags": [
+    "research",
+    "agents",
+    "nvidia",
+    "knowledge",
+    "nextjs"
+  ],
   "accentColor": "#76b900",
   "visual": {
     "imageUrl": "/assets/projects/nvidia-blueprint.jpg",
@@ -34,13 +40,26 @@
   "editableConfig": {
     "profile": "hosted knowledge mode",
     "branch": "develop",
-    "port": 13080,
+    "port": 6917,
     "installDirectory": "deploy/aiq"
   },
   "environment": {
-    "supportedOs": ["windows", "linux"],
-    "architectures": ["x64"],
-    "frameworks": ["Python 3.11+", "NVIDIA Agent Intelligence Toolkit", "FastAPI", "Dask", "LlamaIndex", "Next.js", "NVIDIA API"],
+    "supportedOs": [
+      "windows",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "frameworks": [
+      "Python 3.11+",
+      "NVIDIA Agent Intelligence Toolkit",
+      "FastAPI",
+      "Dask",
+      "LlamaIndex",
+      "Next.js",
+      "NVIDIA API"
+    ],
     "requiredTools": [
       {
         "id": "git",
@@ -110,9 +129,9 @@
   },
   "lastRunAt": "2026-05-12T00:00:00.000Z",
   "runtime": {
-    "defaultPort": 13080,
-    "healthUrl": "http://localhost:18081/health",
-    "metricsUrl": "http://localhost:18081/v1/jobs/async/agents",
+    "defaultPort": 6917,
+    "healthUrl": "http://localhost:6918/health",
+    "metricsUrl": "http://localhost:6918/v1/jobs/async/agents",
     "statusFile": "runtime/status.json",
     "metricsFile": "runtime/metrics.json",
     "pidFile": "runtime/provider.pid",

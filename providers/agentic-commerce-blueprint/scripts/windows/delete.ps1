@@ -2,7 +2,7 @@
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "agentic-commerce-blueprint" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "8088" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "6903" }
 if (Test-Path -LiteralPath (Join-Path $DeployDir "docker-compose.yml")) {
   Invoke-DockerComposeCleanup -WorkingDirectory $DeployDir -ComposeArgs @("-f", "docker-compose.infra.yml", "-f", "docker-compose.yml")
 }

@@ -19,6 +19,6 @@ case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
 esac
 
 cat > "$ROOT/runtime/status.json" <<EOF
-{"projectId":"$ID","state":"not_installed","pid":null,"port":13080,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Deleted","progressPercent":100,"health":{"level":"unknown","message":"Deleted"}}
+{"projectId":"$ID","state":"not_installed","pid":null,"port":6917,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Deleted","progressPercent":100,"health":{"level":"unknown","message":"Deleted"}}
 EOF
 printf '{"state":"not_installed"}\n'

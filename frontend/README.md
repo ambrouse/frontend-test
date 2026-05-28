@@ -22,7 +22,7 @@ Dark-first Next.js frontend for a local AI project hub. The app helps inspect ma
 ```bash
 cd frontend
 npm install
-npm run dev
+API_PROXY_PORT=6902 npm run dev -- --hostname 0.0.0.0 --port 6901
 npm run typecheck
 npm run test
 npm run build

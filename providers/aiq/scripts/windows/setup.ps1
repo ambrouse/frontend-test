@@ -6,10 +6,10 @@ $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScr
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
 $DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "develop" }
-$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "13080" }
-$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "18081" }
+$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "6917" }
+$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "6918" }
 $NextInternalPort = $env:AIHUB_NEXT_INTERNAL_PORT; if (-not $NextInternalPort) { $NextInternalPort = ([int]$FrontendPort + 1).ToString() }
-$PostgresPort = $env:AIHUB_POSTGRES_PORT; if (-not $PostgresPort) { $PostgresPort = "15432" }
+$PostgresPort = $env:AIHUB_POSTGRES_PORT; if (-not $PostgresPort) { $PostgresPort = "6920" }
 $RepoUrl = "https://github.com/PhuongHo03/aiq.git"
 $PatchPath = Join-Path $Root "patches\windows-lifecycle.patch"
 $ProviderEnvKeys = @("NVIDIA_API_KEY", "TAVILY_API_KEY", "SERPER_API_KEY")

@@ -61,7 +61,7 @@ if (Test-Path $DeployDir) {
 }
 
 $PortsPath = Join-Path $DeployDir ".runtime\ports.env"
-$Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-StringData } else { @{ FRONTEND_PORT = "13080"; BACKEND_PORT = "18080"; NEXT_INTERNAL_PORT = "13081" } }
+$Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-StringData } else { @{ FRONTEND_PORT = "6917"; BACKEND_PORT = "6918"; NEXT_INTERNAL_PORT = "6919" } }
 Stop-PortProcess -Port ([int]$Ports.FRONTEND_PORT) -DeployPath $DeployDir
 Stop-PortProcess -Port ([int]$Ports.NEXT_INTERNAL_PORT) -DeployPath $DeployDir
 Stop-PortProcess -Port ([int]$Ports.BACKEND_PORT) -DeployPath $DeployDir

@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/agentic-commerce-blueprint}"
-PORT="${AIHUB_PORT:-8088}"
+PORT="${AIHUB_PORT:-6903}"
 SAMPLED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 gateway_ok=false

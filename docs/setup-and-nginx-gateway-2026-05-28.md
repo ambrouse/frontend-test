@@ -11,29 +11,29 @@ Use the platform-native setup script:
 - Linux/macOS/Git Bash: `./setup.sh`
 - Windows PowerShell: `.\setup.ps1`
 
-Both scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. Docker is optional for viewing the Hub shell, but required for provider install/run flows.
+Both scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. `setup.sh` also starts the Linux/macOS/Git Bash Hub runtime on ports `6900-6902`. Docker is optional for viewing the Hub shell, but required for the gateway and provider install/run flows.
 
 If an NVIDIA key is entered, setup updates only `NVIDIA_API_KEY` in `.env.local` and preserves other local variables. The setup scripts must not write secrets into tracked files.
 
 ## Runtime
 
-Start backend and frontend:
+Manual backend and frontend commands:
 
 ```bash
-./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend
-cd frontend && npm run dev
+./.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 6902 --reload --reload-dir backend --app-dir backend
+cd frontend && API_PROXY_PORT=6902 npm run dev -- --hostname 0.0.0.0 --port 6901
 ```
 
 For LAN testing, bind the frontend to all interfaces and set the host allowed by Next.js dev resources:
 
 ```bash
 cd frontend
-AIHUB_LAN_HOST=<LAN-IP> npm run dev -- --hostname 0.0.0.0 --port 3000
+AIHUB_LAN_HOST=<LAN-IP> API_PROXY_PORT=6902 npm run dev -- --hostname 0.0.0.0 --port 6901
 ```
 
 ## Nginx Gateway
 
-After backend `8000` and frontend `3000` are running:
+After backend `6902` and frontend `6901` are running:
 
 ```bash
 docker compose -f docker-compose.nginx.yml up -d
@@ -41,8 +41,8 @@ docker compose -f docker-compose.nginx.yml up -d
 
 Default entrypoints:
 
-- Local: `http://localhost:8080`
-- LAN: `http://<LAN-IP>:8080`
+- Local: `http://localhost:6900`
+- LAN: `http://<LAN-IP>:6900`
 
 The gateway proxies:
 

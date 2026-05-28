@@ -5,9 +5,9 @@ ID="${AIHUB_PROVIDER_ID:-web-agent}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
-FRONTEND_PORT="${AIHUB_PORT:-3005}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-8011}"
-SEARXNG_PORT="${AIHUB_SEARXNG_PORT:-6004}"
+FRONTEND_PORT="${AIHUB_PORT:-6925}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6926}"
+SEARXNG_PORT="${AIHUB_SEARXNG_PORT:-6927}"
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
 [[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 

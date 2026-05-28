@@ -28,6 +28,6 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" && -d "$DEPLOY_DIR" ]]; then
 fi
 mkdir -p "$ROOT/runtime"
 cat > "$ROOT/runtime/status.json" <<EOF
-{"projectId":"$ID","state":"not_installed","pid":null,"port":7860,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Deleted PDF to Podcast deploy and local Docker resources","progressPercent":100,"health":{"level":"ok","message":"Deleted"}}
+{"projectId":"$ID","state":"not_installed","pid":null,"port":6923,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Deleted PDF to Podcast deploy and local Docker resources","progressPercent":100,"health":{"level":"ok","message":"Deleted"}}
 EOF
 printf '{"state":"deleted"}\n'

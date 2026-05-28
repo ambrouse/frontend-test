@@ -7,7 +7,7 @@ FastAPI backend for hardware snapshots, provider manifests, runtime status, metr
 ```bash
 python -m pip install -e ".[dev]"
 python scripts/seed_providers.py
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 6902 --reload
 pytest
 ```
 

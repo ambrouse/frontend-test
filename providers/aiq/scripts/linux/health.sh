@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/aiq}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-18080}"
-FRONTEND_PORT="${AIHUB_PORT:-13080}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6918}"
+FRONTEND_PORT="${AIHUB_PORT:-6917}"
 
 if [ -f "$DEPLOY_DIR/.runtime/ports.env" ]; then
   # shellcheck disable=SC1090

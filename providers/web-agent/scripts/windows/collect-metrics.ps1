@@ -1,7 +1,7 @@
 $ErrorActionPreference = "SilentlyContinue"
 $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScriptRoot\..\.." }
-$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "3005" }
-$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "8011" }
+$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "6925" }
+$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "6926" }
 $BackendOk = $false
 try { $BackendOk = (Invoke-WebRequest -Uri "http://127.0.0.1:$BackendPort/api/v1/health" -UseBasicParsing -TimeoutSec 5).StatusCode -lt 500 } catch {}
 $FrontendOk = $false

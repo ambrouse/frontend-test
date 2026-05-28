@@ -4,7 +4,11 @@
   "type": "nvidia-blueprint",
   "repoUrl": "https://github.com/baolnq-ai/Agentic-Commerce-blueprint-provider-",
   "description": "Dockerized NVIDIA agentic commerce stack with storefront, merchant APIs, agents, Milvus, MinIO and Phoenix.",
-  "tags": ["commerce", "agents", "nvidia"],
+  "tags": [
+    "commerce",
+    "agents",
+    "nvidia"
+  ],
   "accentColor": "#22c55e",
   "visual": {
     "imageUrl": "/assets/projects/nvidia-blueprint.jpg",
@@ -34,13 +38,28 @@
   "editableConfig": {
     "profile": "api mode",
     "branch": "main",
-    "port": 8088,
+    "port": 6903,
     "installDirectory": "deploy/agentic-commerce-blueprint"
   },
   "environment": {
-    "supportedOs": ["windows", "linux"],
-    "architectures": ["x64", "arm64"],
-    "frameworks": ["Docker Compose", "Python 3.12 containers", "Node 22 containers", "NVIDIA Agent Intelligence Toolkit", "Milvus", "MinIO", "Phoenix", "Next.js"],
+    "supportedOs": [
+      "windows",
+      "linux"
+    ],
+    "architectures": [
+      "x64",
+      "arm64"
+    ],
+    "frameworks": [
+      "Docker Compose",
+      "Python 3.12 containers",
+      "Node 22 containers",
+      "NVIDIA Agent Intelligence Toolkit",
+      "Milvus",
+      "MinIO",
+      "Phoenix",
+      "Next.js"
+    ],
     "requiredTools": [
       {
         "id": "git",
@@ -89,7 +108,7 @@
     ],
     "setupNotes": [
       "Install clones the source into deploy/agentic-commerce-blueprint.",
-      "Default Hub run path uses Docker Compose and fixed gateway port 8088.",
+      "Default Hub run path uses Docker Compose and fixed gateway port 6903.",
       "Source repo supports Git Bash/Linux shell through runall.sh; Hub wrapper supports Windows PowerShell and Linux."
     ]
   },
@@ -103,9 +122,9 @@
   },
   "lastRunAt": "2026-05-10T00:00:00.000Z",
   "runtime": {
-    "defaultPort": 8088,
-    "healthUrl": "http://localhost:8088/api/health",
-    "metricsUrl": "http://localhost:8088/metrics",
+    "defaultPort": 6903,
+    "healthUrl": "http://localhost:6903/api/health",
+    "metricsUrl": "http://localhost:6903/metrics",
     "statusFile": "runtime/status.json",
     "metricsFile": "runtime/metrics.json",
     "pidFile": "runtime/provider.pid",

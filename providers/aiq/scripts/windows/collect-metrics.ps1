@@ -4,7 +4,7 @@ $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScr
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
 $DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot "aiq" }
 $PortsPath = Join-Path $DeployDir ".runtime\ports.env"
-$Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-StringData } else { @{ FRONTEND_PORT = "13080"; BACKEND_PORT = "18080" } }
+$Ports = if (Test-Path $PortsPath) { Get-Content $PortsPath | ConvertFrom-StringData } else { @{ FRONTEND_PORT = "6917"; BACKEND_PORT = "6918" } }
 $BackendPort = [int]$Ports.BACKEND_PORT
 $FrontendPort = [int]$Ports.FRONTEND_PORT
 $BackendPidPath = Join-Path $DeployDir ".runtime\backend.pid"

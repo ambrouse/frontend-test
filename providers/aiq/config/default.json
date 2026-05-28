@@ -1,15 +1,15 @@
 {
   "profile": "hosted knowledge mode",
   "branch": "develop",
-  "port": 13080,
+  "port": 6917,
   "installDirectory": "deploy/aiq",
   "env": {
     "NVIDIA_API_KEY": "",
     "TAVILY_API_KEY": "",
     "SERPER_API_KEY": "",
-    "AIHUB_BACKEND_PORT": "18080",
-    "AIHUB_NEXT_INTERNAL_PORT": "13081",
-    "AIHUB_POSTGRES_PORT": "15432",
+    "AIHUB_BACKEND_PORT": "6918",
+    "AIHUB_NEXT_INTERNAL_PORT": "6919",
+    "AIHUB_POSTGRES_PORT": "6920",
     "AIQ_SUPPORT_SERVICES": "false"
   }
 }

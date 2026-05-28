@@ -20,13 +20,13 @@ def test_local_dev_cors_allows_next_fallback_port() -> None:
     response = client.options(
         "/api/providers",
         headers={
-            "Origin": "http://localhost:3001",
+            "Origin": "http://localhost:6901",
             "Access-Control-Request-Method": "GET",
         },
     )
 
     assert response.status_code == 200
-    assert response.headers["access-control-allow-origin"] == "http://localhost:3001"
+    assert response.headers["access-control-allow-origin"] == "http://localhost:6901"
 
 
 def test_providers_contract() -> None:
@@ -54,7 +54,7 @@ def test_provider_detail_contract() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["id"] == "aiq"
-    assert body["editableConfig"]["port"] == 13080
+    assert body["editableConfig"]["port"] == 6917
 
 
 def test_removed_provider_returns_404() -> None:

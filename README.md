@@ -103,7 +103,7 @@ It focuses on three things:
         <img src="tests/ip-access-evidence-2026-05-28/hub-ip-providers.png" alt="Hub provider dashboard through LAN IP" width="100%">
       </a>
       <br><strong>LAN Hub</strong><br>
-      Nginx gateway loads real provider cards through <code>192.168.x.x:8080</code>.
+      Nginx gateway loads real provider cards through <code>192.168.x.x:6900</code>.
     </td>
     <td width="33%">
       <a href="tests/provider-nvidia-full-stability-evidence-2026-05-27/agentic-commerce-blueprint/function/01-native-checkout-session-output.png">
@@ -151,13 +151,13 @@ AI Hub currently ships exactly eight active provider wrappers:
 
 | Provider | Runtime | Default entry | Evidence posture | Lifecycle |
 | --- | --- | ---: | --- | --- |
-| `agentic-commerce-blueprint`<br>Agentic Commerce Blueprint | <img src="https://img.shields.io/badge/NVIDIA_Blueprint-commerce-22c55e?style=flat-square" alt="NVIDIA Blueprint commerce"> | `8088` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `agentic-commerce-blueprint`<br>Agentic Commerce Blueprint | <img src="https://img.shields.io/badge/NVIDIA_Blueprint-commerce-22c55e?style=flat-square" alt="NVIDIA Blueprint commerce"> | `6903` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
 | `ai-virtual-assistant-provider`<br>AI Virtual Assistant Provider | <img src="https://img.shields.io/badge/NVIDIA_Blueprint-assistant-38bdf8?style=flat-square" alt="NVIDIA assistant"> | `13301` UI / `13300` API | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
-| `aiq`<br>NVIDIA AI-Q Blueprint | <img src="https://img.shields.io/badge/RAG-knowledge-84cc16?style=flat-square" alt="RAG knowledge"> | `13080` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `aiq`<br>NVIDIA AI-Q Blueprint | <img src="https://img.shields.io/badge/RAG-knowledge-84cc16?style=flat-square" alt="RAG knowledge"> | `6917` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
 | `nemotron-voice-agent-provider`<br>Nemotron Voice Agent Provider | <img src="https://img.shields.io/badge/Speech-WebRTC-a855f7?style=flat-square" alt="Speech WebRTC"> | `13100` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
 | `shop-retail-provider`<br>Shop Retail Provider | <img src="https://img.shields.io/badge/Retail-search-ec4899?style=flat-square" alt="Retail search"> | manifest port | <img src="https://img.shields.io/badge/evidence-partial_warning-f59e0b?style=flat-square" alt="partial warning evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
 | `multi-agent-intelligent-warehouse`<br>Multi-Agent Intelligent Warehouse | <img src="https://img.shields.io/badge/Warehouse-agents-0ea5e9?style=flat-square" alt="Warehouse agents"> | `3001` UI / `8091` API | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
-| `pdf-to-podcast`<br>PDF to Podcast | <img src="https://img.shields.io/badge/Gradio-audio-f97316?style=flat-square" alt="Gradio audio"> | `7860` frontend / dynamic API | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `pdf-to-podcast`<br>PDF to Podcast | <img src="https://img.shields.io/badge/Gradio-audio-f97316?style=flat-square" alt="Gradio audio"> | `6923` frontend / dynamic API | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
 | `web-agent`<br>Web Agent | <img src="https://img.shields.io/badge/Tooling-web_search-6366f1?style=flat-square" alt="Tooling web search"> | manifest port | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
 
 Removed or archived providers must not appear in the backend registry, frontend fallback data, or provider dispatch scripts.
@@ -168,11 +168,11 @@ Removed or archived providers must not appear in the backend registry, frontend 
   <tr>
     <td width="50%">
       <strong>Local dev</strong><br>
-      <code>frontend:3000</code> talks to <code>backend:8000</code> with same-origin API rewrites.
+      <code>frontend:6901</code> talks to <code>backend:6902</code> with same-origin API rewrites.
     </td>
     <td width="50%">
       <strong>Nginx gateway</strong><br>
-      <code>localhost:8080</code> or <code>&lt;LAN-IP&gt;:8080</code> serves frontend and API from one origin.
+      <code>localhost:6900</code> or <code>&lt;LAN-IP&gt;:6900</code> serves frontend and API from one origin.
     </td>
   </tr>
 </table>
@@ -184,9 +184,6 @@ Removed or archived providers must not appear in the backend registry, frontend 
 git clone https://github.com/ambrouse/frontend-test.git
 cd frontend-test
 ./setup.sh
-./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend
-cd frontend
-npm run dev
 ```
 
 </details>
@@ -198,9 +195,6 @@ npm run dev
 git clone https://github.com/ambrouse/frontend-test.git
 cd frontend-test
 .\setup.ps1
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir backend
-cd frontend
-npm run dev
 ```
 
 </details>
@@ -210,15 +204,14 @@ npm run dev
 
 ```bash
 ./setup.sh
-WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --reload-dir backend --app-dir backend
-cd frontend
-npm run dev
 ```
 
-If reload is unstable in Git Bash, run without reload:
+If you want to run services manually in Git Bash, run without reload:
 
 ```bash
-./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend
+./.venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 6902 --app-dir backend
+cd frontend
+API_PROXY_PORT=6902 npm run dev -- --hostname 0.0.0.0 --port 6901
 ```
 
 </details>
@@ -226,16 +219,16 @@ If reload is unstable in Git Bash, run without reload:
 Open the app at:
 
 ```text
-http://localhost:3000
+http://localhost:6901
 ```
 
-Or start the Docker-managed Nginx gateway after the backend and frontend are running:
+`setup.sh` starts the backend, frontend, and Docker-managed Nginx gateway when Docker is running. To start the gateway manually after the backend and frontend are running:
 
 ```bash
-docker compose -f docker-compose.nginx.yml up -d
+AIHUB_NGINX_PORT=6900 AIHUB_FRONTEND_UPSTREAM=host.docker.internal:6901 AIHUB_BACKEND_UPSTREAM=host.docker.internal:6902 docker compose -f docker-compose.nginx.yml up -d
 ```
 
-Then open `http://localhost:8080` or the LAN URL printed by `setup.sh` / `setup.ps1`.
+Then open `http://localhost:6900` or the LAN URL printed by `setup.sh` / `setup.ps1`.
 
 The setup scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. Docker is optional for viewing the Hub but required for real provider install/run. If you enter an NVIDIA key, setup updates only `NVIDIA_API_KEY` in `.env.local` and preserves other local variables.
 
@@ -249,10 +242,10 @@ That means provider-source fixes must be committed and pushed to the provider's 
 
 ```mermaid
 flowchart LR
-  Browser[Browser / LAN Client] --> Gateway[Nginx Gateway :8080]
-  Browser --> UI[Next.js Dev UI :3000]
+  Browser[Browser / LAN Client] --> Gateway[Nginx Gateway :6900]
+  Browser --> UI[Next.js Dev UI :6901]
   Gateway --> UI
-  Gateway --> API[FastAPI Backend :8000]
+  Gateway --> API[FastAPI Backend :6902]
   UI --> API
   API --> Registry[Provider Registry]
   API --> Hardware[Hardware Probe]

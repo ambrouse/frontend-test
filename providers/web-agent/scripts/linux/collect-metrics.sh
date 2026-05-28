@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-FRONTEND_PORT="${AIHUB_PORT:-3005}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-8011}"
+FRONTEND_PORT="${AIHUB_PORT:-6925}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6926}"
 mkdir -p "$ROOT/runtime"
 backend_ok=false
 frontend_ok=false

@@ -2,7 +2,7 @@
 $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "nemotron-voice-agent-provider" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "9000" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "6921" }
 if ($env:AIHUB_DRY_RUN -ne "1" -and (Test-Path -LiteralPath $DeployDir)) {
   Push-Location $DeployDir
   try {

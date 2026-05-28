@@ -3,6 +3,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${ROOT_DIR}/.venv"
+HUB_LOG_DIR="${ROOT_DIR}/logs/hub"
+HUB_FRONTEND_PORT="${AIHUB_FRONTEND_PORT:-6901}"
+HUB_BACKEND_PORT="${AIHUB_BACKEND_PORT:-6902}"
+HUB_NGINX_PORT="${AIHUB_NGINX_PORT:-6900}"
+HUB_HOST="${AIHUB_HOST:-0.0.0.0}"
 
 is_windows_bash() {
   case "$(uname -s)" in
@@ -274,11 +279,11 @@ write_local_env_value() {
 
 print_backend_hints() {
   if is_windows_bash; then
-    echo "Backend (PowerShell): .\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --app-dir backend"
-    echo "Backend (Git Bash, reload): WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --reload-dir backend --app-dir backend"
-    echo "Backend (Git Bash, no reload): ./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend"
+    echo "Backend (PowerShell): .\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --host ${HUB_HOST} --port ${HUB_BACKEND_PORT} --reload --app-dir backend"
+    echo "Backend (Git Bash, reload): WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --host ${HUB_HOST} --port ${HUB_BACKEND_PORT} --reload --reload-dir backend --app-dir backend"
+    echo "Backend (Git Bash, no reload): ./.venv/Scripts/python.exe -m uvicorn app.main:app --host ${HUB_HOST} --port ${HUB_BACKEND_PORT} --app-dir backend"
   else
-    echo "Backend:  ./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend"
+    echo "Backend:  ./.venv/bin/python -m uvicorn app.main:app --host ${HUB_HOST} --port ${HUB_BACKEND_PORT} --reload --app-dir backend"
   fi
 }
 
@@ -317,6 +322,171 @@ ensure_docker() {
       echo "Docker daemon is not running. Start Docker Desktop/Engine before provider install/run." >&2
     fi
   fi
+}
+
+pid_from_file() {
+  local pid_file="$1"
+  [[ -f "${pid_file}" ]] || return 1
+  tr -cd '0-9' < "${pid_file}"
+}
+
+stop_pid_file() {
+  local label="$1" pid_file="$2" pid
+  pid="$(pid_from_file "${pid_file}" || true)"
+  if [[ -z "${pid}" ]]; then
+    rm -f "${pid_file}"
+    return 0
+  fi
+
+  if kill -0 "${pid}" 2>/dev/null; then
+    echo "Stopping previous ${label} process (${pid})..."
+    kill "${pid}" 2>/dev/null || true
+    sleep 1
+    if kill -0 "${pid}" 2>/dev/null; then
+      kill -9 "${pid}" 2>/dev/null || true
+    fi
+  fi
+  rm -f "${pid_file}"
+}
+
+port_in_use() {
+  local port="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -nP -iTCP:"${port}" -sTCP:LISTEN >/dev/null 2>&1
+    return $?
+  fi
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltn "sport = :${port}" 2>/dev/null | awk 'NR > 1 { found = 1 } END { exit found ? 0 : 1 }'
+    return $?
+  fi
+  if command -v fuser >/dev/null 2>&1; then
+    fuser "${port}/tcp" >/dev/null 2>&1
+    return $?
+  fi
+  return 1
+}
+
+require_free_port() {
+  local label="$1" port="$2"
+  if port_in_use "${port}"; then
+    echo "${label} port ${port} is already in use. Run ./stop.sh or set a free AIHUB_*_PORT in 6900-6950." >&2
+    return 1
+  fi
+}
+
+require_hub_port_range() {
+  local label="$1" port="$2"
+  if ! [[ "${port}" =~ ^[0-9]+$ ]] || (( port < 6900 || port > 6950 )); then
+    echo "${label} port must be in the 6900-6950 range, got: ${port}" >&2
+    return 1
+  fi
+}
+
+wait_http() {
+  local url="$1" label="$2" log_file="$3" timeout="${4:-90}" end
+  end=$((SECONDS + timeout))
+  until curl -fsS --max-time 5 "${url}" >/dev/null 2>&1; do
+    if (( SECONDS >= end )); then
+      echo "${label} did not become ready at ${url}." >&2
+      if [[ -f "${log_file}" ]]; then
+        echo "--- Last ${label} log lines (${log_file}) ---" >&2
+        tail -n 80 "${log_file}" >&2 || true
+      fi
+      return 1
+    fi
+    sleep 2
+  done
+  echo "OK: ${label} is ready at ${url}"
+}
+
+start_backend() {
+  local log_file="${HUB_LOG_DIR}/backend.log"
+  local pid_file="${HUB_LOG_DIR}/backend.pid"
+  local detach_cmd=()
+  if command -v setsid >/dev/null 2>&1; then
+    detach_cmd=(setsid)
+  fi
+  stop_pid_file "backend" "${pid_file}"
+  require_free_port "Backend" "${HUB_BACKEND_PORT}"
+
+  : > "${log_file}"
+  echo "Starting backend on ${HUB_HOST}:${HUB_BACKEND_PORT}..."
+  (
+    cd "${ROOT_DIR}"
+    nohup "${detach_cmd[@]}" "${VENV_PYTHON}" -m uvicorn app.main:app \
+      --host "${HUB_HOST}" \
+      --port "${HUB_BACKEND_PORT}" \
+      --app-dir backend \
+      > "${log_file}" 2>&1 &
+    printf '%s\n' "$!" > "${pid_file}"
+  )
+  wait_http "http://127.0.0.1:${HUB_BACKEND_PORT}/api/health" "backend" "${log_file}"
+}
+
+start_frontend() {
+  local log_file="${HUB_LOG_DIR}/frontend.log"
+  local pid_file="${HUB_LOG_DIR}/frontend.pid"
+  local detach_cmd=()
+  if command -v setsid >/dev/null 2>&1; then
+    detach_cmd=(setsid)
+  fi
+  stop_pid_file "frontend" "${pid_file}"
+  require_free_port "Frontend" "${HUB_FRONTEND_PORT}"
+
+  : > "${log_file}"
+  echo "Starting frontend on ${HUB_HOST}:${HUB_FRONTEND_PORT}..."
+  (
+    cd "${ROOT_DIR}/frontend"
+    nohup "${detach_cmd[@]}" env \
+      AIHUB_LAN_HOST="${LAN_IP:-}" \
+      API_PROXY_HOST="127.0.0.1" \
+      API_PROXY_PORT="${HUB_BACKEND_PORT}" \
+      NEXT_PUBLIC_API_BASE="" \
+      npm run dev -- --hostname "${HUB_HOST}" --port "${HUB_FRONTEND_PORT}" \
+      > "${log_file}" 2>&1 &
+    printf '%s\n' "$!" > "${pid_file}"
+  )
+  wait_http "http://127.0.0.1:${HUB_FRONTEND_PORT}" "frontend" "${log_file}" 120
+}
+
+start_nginx_gateway() {
+  local log_file="${HUB_LOG_DIR}/nginx.log"
+  if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
+    echo "Docker Compose is unavailable; skipping nginx gateway. Open http://localhost:${HUB_FRONTEND_PORT} instead." >&2
+    return 0
+  fi
+  if ! docker info >/dev/null 2>&1; then
+    echo "Docker daemon is not running; skipping nginx gateway. Open http://localhost:${HUB_FRONTEND_PORT} instead." >&2
+    return 0
+  fi
+
+  : > "${log_file}"
+  (cd "${ROOT_DIR}" && docker compose -f docker-compose.nginx.yml down --remove-orphans >/dev/null 2>&1) || true
+  require_free_port "Nginx gateway" "${HUB_NGINX_PORT}"
+  echo "Starting nginx gateway on 0.0.0.0:${HUB_NGINX_PORT}..."
+  (
+    cd "${ROOT_DIR}"
+    AIHUB_NGINX_PORT="${HUB_NGINX_PORT}" \
+    AIHUB_FRONTEND_UPSTREAM="host.docker.internal:${HUB_FRONTEND_PORT}" \
+    AIHUB_BACKEND_UPSTREAM="host.docker.internal:${HUB_BACKEND_PORT}" \
+    docker compose -f docker-compose.nginx.yml up -d --remove-orphans
+  ) > "${log_file}" 2>&1 || {
+    echo "Nginx gateway failed to start. See ${log_file}" >&2
+    tail -n 80 "${log_file}" >&2 || true
+    return 1
+  }
+  wait_http "http://127.0.0.1:${HUB_NGINX_PORT}/nginx-health" "nginx gateway" "${log_file}" 60
+}
+
+start_hub() {
+  mkdir -p "${HUB_LOG_DIR}"
+  require_hub_port_range "Nginx gateway" "${HUB_NGINX_PORT}"
+  require_hub_port_range "Frontend" "${HUB_FRONTEND_PORT}"
+  require_hub_port_range "Backend" "${HUB_BACKEND_PORT}"
+  echo "Booting AI Hub on ports ${HUB_NGINX_PORT}, ${HUB_FRONTEND_PORT}, ${HUB_BACKEND_PORT}..."
+  start_backend
+  start_frontend
+  start_nginx_gateway
 }
 
 echo "AI Hub setup"
@@ -374,11 +544,16 @@ fi
 
 "${VENV_PYTHON}" "${ROOT_DIR}/backend/scripts/seed_providers.py"
 
+LAN_IP="$(detect_lan_ip || true)"
+start_hub
+
 echo "Setup complete."
 print_backend_hints
-echo "Frontend: cd frontend && npm run dev"
-echo "Nginx gateway: docker compose -f docker-compose.nginx.yml up -d  # http://localhost:8080"
-if LAN_IP="$(detect_lan_ip)"; then
-  echo "LAN frontend: cd frontend && AIHUB_LAN_HOST=${LAN_IP} npm run dev -- --hostname 0.0.0.0 --port 3000"
-  echo "LAN gateway:  http://${LAN_IP}:8080"
+echo "Frontend: cd frontend && npm run dev -- --hostname ${HUB_HOST} --port ${HUB_FRONTEND_PORT}"
+echo "Local frontend: http://localhost:${HUB_FRONTEND_PORT}"
+echo "Local gateway:  http://localhost:${HUB_NGINX_PORT}"
+if [[ -n "${LAN_IP}" ]]; then
+  echo "LAN frontend: http://${LAN_IP}:${HUB_FRONTEND_PORT}"
+  echo "LAN gateway:  http://${LAN_IP}:${HUB_NGINX_PORT}"
 fi
+echo "Logs: ${HUB_LOG_DIR}"

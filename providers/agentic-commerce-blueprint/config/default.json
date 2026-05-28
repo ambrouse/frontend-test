@@ -1,7 +1,7 @@
 {
   "profile": "api mode",
   "branch": "main",
-  "port": 8088,
+  "port": 6903,
   "installDirectory": "deploy/agentic-commerce-blueprint",
   "env": {
     "NVIDIA_API_KEY": "",

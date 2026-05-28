@@ -1,21 +1,21 @@
 {
   "profile": "dev compose",
   "branch": "main",
-  "port": 6009,
+  "port": 6929,
   "installDirectory": "deploy/multi-agent-intelligent-warehouse",
   "env": {
     "NVIDIA_API_KEY": "",
     "EMBEDDING_API_KEY": "",
     "RAIL_API_KEY": "",
-    "AIHUB_BACKEND_PORT": "6008",
-    "HOST_NGINX_PORT": "6010",
-    "HOST_POSTGRES_PORT": "6000",
-    "HOST_REDIS_PORT": "6001",
-    "HOST_KAFKA_PORT": "6002",
-    "HOST_ETCD_PORT": "6003",
-    "HOST_MINIO_PORT": "6004",
-    "HOST_MINIO_CONSOLE_PORT": "6005",
-    "HOST_MILVUS_GRPC_PORT": "6006",
-    "HOST_MILVUS_HTTP_PORT": "6007"
+    "AIHUB_BACKEND_PORT": "6928",
+    "HOST_NGINX_PORT": "6930",
+    "HOST_POSTGRES_PORT": "6931",
+    "HOST_REDIS_PORT": "6932",
+    "HOST_KAFKA_PORT": "6933",
+    "HOST_ETCD_PORT": "6934",
+    "HOST_MINIO_PORT": "6935",
+    "HOST_MINIO_CONSOLE_PORT": "6936",
+    "HOST_MILVUS_GRPC_PORT": "6937",
+    "HOST_MILVUS_HTTP_PORT": "6938"
   }
 }

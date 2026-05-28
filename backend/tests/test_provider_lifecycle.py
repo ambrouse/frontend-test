@@ -57,22 +57,22 @@ def test_provider_config_reports_port_conflict() -> None:
     config = response.json()
     assert config["port"] == 1
     assert local_config.exists()
-    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 8088})
+    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 6903})
     local_config.unlink(missing_ok=True)
 
 
-def test_reserved_hub_frontend_port_blocks_lifecycle_script() -> None:
+def test_reserved_hub_port_blocks_lifecycle_script() -> None:
     local_config = repo_root() / "providers/agentic-commerce-blueprint/runtime/config.local.json"
     local_config.unlink(missing_ok=True)
-    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 3000})
+    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 6901})
 
     install = client.post("/api/providers/agentic-commerce-blueprint/install", json={"dryRun": False})
     assert install.status_code == 200
     task = _wait_task(install.json()["taskId"])
 
     assert task["status"] == "failed"
-    assert "reserved for the Hub frontend dev server" in task["currentStep"]
-    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 8088})
+    assert "reserved for the Hub runtime" in task["currentStep"]
+    client.patch("/api/providers/agentic-commerce-blueprint/config", json={"port": 6903})
     local_config.unlink(missing_ok=True)
 
 
@@ -100,7 +100,7 @@ def test_empty_provider_env_does_not_clear_process_secret() -> None:
     config = ProviderConfig(
         profile="default",
         branch="main",
-        port=8088,
+        port=6903,
         installDirectory="deploy/provider",
         env={"NVIDIA_API_KEY": "", "NGC_API_KEY": "", "MERCHANT_API_KEY": "merchant-test"},
     )

@@ -43,7 +43,7 @@ class ScriptResult:
 CONFIG_KEYS = ("profile", "branch", "port", "installDirectory")
 LOCAL_CONFIG_PATH = "runtime/config.local.json"
 ENV_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-RESERVED_HUB_FRONTEND_PORTS = {3000, 3001}
+RESERVED_HUB_PORTS = {6900, 6901, 6902}
 SERVICE_LOG_CONFIGS: dict[str, dict] = {
     "agentic-commerce-blueprint": {
         "mode": "docker_compose",
@@ -298,8 +298,8 @@ def provider_config(provider_id: str) -> ProviderConfig:
     ):
         _merge_config_data(base, data)
     config = ProviderConfig(**base)
-    if config.port in RESERVED_HUB_FRONTEND_PORTS:
-        config.warnings.append(f"Port {config.port} is reserved for the Hub frontend dev server")
+    if config.port in RESERVED_HUB_PORTS:
+        config.warnings.append(f"Port {config.port} is reserved for the Hub runtime")
     if _is_port_in_use(config.port):
         config.warnings.append(f"Port {config.port} is already in use")
     return config
@@ -321,8 +321,8 @@ def patch_provider_config(provider_id: str, patch: dict) -> ProviderConfig:
         current["env"] = current_env
     current["warnings"] = []
     config = ProviderConfig.model_validate(current)
-    if config.port in RESERVED_HUB_FRONTEND_PORTS:
-        config.warnings.append(f"Port {config.port} is reserved for the Hub frontend dev server")
+    if config.port in RESERVED_HUB_PORTS:
+        config.warnings.append(f"Port {config.port} is reserved for the Hub runtime")
     if _is_port_in_use(config.port):
         config.warnings.append(f"Port {config.port} is already in use")
     path = _provider_file(provider, LOCAL_CONFIG_PATH)
@@ -709,10 +709,8 @@ def _run_script(
     env["AIHUB_PROVIDER_ID"] = provider.id
     env["AIHUB_PROVIDER_ROOT"] = str(provider_root)
     config = provider_config(provider.id)
-    if config.port in RESERVED_HUB_FRONTEND_PORTS:
-        return ScriptResult(
-            returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub frontend dev server"
-        )
+    if config.port in RESERVED_HUB_PORTS:
+        return ScriptResult(returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub runtime")
     install_path = _provider_install_path(provider, config)
     env["AIHUB_DEPLOY_ROOT"] = str(install_path.parent)
     env["AIHUB_INSTALL_DIRECTORY"] = str(install_path)
@@ -812,10 +810,8 @@ def _run_utility_script(provider: HubProject, command_name: str, *, timeout_seco
     env["AIHUB_PROVIDER_ID"] = provider.id
     env["AIHUB_PROVIDER_ROOT"] = str(provider_root)
     config = provider_config(provider.id)
-    if config.port in RESERVED_HUB_FRONTEND_PORTS:
-        return ScriptResult(
-            returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub frontend dev server"
-        )
+    if config.port in RESERVED_HUB_PORTS:
+        return ScriptResult(returncode=2, stdout="", stderr=f"Port {config.port} is reserved for the Hub runtime")
     install_path = _provider_install_path(provider, config)
     env["AIHUB_DEPLOY_ROOT"] = str(install_path.parent)
     env["AIHUB_INSTALL_DIRECTORY"] = str(install_path)

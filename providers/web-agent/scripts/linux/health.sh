@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-8011}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6926}"
 mkdir -p "$ROOT/runtime"
 ok=false
 if curl -fsS "http://127.0.0.1:$BACKEND_PORT/api/v1/health" >/dev/null 2>&1; then

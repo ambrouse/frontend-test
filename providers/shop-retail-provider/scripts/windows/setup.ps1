@@ -3,7 +3,7 @@ $Id = $env:AIHUB_PROVIDER_ID; if (-not $Id) { $Id = "shop-retail-provider" }
 $Root = Get-ProviderRoot
 $DeployDir = Get-DeployDir -ProviderId $Id
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
-$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "13000" }
+$Port = $env:AIHUB_PORT; if (-not $Port) { $Port = "6907" }
 $RepoUrl = "https://github.com/mionm/Shop-Retail-Provider-mion-.git"
 New-Item -ItemType Directory -Force -Path "$Root\logs", "$Root\runtime" | Out-Null
 Sync-Repo -RepoUrl $RepoUrl -Branch $Branch -DeployDir $DeployDir
@@ -61,15 +61,15 @@ if ($env:AIHUB_DRY_RUN -ne "1") {
   $Text = Set-EnvValue -Text $Text -Key "HTTP_HOST_PORT" -Value $Port
   Set-Item -Path "Env:HTTP_HOST_PORT" -Value $Port
   $DefaultPorts = @{
-    CHAIN_SERVER_PORT = "18109"
-    CATALOG_RETRIEVER_PORT = "18110"
-    MEMORY_RETRIEVER_PORT = "18111"
-    GUARDRAILS_PORT = "18112"
-    MILVUS_PORT = "19531"
-    MILVUS_HEALTH_PORT = "19091"
-    MINIO_PORT = "19000"
-    MINIO_CONSOLE_PORT = "19001"
-    ETCD_PORT = "12379"
+    CHAIN_SERVER_PORT = "6908"
+    CATALOG_RETRIEVER_PORT = "6909"
+    MEMORY_RETRIEVER_PORT = "6910"
+    GUARDRAILS_PORT = "6911"
+    MILVUS_PORT = "6912"
+    MILVUS_HEALTH_PORT = "6913"
+    MINIO_PORT = "6914"
+    MINIO_CONSOLE_PORT = "6915"
+    ETCD_PORT = "6916"
   }
   foreach ($Key in @("CHAIN_SERVER_PORT","CATALOG_RETRIEVER_PORT","MEMORY_RETRIEVER_PORT","GUARDRAILS_PORT","MILVUS_PORT","MILVUS_HEALTH_PORT","MINIO_PORT","MINIO_CONSOLE_PORT","ETCD_PORT")) {
     $Value = [Environment]::GetEnvironmentVariable($Key)

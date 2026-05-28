@@ -39,6 +39,6 @@ elif [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
 fi
 mkdir -p "$ROOT/runtime"
 cat > "$ROOT/runtime/status.json" <<EOF
-{"projectId":"$ID","state":"not_installed","pid":null,"port":8088,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Deleted Agentic Commerce deploy and local Docker resources","progressPercent":100,"health":{"level":"ok","message":"Deleted"}}
+{"projectId":"$ID","state":"not_installed","pid":null,"port":6903,"platform":"linux","startedAt":null,"uptimeSec":0,"currentStep":"Deleted Agentic Commerce deploy and local Docker resources","progressPercent":100,"health":{"level":"ok","message":"Deleted"}}
 EOF
 printf '{"state":"deleted"}\n'

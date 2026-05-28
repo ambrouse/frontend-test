@@ -4,7 +4,13 @@
   "type": "tooling",
   "repoUrl": "https://github.com/baolnq-ai/web-agent.git",
   "description": "Tavily-first web search chat app with FastAPI, Next.js, SSE streaming, session history, LLM runtime config and optional SearXNG fallback.",
-  "tags": ["web-search", "chat", "fastapi", "nextjs", "tavily"],
+  "tags": [
+    "web-search",
+    "chat",
+    "fastapi",
+    "nextjs",
+    "tavily"
+  ],
   "accentColor": "#2563eb",
   "visual": {
     "imageUrl": "/assets/projects/agent-command-center.jpg",
@@ -34,13 +40,27 @@
   "editableConfig": {
     "profile": "local dev",
     "branch": "main",
-    "port": 3005,
+    "port": 6925,
     "installDirectory": "deploy/web-agent"
   },
   "environment": {
-    "supportedOs": ["windows", "linux"],
-    "architectures": ["x64", "arm64"],
-    "frameworks": ["FastAPI", "Next.js 16", "React 19", "Tailwind CSS", "Tavily", "SearXNG optional", "PostgreSQL optional"],
+    "supportedOs": [
+      "windows",
+      "linux"
+    ],
+    "architectures": [
+      "x64",
+      "arm64"
+    ],
+    "frameworks": [
+      "FastAPI",
+      "Next.js 16",
+      "React 19",
+      "Tailwind CSS",
+      "Tavily",
+      "SearXNG optional",
+      "PostgreSQL optional"
+    ],
     "requiredTools": [
       {
         "id": "git",
@@ -82,8 +102,8 @@
     ],
     "setupNotes": [
       "Install clones the source into deploy/web-agent and installs Python/Node dependencies without auto-starting services.",
-      "Run starts the backend on AIHUB_BACKEND_PORT or 8011 and the frontend on the configured provider port.",
-      "SearXNG starts in a provider-scoped Docker container on port 6004 by default so web search works without a Tavily key while avoiding the common 8080 port."
+      "Run starts the backend on AIHUB_BACKEND_PORT or 6926 and the frontend on the configured provider port.",
+      "SearXNG starts in a provider-scoped Docker container on port 6927 by default so web search works without a Tavily key while avoiding the common 8080 port."
     ]
   },
   "lastBenchmark": {
@@ -96,9 +116,9 @@
   },
   "lastRunAt": "2026-05-20T00:00:00.000Z",
   "runtime": {
-    "defaultPort": 3005,
-    "healthUrl": "http://localhost:3005",
-    "metricsUrl": "http://127.0.0.1:8011/api/v1/health",
+    "defaultPort": 6925,
+    "healthUrl": "http://localhost:6925",
+    "metricsUrl": "http://127.0.0.1:6926/api/v1/health",
     "statusFile": "runtime/status.json",
     "metricsFile": "runtime/metrics.json",
     "pidFile": "runtime/provider.pid",

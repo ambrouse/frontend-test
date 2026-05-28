@@ -6,9 +6,9 @@ $Root = $env:AIHUB_PROVIDER_ROOT; if (-not $Root) { $Root = Resolve-Path "$PSScr
 $DeployRoot = $env:AIHUB_DEPLOY_ROOT; if (-not $DeployRoot) { $DeployRoot = Resolve-Path "$Root\..\..\deploy" }
 $DeployDir = $env:AIHUB_INSTALL_DIRECTORY; if (-not $DeployDir) { $DeployDir = Join-Path $DeployRoot $Id }
 $Branch = $env:AIHUB_BRANCH; if (-not $Branch) { $Branch = "main" }
-$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "3005" }
-$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "8011" }
-$SearxngPort = $env:AIHUB_SEARXNG_PORT; if (-not $SearxngPort) { $SearxngPort = "18080" }
+$FrontendPort = $env:AIHUB_PORT; if (-not $FrontendPort) { $FrontendPort = "6925" }
+$BackendPort = $env:AIHUB_BACKEND_PORT; if (-not $BackendPort) { $BackendPort = "6926" }
+$SearxngPort = $env:AIHUB_SEARXNG_PORT; if (-not $SearxngPort) { $SearxngPort = "6927" }
 $SearxngContainer = $env:AIHUB_SEARXNG_CONTAINER; if (-not $SearxngContainer) { $SearxngContainer = "web-agent-searxng" }
 $RepoUrl = "https://github.com/baolnq-ai/web-agent.git"
 

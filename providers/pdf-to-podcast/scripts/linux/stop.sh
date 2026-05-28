@@ -5,7 +5,7 @@ ID="${AIHUB_PROVIDER_ID:-pdf-to-podcast}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
-PORT="${AIHUB_PORT:-7860}"
+PORT="${AIHUB_PORT:-6923}"
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
 [[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 

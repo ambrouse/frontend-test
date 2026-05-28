@@ -6,17 +6,17 @@ ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 BRANCH="${AIHUB_BRANCH:-develop}"
-FRONTEND_PORT="${AIHUB_PORT:-13080}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-6042}"
+FRONTEND_PORT="${AIHUB_PORT:-6917}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6918}"
 NEXT_INTERNAL_PORT="${AIHUB_NEXT_INTERNAL_PORT:-$((FRONTEND_PORT + 1))}"
-POSTGRES_PORT="${AIHUB_POSTGRES_PORT:-15432}"
+POSTGRES_PORT="${AIHUB_POSTGRES_PORT:-6920}"
 REPO_URL="https://github.com/PhuongHo03/aiq.git"
 PATCH_PATH="$ROOT/patches/windows-lifecycle.patch"
 PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
 [[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 
-if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [ "$BACKEND_PORT" -lt 6001 ] || [ "$BACKEND_PORT" -gt 6050 ]; then
-  BACKEND_PORT="6042"
+if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [ "$BACKEND_PORT" -lt 6900 ] || [ "$BACKEND_PORT" -gt 6950 ]; then
+  BACKEND_PORT="6918"
 fi
 
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
@@ -117,8 +117,8 @@ sync_provider_env() {
   set_env_value "$env_file" AIQ_FRONTEND_PORT "$FRONTEND_PORT"
   set_env_value "$env_file" AIQ_NEXT_INTERNAL_PORT "$NEXT_INTERNAL_PORT"
   set_env_value "$env_file" AIQ_POSTGRES_PORT "$POSTGRES_PORT"
-  set_env_value "$env_file" AIQ_PORT_MIN "6001"
-  set_env_value "$env_file" AIQ_PORT_MAX "6050"
+  set_env_value "$env_file" AIQ_PORT_MIN "6900"
+  set_env_value "$env_file" AIQ_PORT_MAX "6950"
   set_env_value "$env_file" REQUIRE_AUTH "false"
 }
 

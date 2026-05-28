@@ -203,13 +203,13 @@ if (Test-Path -LiteralPath (Join-Path $RootDir "frontend/package-lock.json")) {
 & $VenvPython (Join-Path $RootDir "backend/scripts/seed_providers.py")
 
 Write-Host "Setup complete."
-Write-Host "Backend (PowerShell): .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir backend"
-Write-Host "Backend (Git Bash, reload): WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --reload-dir backend --app-dir backend"
-Write-Host "Backend (Git Bash, no reload): ./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend"
-Write-Host "Frontend: cd frontend; npm run dev"
-Write-Host "Nginx gateway: docker compose -f docker-compose.nginx.yml up -d  # http://localhost:8080"
+Write-Host "Backend (PowerShell): .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 6902 --reload --app-dir backend"
+Write-Host "Backend (Git Bash, reload): WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 6902 --reload --reload-dir backend --app-dir backend"
+Write-Host "Backend (Git Bash, no reload): ./.venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 6902 --app-dir backend"
+Write-Host "Frontend: cd frontend; `$env:API_PROXY_PORT=`"6902`"; npm run dev -- --hostname 0.0.0.0 --port 6901"
+Write-Host "Nginx gateway: `$env:AIHUB_NGINX_PORT=`"6900`"; `$env:AIHUB_FRONTEND_UPSTREAM=`"host.docker.internal:6901`"; `$env:AIHUB_BACKEND_UPSTREAM=`"host.docker.internal:6902`"; docker compose -f docker-compose.nginx.yml up -d  # http://localhost:6900"
 $LanIp = Get-LanIp
 if ($LanIp) {
-  Write-Host "LAN frontend (PowerShell): `$env:AIHUB_LAN_HOST=`"$LanIp`"; cd frontend; npm run dev -- --hostname 0.0.0.0 --port 3000"
-  Write-Host "LAN gateway: http://${LanIp}:8080"
+  Write-Host "LAN frontend: http://${LanIp}:6901"
+  Write-Host "LAN gateway: http://${LanIp}:6900"
 }
