@@ -59,7 +59,7 @@
       {
         "id": "python",
         "label": "Python 3.11-3.13",
-        "command": "python --version",
+        "command": "python3 --version",
         "required": true,
         "installHint": "Install Python 3.11, 3.12 or 3.13. Windows launcher py -3.11 is supported."
       },

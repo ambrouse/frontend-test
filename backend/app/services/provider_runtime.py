@@ -879,6 +879,8 @@ def _apply_config_env(env: dict[str, str], config: ProviderConfig) -> None:
     for key, value in config.env.items():
         key = key.strip()
         if ENV_KEY_PATTERN.match(key):
+            if value == "" and env.get(key):
+                continue
             env[key] = value
 
 

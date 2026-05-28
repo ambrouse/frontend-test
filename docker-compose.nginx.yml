@@ -1,0 +1,23 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ai-hub-nginx
+    restart: unless-stopped
+    ports:
+      - "${AIHUB_NGINX_PORT:-8080}:80"
+    environment:
+      AIHUB_FRONTEND_UPSTREAM: "${AIHUB_FRONTEND_UPSTREAM:-host.docker.internal:3000}"
+      AIHUB_BACKEND_UPSTREAM: "${AIHUB_BACKEND_UPSTREAM:-host.docker.internal:8000}"
+      AIHUB_CLIENT_MAX_BODY_SIZE: "${AIHUB_CLIENT_MAX_BODY_SIZE:-100m}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./infra/nginx/templates/aihub.conf.template:/etc/nginx/templates/default.conf.template:ro
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/nginx-health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 5s

@@ -214,6 +214,14 @@ remove_venv_dir() {
   rm -rf -- "${VENV_DIR}"
 }
 
+venv_python_is_supported() {
+  local python_path="$1"
+  "${python_path}" - 2>/dev/null <<'PY'
+import sys
+raise SystemExit(0 if sys.version_info >= (3, 11) else 1)
+PY
+}
+
 create_venv() {
   if "${PYTHON_BIN}" -m venv "${VENV_DIR}"; then
     return 0
@@ -235,6 +243,35 @@ create_venv() {
   fi
 }
 
+write_local_env_value() {
+  local key="$1"
+  local value="$2"
+  local env_file="${ROOT_DIR}/.env.local"
+  local tmp_file
+
+  if [[ -f "${env_file}" ]]; then
+    tmp_file="$(mktemp)"
+    awk -v key="${key}" -v value="${value}" '
+      BEGIN { written = 0 }
+      $0 ~ "^[[:space:]]*" key "=" {
+        print key "=" value
+        written = 1
+        next
+      }
+      { print }
+      END {
+        if (!written) {
+          print key "=" value
+        }
+      }
+    ' "${env_file}" > "${tmp_file}"
+    cat "${tmp_file}" > "${env_file}"
+    rm -f "${tmp_file}"
+  else
+    printf '%s=%s\n' "${key}" "${value}" > "${env_file}"
+  fi
+}
+
 print_backend_hints() {
   if is_windows_bash; then
     echo "Backend (PowerShell): .\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --app-dir backend"
@@ -243,6 +280,18 @@ print_backend_hints() {
   else
     echo "Backend:  ./.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend"
   fi
+}
+
+detect_lan_ip() {
+  local ip
+  if command -v hostname >/dev/null 2>&1; then
+    ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+    if [[ -n "${ip}" ]]; then
+      printf '%s\n' "${ip}"
+      return 0
+    fi
+  fi
+  return 1
 }
 
 ensure_docker() {
@@ -285,10 +334,8 @@ NVIDIA_API_KEY_INPUT="${NVIDIA_API_KEY_INPUT#"${NVIDIA_API_KEY_INPUT%%[![:space:
 NVIDIA_API_KEY_INPUT="${NVIDIA_API_KEY_INPUT%"${NVIDIA_API_KEY_INPUT##*[![:space:]]}"}"
 
 if [[ -n "${NVIDIA_API_KEY_INPUT}" ]]; then
-  {
-    echo "NVIDIA_API_KEY=${NVIDIA_API_KEY_INPUT}"
-  } > "${ROOT_DIR}/.env.local"
-  echo "Wrote local key to .env.local (gitignored)."
+  write_local_env_value "NVIDIA_API_KEY" "${NVIDIA_API_KEY_INPUT}"
+  echo "Updated NVIDIA_API_KEY in .env.local (gitignored)."
 fi
 
 PYTHON_BIN="$(resolve_python)"
@@ -301,6 +348,15 @@ if ! VENV_PYTHON="$(find_venv_python)"; then
   if ! VENV_PYTHON="$(find_venv_python)"; then
     echo "Could not locate venv python interpreter in ${VENV_DIR}." >&2
     echo "Expected one of: .venv/bin/python, .venv/bin/python3, or .venv/Scripts/python(.exe)." >&2
+    exit 1
+  fi
+fi
+if ! venv_python_is_supported "${VENV_PYTHON}"; then
+  echo "Existing venv Python is older than 3.11. Recreating ${VENV_DIR}..." >&2
+  remove_venv_dir
+  create_venv
+  if ! VENV_PYTHON="$(find_venv_python)" || ! venv_python_is_supported "${VENV_PYTHON}"; then
+    echo "Could not create a Python 3.11+ virtual environment in ${VENV_DIR}." >&2
     exit 1
   fi
 fi
@@ -321,3 +377,8 @@ fi
 echo "Setup complete."
 print_backend_hints
 echo "Frontend: cd frontend && npm run dev"
+echo "Nginx gateway: docker compose -f docker-compose.nginx.yml up -d  # http://localhost:8080"
+if LAN_IP="$(detect_lan_ip)"; then
+  echo "LAN frontend: cd frontend && AIHUB_LAN_HOST=${LAN_IP} npm run dev -- --hostname 0.0.0.0 --port 3000"
+  echo "LAN gateway:  http://${LAN_IP}:8080"
+fi

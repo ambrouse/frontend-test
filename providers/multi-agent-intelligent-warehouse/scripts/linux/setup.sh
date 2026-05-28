@@ -4,19 +4,45 @@ ID="${AIHUB_PROVIDER_ID:-multi-agent-intelligent-warehouse}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
-PORT="${AIHUB_PORT:-13002}"
+PORT="${AIHUB_PORT:-6009}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6008}"
 REPO_URL="https://github.com/baolnq-ai/Multi-Agent-Intelligent-WarehousePublic-nvidia"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
 METRICS="$ROOT/runtime/metrics.json"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
-log_json() { python - "$1" "$2" "$3" >> "$LOG" <<'PY'
+if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [[ "$PORT" -lt 6000 || "$PORT" -gt 6050 ]]; then
+  PORT="6009"
+fi
+if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [[ "$BACKEND_PORT" -lt 6000 || "$BACKEND_PORT" -gt 6050 ]]; then
+  BACKEND_PORT="6008"
+fi
+export AIHUB_PORT="$PORT"
+export AIHUB_BACKEND_PORT="$BACKEND_PORT"
+safe_remove_deploy_dir() {
+  case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
+    "$(cd "$DEPLOY_ROOT" && pwd)"/*) ;;
+    *) echo "Refusing to delete outside deploy root: $DEPLOY_DIR" >&2; exit 1 ;;
+  esac
+  rm -rf "$DEPLOY_DIR" 2>/dev/null || {
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
+      rm -rf "$DEPLOY_DIR"
+    else
+      echo "Cannot remove root-owned deploy directory: $DEPLOY_DIR" >&2
+      exit 1
+    fi
+  }
+}
+log_json() { "$PYTHON_BIN" - "$1" "$2" "$3" >> "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 print(json.dumps({"source": sys.argv[1], "level": sys.argv[2], "timestamp": datetime.now(timezone.utc).isoformat(), "message": sys.argv[3]}))
 PY
 }
-status_json() { python - "$ID" "$PORT" "$1" "$2" "$3" > "$STATUS" <<'PY'
+status_json() { "$PYTHON_BIN" - "$ID" "$PORT" "$1" "$2" "$3" > "$STATUS" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 print(json.dumps({"projectId": sys.argv[1], "state": sys.argv[3], "pid": None, "port": int(sys.argv[2]), "platform": "linux", "startedAt": datetime.now(timezone.utc).isoformat(), "uptimeSec": 0, "currentStep": sys.argv[4], "progressPercent": int(sys.argv[5]), "health": {"level": "ok", "message": sys.argv[4]}}, indent=2))
@@ -28,7 +54,7 @@ if [[ "${AIHUB_DRY_RUN:-0}" == "1" ]]; then
 else
   if [[ ! -d "$DEPLOY_DIR/.git" ]]; then
     if [[ -d "$DEPLOY_DIR" ]] && [[ -n "$(ls -A "$DEPLOY_DIR" 2>/dev/null)" ]]; then
-      rm -rf "$DEPLOY_DIR"
+      safe_remove_deploy_dir
     fi
     git clone --depth 1 --branch "${AIHUB_BRANCH:-main}" "$REPO_URL" "$DEPLOY_DIR"
   else
@@ -43,7 +69,7 @@ mkdir -p "$(dirname "$ENV_FILE")"
 if [[ ! -f "$ENV_FILE" ]]; then
   cp "$ROOT/.env.example" "$ENV_FILE"
 fi
-python - "$ENV_FILE" "$PORT" "$ROOT/.env.example" <<'PY'
+"$PYTHON_BIN" - "$ENV_FILE" "$PORT" "$ROOT/.env.example" <<'PY'
 import os, sys
 path, port, defaults_path = sys.argv[1], sys.argv[2], sys.argv[3]
 text = open(path, encoding="utf-8").read()
@@ -56,8 +82,8 @@ for line in defaults:
             text += "\n" + line
             existing.add(key)
 updates = {
-    "BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "8091"),
-    "HOST_BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "8091"),
+    "BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "6008"),
+    "HOST_BACKEND_PORT": os.environ.get("AIHUB_BACKEND_PORT", "6008"),
     "FRONTEND_PORT": port,
     "HOST_FRONTEND_PORT": port,
     "NVIDIA_API_KEY": os.environ.get("NVIDIA_API_KEY", ""),
@@ -80,7 +106,7 @@ for line in text.splitlines():
         lines.append(f"{key}={updates[key]}")
         seen.add(key)
     elif key in {"BACKEND_PORT", "HOST_BACKEND_PORT"}:
-        lines.append(f"{key}={os.environ.get('AIHUB_BACKEND_PORT', '8091')}")
+        lines.append(f"{key}={os.environ.get('AIHUB_BACKEND_PORT', '6008')}")
         seen.add(key)
     elif key in {"FRONTEND_PORT", "HOST_FRONTEND_PORT"}:
         lines.append(f"{key}={port}")
@@ -95,7 +121,7 @@ for key, value in updates.items():
         lines.append(f"{key}={value}")
 open(path, "w", encoding="utf-8").write("\n".join(lines) + "\n")
 PY
-python - "$METRICS" <<'PY'
+"$PYTHON_BIN" - "$METRICS" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 json.dump({"sampledAt": datetime.now(timezone.utc).isoformat(), "platform": "linux", "process": {"cpuPercent": 0, "ramMb": 0, "gpuPercent": 0, "vramMb": 0}, "service": {"requestsTotal": 0, "requestsPerMin": 0, "latencyP50Ms": 0, "latencyP95Ms": 0, "errorsLastHour": 0}, "benchmark": {"headlineMetric": "installed", "secondaryMetric": "ready", "vramPeakMb": 0}}, open(sys.argv[1], "w", encoding="utf-8"), indent=2)

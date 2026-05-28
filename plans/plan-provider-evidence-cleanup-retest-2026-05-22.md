@@ -40,7 +40,7 @@ Retest and clean provider frontend evidence so each in-scope provider folder is 
 
 - Each provider has `README.md`.
 - Each provider `app/`, `function/`, `lifecycle/`, and `logs/` folder has a concise `README.md`.
-- No `.json`, `.txt`, or `.log` technical evidence files remain under `test/provider-post-push-pipeline-evidence-2026-05-22`.
+- No `.json`, `.txt`, or `.log` technical evidence files remain under `tests/provider-post-push-pipeline-evidence-2026-05-22`.
 - No exact duplicate screenshot hashes remain.
 - Agentic Commerce has a search screenshot with visible search result evidence.
 - Full secret scan over evidence/log/plan/provider folders does not expose the NVIDIA key value.
@@ -54,9 +54,9 @@ Retest and clean provider frontend evidence so each in-scope provider folder is 
 ## Closure - 2026-05-22
 
 - Result: closed/pass for the six-provider scope.
-- Evidence root: `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+- Evidence root: `tests/provider-post-push-pipeline-evidence-2026-05-22/`.
 - Final cleanup kept only screenshots and README reports; no raw JSON/TXT/log evidence files remain.
-- Earlier evidence folder `test/provider-functional-evidence-2026-05-21/` was superseded and removed so `test/` keeps only the latest provider evidence set.
+- Earlier evidence folder `tests/provider-functional-evidence-2026-05-21/` was superseded and removed so `tests/` keeps only the latest provider evidence set.
 - Final duplicate hash scan returned no duplicate screenshots.
 - Final README scan found no missing local image links, `$sub` placeholders, malformed provider matrix table, or control characters.
 - Final secret scan over `test`, `logs`, `plans`, and `providers` returned no `nvapi-...` matches.

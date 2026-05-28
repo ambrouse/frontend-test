@@ -4,15 +4,27 @@ ID="${AIHUB_PROVIDER_ID:-pdf-to-podcast}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
+safe_remove_deploy_dir() {
+  case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
+    "$(cd "$DEPLOY_ROOT" && pwd)"/*) ;;
+    *) echo "Refusing to delete outside deploy root: $DEPLOY_DIR" >&2; exit 1 ;;
+  esac
+  rm -rf "$DEPLOY_DIR" 2>/dev/null || {
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
+      rm -rf "$DEPLOY_DIR"
+    else
+      echo "Cannot remove root-owned deploy directory: $DEPLOY_DIR" >&2
+      exit 1
+    fi
+  }
+}
 "$ROOT/scripts/linux/stop.sh" >/dev/null || true
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" && -d "$DEPLOY_DIR" ]]; then
   if [[ -f "$DEPLOY_DIR/docker-compose.yml" ]]; then
     (cd "$DEPLOY_DIR" && docker compose -f docker-compose.yml down --volumes --remove-orphans --rmi all || true)
   fi
-  case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
-    "$(cd "$DEPLOY_ROOT" && pwd)"/*) rm -rf "$DEPLOY_DIR" ;;
-    *) echo "Refusing to delete outside deploy root: $DEPLOY_DIR" >&2; exit 1 ;;
-  esac
+  safe_remove_deploy_dir
 fi
 mkdir -p "$ROOT/runtime"
 cat > "$ROOT/runtime/status.json" <<EOF

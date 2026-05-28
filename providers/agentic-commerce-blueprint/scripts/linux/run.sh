@@ -8,8 +8,10 @@ DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-8088}"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
-python - "$LOG" <<'PY'
+"$PYTHON_BIN" - "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 print(json.dumps({"source":"runtime","level":"info","timestamp":datetime.now(timezone.utc).isoformat(),"message":"run requested"}), file=open(sys.argv[1], "a", encoding="utf-8"))
@@ -25,7 +27,7 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
     export HTTP_HOST_PORT="$PORT"
     docker compose -f docker-compose.infra.yml -f docker-compose.yml build promotion-agent
     docker compose -f docker-compose.infra.yml -f docker-compose.yml up -d
-    python - "$PORT" <<'PY'
+    "$PYTHON_BIN" - "$PORT" <<'PY'
 import sys, time, urllib.request
 
 url = f"http://127.0.0.1:{sys.argv[1]}/api/health"
@@ -52,7 +54,7 @@ PY
     fi
   )
 fi
-python - "$STATUS" "$ID" "$PORT" <<'PY'
+"$PYTHON_BIN" - "$STATUS" "$ID" "$PORT" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 json.dump({"projectId":sys.argv[2],"state":"running","pid":None,"port":int(sys.argv[3]),"platform":"linux","startedAt":datetime.now(timezone.utc).isoformat(),"uptimeSec":0,"currentStep":"Running commerce stack","progressPercent":100,"health":{"level":"ok","message":"Started"}}, open(sys.argv[1],"w",encoding="utf-8"), indent=2)

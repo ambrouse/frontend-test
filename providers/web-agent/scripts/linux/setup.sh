@@ -8,18 +8,36 @@ DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 BRANCH="${AIHUB_BRANCH:-main}"
 FRONTEND_PORT="${AIHUB_PORT:-3005}"
 BACKEND_PORT="${AIHUB_BACKEND_PORT:-8011}"
-SEARXNG_PORT="${AIHUB_SEARXNG_PORT:-18080}"
+SEARXNG_PORT="${AIHUB_SEARXNG_PORT:-6004}"
 SEARXNG_CONTAINER="${AIHUB_SEARXNG_CONTAINER:-web-agent-searxng}"
 REPO_URL="https://github.com/baolnq-ai/web-agent.git"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
+
+safe_remove_deploy_dir() {
+  case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
+    "$(cd "$DEPLOY_ROOT" && pwd)"/*) ;;
+    *) echo "Refusing to delete outside deploy root: $DEPLOY_DIR" >&2; exit 1 ;;
+  esac
+  rm -rf "$DEPLOY_DIR" 2>/dev/null || {
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
+      rm -rf "$DEPLOY_DIR"
+    else
+      echo "Cannot remove root-owned deploy directory: $DEPLOY_DIR" >&2
+      exit 1
+    fi
+  }
+}
 
 set_env_value() {
   local path="$1"
   local key="$2"
   local value="${3:-}"
   touch "$path"
-  python - "$path" "$key" "$value" <<'PY'
+  "$PYTHON_BIN" - "$path" "$key" "$value" <<'PY'
 from pathlib import Path
 import sys
 path = Path(sys.argv[1])
@@ -78,7 +96,7 @@ PY
 if [ "${AIHUB_DRY_RUN:-0}" = "1" ]; then
   mkdir -p "$DEPLOY_DIR"
 elif [ ! -d "$DEPLOY_DIR/.git" ]; then
-  [ ! -e "$DEPLOY_DIR" ] || rm -rf "$DEPLOY_DIR"
+  [ ! -e "$DEPLOY_DIR" ] || safe_remove_deploy_dir
   git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$DEPLOY_DIR"
 else
   git -C "$DEPLOY_DIR" fetch --depth 1 origin "$BRANCH"

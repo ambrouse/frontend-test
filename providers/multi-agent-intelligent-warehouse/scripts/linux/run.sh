@@ -4,11 +4,19 @@ ID="${AIHUB_PROVIDER_ID:-multi-agent-intelligent-warehouse}"
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
-PORT="${AIHUB_PORT:-13002}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-8091}"
+PORT="${AIHUB_PORT:-6009}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6008}"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
+if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [[ "$PORT" -lt 6000 || "$PORT" -gt 6050 ]]; then
+  PORT="6009"
+fi
+if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [[ "$BACKEND_PORT" -lt 6000 || "$BACKEND_PORT" -gt 6050 ]]; then
+  BACKEND_PORT="6008"
+fi
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   if [[ ! -d "$DEPLOY_DIR" ]]; then
     SETUP_SCRIPT="$ROOT/scripts/linux/setup.sh"
@@ -22,7 +30,7 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
         key="${kv%%=*}"
         value="${kv#*=}"
         if grep -qE "^${key}=" "$env_file"; then
-          python - "$env_file" "$key" "$value" <<'PY'
+          "$PYTHON_BIN" - "$env_file" "$key" "$value" <<'PY'
 from pathlib import Path
 import sys
 path = Path(sys.argv[1])
@@ -38,7 +46,7 @@ PY
     BACKEND_PORT="$BACKEND_PORT" HOST_BACKEND_PORT="$BACKEND_PORT" FRONTEND_PORT="$PORT" HOST_FRONTEND_PORT="$PORT" bash scripts/run_all_services.sh
   )
 fi
-python - "$STATUS" "$ID" "$PORT" <<'PY'
+"$PYTHON_BIN" - "$STATUS" "$ID" "$PORT" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 json.dump({"projectId":sys.argv[2],"state":"running","pid":None,"port":int(sys.argv[3]),"platform":"linux","startedAt":datetime.now(timezone.utc).isoformat(),"uptimeSec":0,"currentStep":"Running warehouse stack","progressPercent":100,"health":{"level":"ok","message":"Started"}}, open(sys.argv[1],"w",encoding="utf-8"), indent=2)

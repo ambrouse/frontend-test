@@ -82,6 +82,61 @@ function Test-DockerDaemon {
   return $LASTEXITCODE -eq 0
 }
 
+function Set-LocalEnvValue {
+  param(
+    [Parameter(Mandatory = $true)][string]$Name,
+    [Parameter(Mandatory = $true)][string]$Value
+  )
+  $EnvFile = Join-Path $RootDir ".env.local"
+  if (Test-Path -LiteralPath $EnvFile) {
+    $Updated = $false
+    $Pattern = "^\s*$([regex]::Escape($Name))="
+    $Lines = Get-Content -LiteralPath $EnvFile
+    $Output = foreach ($Line in $Lines) {
+      if ($Line -match $Pattern) {
+        $Updated = $true
+        "$Name=$Value"
+      } else {
+        $Line
+      }
+    }
+    if (!$Updated) {
+      $Output += "$Name=$Value"
+    }
+    $Output | Set-Content -LiteralPath $EnvFile -Encoding UTF8
+  } else {
+    "$Name=$Value" | Set-Content -LiteralPath $EnvFile -Encoding UTF8
+  }
+}
+
+function Get-VenvPython {
+  $Candidate = Join-Path $VenvDir "Scripts\python.exe"
+  if (Test-Path -LiteralPath $Candidate) { return $Candidate }
+  return $null
+}
+
+function Test-PythonVersion {
+  param([Parameter(Mandatory = $true)][string]$PythonPath)
+  & $PythonPath -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)" 2>$null
+  return $LASTEXITCODE -eq 0
+}
+
+function New-ProjectVenv {
+  & $Python.Exe @($Python.Args) -m venv $VenvDir
+}
+
+function Get-LanIp {
+  try {
+    $Ip = Get-NetIPAddress -AddressFamily IPv4 |
+      Where-Object { $_.IPAddress -notmatch "^(127|169\.254)\." } |
+      Select-Object -First 1 -ExpandProperty IPAddress
+    if ($Ip) { return $Ip }
+  } catch {
+    return $null
+  }
+  return $null
+}
+
 Write-Host "AI Hub setup"
 Write-Host "This checks prerequisites, installs frontend/backend dependencies, and seeds provider manifests."
 
@@ -105,15 +160,35 @@ if (Test-Command "docker") {
 $NvidiaApiKeyInput = Read-Host "NVIDIA API key (optional, press Enter to skip)"
 
 if ($NvidiaApiKeyInput) {
-  "NVIDIA_API_KEY=$NvidiaApiKeyInput" | Set-Content -LiteralPath (Join-Path $RootDir ".env.local") -Encoding UTF8
-  Write-Host "Wrote local key to .env.local (gitignored)."
+  Set-LocalEnvValue "NVIDIA_API_KEY" $NvidiaApiKeyInput
+  Write-Host "Updated NVIDIA_API_KEY in .env.local (gitignored)."
 }
 
 $Python = Resolve-Python
 if (!(Test-Path -LiteralPath $VenvDir)) {
-  & $Python.Exe @($Python.Args) -m venv $VenvDir
+  New-ProjectVenv
 }
-$VenvPython = Join-Path $VenvDir "Scripts\python.exe"
+$VenvPython = Get-VenvPython
+if (!$VenvPython) {
+  Write-Warning "Existing venv is incomplete. Recreating $VenvDir..."
+  if (Test-Path -LiteralPath $VenvDir) {
+    Remove-Item -LiteralPath $VenvDir -Recurse -Force
+  }
+  New-ProjectVenv
+  $VenvPython = Get-VenvPython
+}
+if (!$VenvPython) {
+  throw "Could not locate venv python interpreter in $VenvDir."
+}
+if (!(Test-PythonVersion $VenvPython)) {
+  Write-Warning "Existing venv Python is older than 3.11. Recreating $VenvDir..."
+  Remove-Item -LiteralPath $VenvDir -Recurse -Force
+  New-ProjectVenv
+  $VenvPython = Get-VenvPython
+  if (!$VenvPython -or !(Test-PythonVersion $VenvPython)) {
+    throw "Could not create a Python 3.11+ virtual environment in $VenvDir."
+  }
+}
 & $VenvPython -m pip install --upgrade pip setuptools
 Push-Location (Join-Path $RootDir "backend")
 & $VenvPython -m pip install -e ".[dev]"
@@ -132,3 +207,9 @@ Write-Host "Backend (PowerShell): .\.venv\Scripts\python.exe -m uvicorn app.main
 Write-Host "Backend (Git Bash, reload): WATCHFILES_FORCE_POLLING=true ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --reload-dir backend --app-dir backend"
 Write-Host "Backend (Git Bash, no reload): ./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend"
 Write-Host "Frontend: cd frontend; npm run dev"
+Write-Host "Nginx gateway: docker compose -f docker-compose.nginx.yml up -d  # http://localhost:8080"
+$LanIp = Get-LanIp
+if ($LanIp) {
+  Write-Host "LAN frontend (PowerShell): `$env:AIHUB_LAN_HOST=`"$LanIp`"; cd frontend; npm run dev -- --hostname 0.0.0.0 --port 3000"
+  Write-Host "LAN gateway: http://${LanIp}:8080"
+}

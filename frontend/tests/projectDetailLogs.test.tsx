@@ -180,6 +180,7 @@ describe("ProjectDetailView provider activity", () => {
 
     await waitFor(() => expect(screen.getByLabelText("NVIDIA_API_KEY")).toBeInTheDocument());
     fireEvent.change(screen.getByLabelText("API_SERVICE_PORT"), { target: { value: "8012" } });
+    await waitFor(() => expect(screen.getByLabelText("Save config")).toBeEnabled());
     fireEvent.click(screen.getByLabelText("Save config"));
 
     await waitFor(async () => {

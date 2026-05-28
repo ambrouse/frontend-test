@@ -6,6 +6,8 @@ ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../../deploy" && pwd)}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 PORT="${AIHUB_PORT:-7860}"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
 
@@ -13,7 +15,7 @@ if [[ -f "$DEPLOY_DIR/setup.sh" ]]; then
   (cd "$DEPLOY_DIR" && bash setup.sh --down)
 fi
 
-python - "$ROOT/runtime/status.json" "$ID" "$PORT" <<'PY'
+"$PYTHON_BIN" - "$ROOT/runtime/status.json" "$ID" "$PORT" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 

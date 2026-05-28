@@ -47,6 +47,22 @@ PY
   fi
 }
 
+safe_remove_deploy_dir() {
+  case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
+    "$(cd "$DEPLOY_ROOT" && pwd)"/*) ;;
+    *) echo "Refusing to delete outside deploy root: $DEPLOY_DIR" >&2; exit 1 ;;
+  esac
+  rm -rf "$DEPLOY_DIR" 2>/dev/null || {
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
+      rm -rf "$DEPLOY_DIR"
+    else
+      echo "Cannot remove root-owned deploy directory: $DEPLOY_DIR" >&2
+      exit 1
+    fi
+  }
+}
+
 clone_or_update() {
   mkdir -p "$(dirname "$DEPLOY_DIR")" "$ROOT/logs" "$ROOT/runtime"
   if [[ "${AIHUB_DRY_RUN:-}" == "1" ]]; then
@@ -54,7 +70,7 @@ clone_or_update() {
     return
   fi
   if [[ ! -d "$DEPLOY_DIR/.git" ]]; then
-    rm -rf "$DEPLOY_DIR"
+    [[ -d "$DEPLOY_DIR" ]] && safe_remove_deploy_dir
     git clone --depth 1 --branch "$BRANCH" "$(repo_url)" "$DEPLOY_DIR"
   else
     git -C "$DEPLOY_DIR" fetch --depth 1 origin "$BRANCH"
@@ -64,7 +80,8 @@ clone_or_update() {
 }
 
 wait_http() {
-  local url="$1" timeout="${2:-300}" end=$((SECONDS + timeout))
+  local url="$1" timeout="${2:-300}" end
+  end=$((SECONDS + timeout))
   until curl -fsS --max-time 5 "$url" >/dev/null 2>&1; do
     if (( SECONDS >= end )); then
       echo "Timed out waiting for ${url}" >&2
@@ -177,6 +194,13 @@ EOF
         [[ "$key" == "NGC_API_KEY" && -z "$val" ]] && val="$ngc"
         [[ -n "$val" ]] && set_env_value "$DEPLOY_DIR/.env" "$key" "$val"
       done
+      set_env_value "$DEPLOY_DIR/.env" POSTGRES_USER postgres
+      set_env_value "$DEPLOY_DIR/.env" POSTGRES_PASSWORD password
+      set_env_value "$DEPLOY_DIR/.env" POSTGRES_DB customer_data
+      set_env_value "$DEPLOY_DIR/.env" POSTGRES_USER_READONLY postgres_readonly
+      set_env_value "$DEPLOY_DIR/.env" POSTGRES_PASSWORD_READONLY readonly_password
+      set_env_value "$DEPLOY_DIR/.env" CUSTOMER_DATA_DB customer_data
+      set_env_value "$DEPLOY_DIR/.env" COMPOSE_PROJECT_NAME aihub-aiva
       ;;
   esac
   write_status installed "Installed"
@@ -188,6 +212,11 @@ run_provider() {
   case "$PROVIDER_ID" in
     shop-retail-provider)
       setup_provider
+      set -a
+      # Ensure compose interpolation uses the hydrated deploy .env values instead of empty Hub env placeholders.
+      # shellcheck disable=SC1091
+      source "$DEPLOY_DIR/.env"
+      set +a
       (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yaml up -d --build)
       wait_http "http://127.0.0.1:${PORT}/api/health" 600
       ;;
@@ -220,6 +249,24 @@ stop_provider() {
 
 cleanup_provider() {
   [[ -d "$DEPLOY_DIR" && "${AIHUB_DRY_RUN:-}" != "1" ]] || return 0
+  cleanup_compose_project_by_label() {
+    local project="$1" containers networks volumes
+    containers=$(docker ps -aq --filter "label=com.docker.compose.project=${project}" 2>/dev/null || true)
+    if [[ -n "$containers" ]]; then
+      # shellcheck disable=SC2086
+      docker rm -f $containers >/dev/null 2>&1 || true
+    fi
+    networks=$(docker network ls -q --filter "label=com.docker.compose.project=${project}" 2>/dev/null || true)
+    if [[ -n "$networks" ]]; then
+      # shellcheck disable=SC2086
+      docker network rm $networks >/dev/null 2>&1 || true
+    fi
+    volumes=$(docker volume ls -q --filter "label=com.docker.compose.project=${project}" 2>/dev/null || true)
+    if [[ -n "$volumes" ]]; then
+      # shellcheck disable=SC2086
+      docker volume rm -f $volumes >/dev/null 2>&1 || true
+    fi
+  }
   case "$PROVIDER_ID" in
     shop-retail-provider)
       [[ -f "$DEPLOY_DIR/.env" && -f "$DEPLOY_DIR/docker-compose.yaml" ]] && (cd "$DEPLOY_DIR" && docker compose --env-file .env -f docker-compose.yaml down --volumes --remove-orphans --rmi all || true)
@@ -230,9 +277,12 @@ cleanup_provider() {
     ai-virtual-assistant-provider)
       if [[ -f "$DEPLOY_DIR/deploy/compose/docker-compose.yaml" ]]; then
         local args=(--env-file .env -f deploy/compose/docker-compose.yaml)
+        [[ -f "$DEPLOY_DIR/.runtime/docker-compose.override.yaml" ]] && args+=(-f .runtime/docker-compose.override.yaml)
         [[ -f "$DEPLOY_DIR/.runtime/docker-compose.aihub.yaml" ]] && args+=(-f .runtime/docker-compose.aihub.yaml)
         [[ -f "$DEPLOY_DIR/.runtime/docker-compose.cpu.yaml" ]] && args+=(-f .runtime/docker-compose.cpu.yaml)
         (cd "$DEPLOY_DIR" && docker compose "${args[@]}" down --volumes --remove-orphans --rmi all || true)
+        cleanup_compose_project_by_label aihub-aiva
+        cleanup_compose_project_by_label compose
       fi
       ;;
   esac
@@ -258,7 +308,7 @@ case "$ACTION" in
   setup) setup_provider ;;
   run) run_provider ;;
   stop) stop_provider ;;
-  delete) cleanup_provider; rm -rf "$DEPLOY_DIR"; write_status not_installed "Deleted" ;;
+  delete) cleanup_provider; [[ -d "$DEPLOY_DIR" ]] && safe_remove_deploy_dir; write_status not_installed "Deleted" ;;
   health) [[ -f "$ROOT/runtime/status.json" ]] && cat "$ROOT/runtime/status.json" || echo '{"state":"unknown","health":{"level":"unknown","message":"No status file"}}' ;;
   metrics) metrics_provider ;;
   *) echo "Unknown action ${ACTION}" >&2; exit 2 ;;

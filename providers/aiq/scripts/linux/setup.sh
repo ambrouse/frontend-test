@@ -7,11 +7,17 @@ DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 BRANCH="${AIHUB_BRANCH:-develop}"
 FRONTEND_PORT="${AIHUB_PORT:-13080}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-18080}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6042}"
 NEXT_INTERNAL_PORT="${AIHUB_NEXT_INTERNAL_PORT:-$((FRONTEND_PORT + 1))}"
 POSTGRES_PORT="${AIHUB_POSTGRES_PORT:-15432}"
 REPO_URL="https://github.com/PhuongHo03/aiq.git"
 PATCH_PATH="$ROOT/patches/windows-lifecycle.patch"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
+
+if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [ "$BACKEND_PORT" -lt 6001 ] || [ "$BACKEND_PORT" -gt 6050 ]; then
+  BACKEND_PORT="6042"
+fi
 
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
 
@@ -21,7 +27,7 @@ set_env_value() {
   local value="${3:-}"
   touch "$path"
   if grep -qE "^${key}=" "$path"; then
-    python - "$path" "$key" "$value" <<'PY'
+    "$PYTHON_BIN" - "$path" "$key" "$value" <<'PY'
 from pathlib import Path
 import sys
 path = Path(sys.argv[1])
@@ -49,7 +55,7 @@ apply_provider_patch() {
 ensure_service_timeout() {
   local setup_script="$DEPLOY_DIR/setup.sh"
   [ -f "$setup_script" ] || return 0
-  python - "$setup_script" <<'PY'
+  "$PYTHON_BIN" - "$setup_script" <<'PY'
 from pathlib import Path
 import sys
 
@@ -60,6 +66,14 @@ updated = updated.replace(
     'export NEXT_PUBLIC_BACKEND_URL="$BACKEND_URL"\n    export PORT="$FRONTEND_PORT"',
     'export NEXT_PUBLIC_BACKEND_URL="$BACKEND_URL"\n    export AIQ_FRONTEND_HOST="${AIQ_FRONTEND_HOST:-0.0.0.0}"\n    export PORT="$FRONTEND_PORT"',
 )
+updated = updated.replace(
+    'export BACKEND_URL="${BACKEND_URL:-http://localhost:$BACKEND_PORT}"',
+    'export BACKEND_URL="http://127.0.0.1:$BACKEND_PORT"',
+)
+updated = updated.replace(
+    'export NEXT_PUBLIC_BACKEND_URL="${NEXT_PUBLIC_BACKEND_URL:-$BACKEND_URL}"',
+    'export NEXT_PUBLIC_BACKEND_URL="$BACKEND_URL"',
+)
 if updated != text:
     path.write_text(updated, encoding="utf-8")
 PY
@@ -68,7 +82,7 @@ PY
 ensure_frontend_host_binding() {
   local server_script="$DEPLOY_DIR/frontends/ui/server.js"
   [ -f "$server_script" ] || return 0
-  python - "$server_script" <<'PY'
+  "$PYTHON_BIN" - "$server_script" <<'PY'
 from pathlib import Path
 import sys
 
@@ -103,6 +117,8 @@ sync_provider_env() {
   set_env_value "$env_file" AIQ_FRONTEND_PORT "$FRONTEND_PORT"
   set_env_value "$env_file" AIQ_NEXT_INTERNAL_PORT "$NEXT_INTERNAL_PORT"
   set_env_value "$env_file" AIQ_POSTGRES_PORT "$POSTGRES_PORT"
+  set_env_value "$env_file" AIQ_PORT_MIN "6001"
+  set_env_value "$env_file" AIQ_PORT_MAX "6050"
   set_env_value "$env_file" REQUIRE_AUTH "false"
 }
 

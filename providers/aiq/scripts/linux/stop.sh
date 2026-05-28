@@ -7,7 +7,7 @@ DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 
 if [ -d "$DEPLOY_DIR" ]; then
-  (cd "$DEPLOY_DIR" && ./setup.sh --down) || true
+  (cd "$DEPLOY_DIR" && bash ./setup.sh --down) || true
 fi
 
 mkdir -p "$ROOT/runtime"

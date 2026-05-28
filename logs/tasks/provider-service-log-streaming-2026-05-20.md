@@ -129,7 +129,7 @@ Skipped by scope, not failed:
 - `nemotron-voice-agent-provider`
 - `pdf-to-podcast`
 
-Evidence written under `test/`:
+Evidence written under `tests/`:
 
 - `provider-frontend-validation-summary.json`
 - `provider-frontend-validation-progress.log`
@@ -183,7 +183,7 @@ Code/test verification passed:
 - `npm run test --prefix frontend` (`9 passed`)
 - `npm run typecheck --prefix frontend`
 - `npm run build --prefix frontend`
-- Secret artifact scan across generated `test/`, `logs/`, and `plans/` text files.
+- Secret artifact scan across generated `tests/`, `logs/`, and `plans/` text files.
 
 Small verification maintenance:
 
@@ -231,7 +231,7 @@ Skipped by updated scope:
 
 Evidence root:
 
-- `test/provider-post-push-pipeline-evidence-2026-05-22/`
+- `tests/provider-post-push-pipeline-evidence-2026-05-22/`
 
 Provider source fixes pushed before fresh reinstall:
 

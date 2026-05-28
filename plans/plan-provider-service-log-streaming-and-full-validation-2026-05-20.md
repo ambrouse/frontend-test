@@ -664,7 +664,7 @@ Testing gate:
 - Status: complete for the updated six-provider scope.
 - Real frontend validation completed for: `agentic-commerce-blueprint`, `ai-virtual-assistant-provider`, `aiq`, `shop-retail-provider`, `multi-agent-intelligent-warehouse`, and `web-agent`.
 - Explicitly skipped by user scope: `nemotron-voice-agent-provider`, `pdf-to-podcast`.
-- Evidence root: `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+- Evidence root: `tests/provider-post-push-pipeline-evidence-2026-05-22/`.
 - Evidence is split per provider into `app/`, `function/`, `lifecycle/`, and `logs/`; stale/no-output screenshots were removed.
 - AIQ blocker status: resolved for current scope by retesting the frontend file-upload flow first, then asking the file-grounded question and capturing the answer output.
 - Source provider fixes pushed before fresh reinstall:
@@ -692,7 +692,7 @@ Testing gate:
 - Pre-run cleanup: stopped provider-owned runtime containers/processes and removed stale provider deploy clones before retesting.
 - Hub push-before-test checkpoint: `710e2fd feat: add provider service log validation evidence 2026-05-22`.
 - Additional Hub fix/push loop for Warehouse wrapper/env handling: latest pushed commit `bdef5c5 fix: pass warehouse env values into compose 2026-05-22`.
-- Post-push evidence root: `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+- Post-push evidence root: `tests/provider-post-push-pipeline-evidence-2026-05-22/`.
 - In-scope providers retested through real Hub lifecycle and frontend:
   - `agentic-commerce-blueprint`: catalog, native commerce UI state, Apps SDK search results, Hub running status, service logs.
   - `ai-virtual-assistant-provider`: customer data, customer selector, delivery-status chat answer, Hub running status, service logs.
@@ -703,7 +703,7 @@ Testing gate:
 - Explicitly skipped by user scope: `nemotron-voice-agent-provider`, `pdf-to-podcast`.
 - Provider source repos changed during this post-push run: none. The failing Warehouse path was fixed in Hub wrapper/env handling, pushed to Hub, then freshly retested.
 - Evidence cleanup: kept only `.png` screenshots and `.md` reports; removed debug, duplicate, prompt-only, no-output, raw `.txt`, raw `.json`, and raw log evidence.
-- Test evidence cleanup: removed superseded `test/provider-functional-evidence-2026-05-21/`; the latest kept evidence set is `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+- Test evidence cleanup: removed superseded `tests/provider-functional-evidence-2026-05-21/`; the latest kept evidence set is `tests/provider-post-push-pipeline-evidence-2026-05-22/`.
 - Remaining key limitations under the accepted existing-key scope:
   - `aiq`: Tavily/Serper paths not validated because those keys were not present; file-grounded frontend flow passed.
   - `web-agent`: Tavily-specific path not validated; SearXNG fallback plus LLM summary with visible sources passed.

@@ -32,7 +32,7 @@ No provider source repository required a new fix during this post-push validatio
 
 ## Evidence
 
-Evidence root: `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+Evidence root: `tests/provider-post-push-pipeline-evidence-2026-05-22/`.
 
 Each provider folder contains:
 
@@ -65,7 +65,7 @@ Final checks performed after evidence cleanup:
 
 Time: 2026-05-22
 
-- Removed superseded evidence folder `test/provider-functional-evidence-2026-05-21/`.
-- Kept latest curated evidence folder `test/provider-post-push-pipeline-evidence-2026-05-22/`.
+- Removed superseded evidence folder `tests/provider-functional-evidence-2026-05-21/`.
+- Kept latest curated evidence folder `tests/provider-post-push-pipeline-evidence-2026-05-22/`.
 - Removed local ignored `test/__pycache__/`.
-- Updated the legacy smoke helper to write transient output under `test-results/provider-functional-smoke/` so it cannot recreate stale curated evidence under `test/`.
+- Updated the legacy smoke helper to write transient output under `test-results/provider-functional-smoke/` so it cannot recreate stale curated evidence under `tests/`.

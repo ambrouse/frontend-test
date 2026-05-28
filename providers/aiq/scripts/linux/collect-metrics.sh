@@ -6,6 +6,8 @@ DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/aiq}"
 BACKEND_PORT="${AIHUB_BACKEND_PORT:-18080}"
 FRONTEND_PORT="${AIHUB_PORT:-13080}"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 
 if [ -f "$DEPLOY_DIR/.runtime/ports.env" ]; then
   # shellcheck disable=SC1090
@@ -16,7 +18,7 @@ backend_ok=false
 agent_count=0
 if agents_json="$(curl -fsS "http://127.0.0.1:${BACKEND_PORT}/v1/jobs/async/agents" 2>/dev/null)"; then
   backend_ok=true
-  agent_count="$(python -c 'import json,sys; print(len(json.load(sys.stdin).get("agents", [])))' <<<"$agents_json" 2>/dev/null || echo 0)"
+  agent_count="$("$PYTHON_BIN" -c 'import json,sys; print(len(json.load(sys.stdin).get("agents", [])))' <<<"$agents_json" 2>/dev/null || echo 0)"
 fi
 
 headline="not running"

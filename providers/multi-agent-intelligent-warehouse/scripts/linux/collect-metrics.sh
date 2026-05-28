@@ -3,9 +3,15 @@ set -euo pipefail
 ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/multi-agent-intelligent-warehouse}"
-FRONTEND_PORT="${AIHUB_PORT:-13002}"
-BACKEND_PORT="${AIHUB_BACKEND_PORT:-8091}"
+FRONTEND_PORT="${AIHUB_PORT:-6009}"
+BACKEND_PORT="${AIHUB_BACKEND_PORT:-6008}"
 SAMPLED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+if ! [[ "$FRONTEND_PORT" =~ ^[0-9]+$ ]] || [[ "$FRONTEND_PORT" -lt 6000 || "$FRONTEND_PORT" -gt 6050 ]]; then
+  FRONTEND_PORT="6009"
+fi
+if ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [[ "$BACKEND_PORT" -lt 6000 || "$BACKEND_PORT" -gt 6050 ]]; then
+  BACKEND_PORT="6008"
+fi
 
 backend_ok=false
 if curl -fsS "http://127.0.0.1:${BACKEND_PORT}/api/v1/health" >/dev/null 2>&1; then

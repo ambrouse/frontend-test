@@ -6,7 +6,7 @@ ROOT="${AIHUB_PROVIDER_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 
-"$ROOT/scripts/linux/stop.sh" >/dev/null || true
+bash "$ROOT/scripts/linux/stop.sh" >/dev/null || true
 
 COMPOSE_DIR="$DEPLOY_DIR/deploy"
 if [[ "${AIHUB_DRY_RUN:-0}" != "1" && -f "$COMPOSE_DIR/.env" && -f "$COMPOSE_DIR/docker-compose.yml" ]]; then

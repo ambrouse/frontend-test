@@ -52,7 +52,7 @@
       {
         "id": "python",
         "label": "Python 3.12+",
-        "command": "python --version",
+        "command": "python3 --version",
         "required": true,
         "installHint": "Install Python 3.12 or newer. On Windows the provider can use the py launcher when python points to an older version."
       },
@@ -83,7 +83,7 @@
     "setupNotes": [
       "Install clones the source into deploy/web-agent and installs Python/Node dependencies without auto-starting services.",
       "Run starts the backend on AIHUB_BACKEND_PORT or 8011 and the frontend on the configured provider port.",
-      "SearXNG starts in a provider-scoped Docker container on port 18080 by default so web search works without a Tavily key while avoiding the common 8080 port."
+      "SearXNG starts in a provider-scoped Docker container on port 6004 by default so web search works without a Tavily key while avoiding the common 8080 port."
     ]
   },
   "lastBenchmark": {

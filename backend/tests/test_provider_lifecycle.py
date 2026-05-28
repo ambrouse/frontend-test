@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 
 from app.core.paths import repo_root
 from app.main import app
+from app.schemas.models import ProviderConfig
+from app.services.provider_runtime import _apply_config_env
 
 client = TestClient(app)
 
@@ -91,6 +93,23 @@ def test_provider_config_persists_local_env_without_touching_defaults() -> None:
     assert config["env"]["API_SERVICE_PORT"] == "8012"
     assert default_config_path.read_text(encoding="utf-8") == default_config
     local_config.unlink(missing_ok=True)
+
+
+def test_empty_provider_env_does_not_clear_process_secret() -> None:
+    env = {"NVIDIA_API_KEY": "existing-secret", "NGC_API_KEY": "existing-ngc"}
+    config = ProviderConfig(
+        profile="default",
+        branch="main",
+        port=8088,
+        installDirectory="deploy/provider",
+        env={"NVIDIA_API_KEY": "", "NGC_API_KEY": "", "MERCHANT_API_KEY": "merchant-test"},
+    )
+
+    _apply_config_env(env, config)
+
+    assert env["NVIDIA_API_KEY"] == "existing-secret"
+    assert env["NGC_API_KEY"] == "existing-ngc"
+    assert env["MERCHANT_API_KEY"] == "merchant-test"
 
 
 def test_provider_service_log_sources_include_web_agent_process_files() -> None:

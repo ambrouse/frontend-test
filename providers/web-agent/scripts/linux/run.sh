@@ -7,13 +7,15 @@ DEPLOY_ROOT="${AIHUB_DEPLOY_ROOT:-$(cd "$ROOT/../.." && pwd)/deploy}"
 DEPLOY_DIR="${AIHUB_INSTALL_DIRECTORY:-$DEPLOY_ROOT/$ID}"
 FRONTEND_PORT="${AIHUB_PORT:-3005}"
 BACKEND_PORT="${AIHUB_BACKEND_PORT:-8011}"
-SEARXNG_PORT="${AIHUB_SEARXNG_PORT:-18080}"
+SEARXNG_PORT="${AIHUB_SEARXNG_PORT:-6004}"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 
 mkdir -p "$ROOT/logs" "$ROOT/runtime"
 
 set_env_value() {
   local path="$1" key="$2" value="${3:-}"
-  python - "$path" "$key" "$value" <<'PY'
+  "$PYTHON_BIN" - "$path" "$key" "$value" <<'PY'
 from pathlib import Path
 import sys
 path = Path(sys.argv[1])
@@ -44,6 +46,19 @@ wait_http() {
   return 1
 }
 
+stop_by_port() {
+  local port="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    local pids
+    pids="$(lsof -ti tcp:"$port" 2>/dev/null || true)"
+    if [[ -n "$pids" ]]; then
+      kill $pids >/dev/null 2>&1 || true
+      sleep 0.5
+      kill -9 $pids >/dev/null 2>&1 || true
+    fi
+  fi
+}
+
 if [ "${AIHUB_DRY_RUN:-0}" != "1" ]; then
   if [ ! -d "$DEPLOY_DIR" ]; then
     "$ROOT/scripts/linux/setup.sh"
@@ -54,7 +69,10 @@ if [ "${AIHUB_DRY_RUN:-0}" != "1" ]; then
   set_env_value "$DEPLOY_DIR/.env" AUTO_START_APPS "false"
   set_env_value "$DEPLOY_DIR/backend/.env" APP_SEARXNG_BASE_URL "http://127.0.0.1:$SEARXNG_PORT"
   set_env_value "$DEPLOY_DIR/backend/.env" APP_SEARXNG_BACKUP_BASE_URLS ""
-  "$DEPLOY_DIR/run.sh"
+  stop_by_port "$BACKEND_PORT"
+  stop_by_port "$FRONTEND_PORT"
+  rm -f "$DEPLOY_DIR/logs/backend.pid" "$DEPLOY_DIR/logs/frontend.pid"
+  bash "$DEPLOY_DIR/run.sh"
   wait_http "http://127.0.0.1:$BACKEND_PORT/api/v1/health" "Web Agent backend"
   wait_http "http://127.0.0.1:$FRONTEND_PORT" "Web Agent frontend"
 fi

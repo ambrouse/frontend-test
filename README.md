@@ -14,7 +14,7 @@
 ![Docker](https://img.shields.io/badge/Provider_Runtime-Docker_Compose-2496ED?logo=docker)
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue)
 
-[Quick Start](#quick-start) · [Providers](#active-provider-catalog) · [Architecture](#architecture) · [Verification](#verification) · [Release](#release-and-packaging)
+[Quick Start](#quick-start) · [Providers](#active-provider-catalog) · [Architecture](#architecture) · [Docs](#docs-index) · [Verification](#verification) · [Release](#release-and-packaging)
 
 </div>
 
@@ -32,7 +32,7 @@ It focuses on three things:
 
 ## Active Provider Catalog
 
-AI Hub currently ships exactly seven active provider wrappers:
+AI Hub currently ships exactly eight active provider wrappers:
 
 | Provider ID | Display name | Default port | Runtime mode | Lifecycle |
 | --- | --- | ---: | --- | --- |
@@ -43,6 +43,7 @@ AI Hub currently ships exactly seven active provider wrappers:
 | `shop-retail-provider` | Shop Retail Provider | provider manifest port | Docker Compose + retail agents | Install, run, logs, metrics, stop, delete |
 | `multi-agent-intelligent-warehouse` | Multi-Agent Intelligent Warehouse | `3001` UI / `8091` API | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
 | `pdf-to-podcast` | PDF to Podcast | `7860` frontend / dynamic API | Git Bash + Docker Compose + Python/Gradio + NVIDIA/ElevenLabs API | Install, run, logs, metrics, stop, delete |
+| `web-agent` | Web Agent | provider manifest port | FastAPI/Next.js + Tavily-style web search | Install, run, logs, metrics, stop, delete |
 
 Removed or archived providers must not appear in the backend registry, frontend fallback data, or provider dispatch scripts.
 
@@ -91,7 +92,15 @@ Open the app at:
 http://localhost:3000
 ```
 
-The setup scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. Docker is optional for viewing the Hub but required for real provider install/run.
+Or start the Docker-managed Nginx gateway after the backend and frontend are running:
+
+```bash
+docker compose -f docker-compose.nginx.yml up -d
+```
+
+Then open `http://localhost:8080` or the LAN URL printed by `setup.sh` / `setup.ps1`.
+
+The setup scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. Docker is optional for viewing the Hub but required for real provider install/run. If you enter an NVIDIA key, setup updates only `NVIDIA_API_KEY` in `.env.local` and preserves other local variables.
 
 ## Provider Install Flow
 
@@ -120,11 +129,12 @@ flowchart LR
 | --- | --- |
 | `frontend/` | Next.js UI, provider cards, detail pages, real API client, tests, and production build. |
 | `backend/` | FastAPI API, hardware snapshot, provider registry, task queue, runtime lifecycle, latency tools. |
-| `providers/` | Seven active provider manifests plus Windows/Linux lifecycle wrappers. |
+| `providers/` | Eight active provider manifests plus Windows/Linux lifecycle wrappers. |
 | `deploy/` | Ignored runtime clone target for provider source repos. |
 | `docs/` | Provider contract, backend/API notes, and task documentation. |
 | `plans/` | Implementation plans and execution phases. |
 | `logs/` | Work logs and task summaries. |
+| `tests/` | Curated test evidence, screenshots, and helper test artifacts. |
 
 ## Provider Lifecycle
 
@@ -187,6 +197,15 @@ Get-ChildItem providers -Recurse -Filter *.ps1 | ForEach-Object {
 ```bash
 bash -lc "bash -n setup.sh && find providers -path '*/scripts/linux/*.sh' -print0 | xargs -0 -n1 bash -n"
 ```
+
+## Docs Index
+
+| Topic | Document |
+| --- | --- |
+| Setup and LAN/Nginx gateway | [`docs/setup-and-nginx-gateway-2026-05-28.md`](docs/setup-and-nginx-gateway-2026-05-28.md) |
+| Backend API contract | [`docs/backend-api.md`](docs/backend-api.md) |
+| Provider source readiness | [`docs/provider-source-hub-readiness-checklist.md`](docs/provider-source-hub-readiness-checklist.md) |
+| Design system | [`docs/design-system.md`](docs/design-system.md) |
 
 ## CI/CD
 

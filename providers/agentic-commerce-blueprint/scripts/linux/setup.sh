@@ -10,15 +10,17 @@ REPO_URL="https://github.com/baolnq-ai/Agentic-Commerce-blueprint-provider-"
 LOG="$ROOT/logs/runtime.log"
 STATUS="$ROOT/runtime/status.json"
 METRICS="$ROOT/runtime/metrics.json"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
-log_json() { python - "$1" "$2" "$3" >> "$LOG" <<'PY'
+log_json() { "$PYTHON_BIN" - "$1" "$2" "$3" >> "$LOG" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 print(json.dumps({"source": sys.argv[1], "level": sys.argv[2], "timestamp": datetime.now(timezone.utc).isoformat(), "message": sys.argv[3]}))
 PY
 }
-status_json() { python - "$ID" "$PORT" "$1" "$2" "$3" > "$STATUS" <<'PY'
+status_json() { "$PYTHON_BIN" - "$ID" "$PORT" "$1" "$2" "$3" > "$STATUS" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 print(json.dumps({"projectId": sys.argv[1], "state": sys.argv[3], "pid": None, "port": int(sys.argv[2]), "platform": "linux", "startedAt": datetime.now(timezone.utc).isoformat(), "uptimeSec": 0, "currentStep": sys.argv[4], "progressPercent": int(sys.argv[5]), "health": {"level": "ok", "message": sys.argv[4]}}, indent=2))
@@ -27,7 +29,7 @@ PY
 patch_deploy_source() {
   local mcp_client="$DEPLOY_DIR/src/ui/hooks/useMCPClient.ts"
   [[ -f "$mcp_client" ]] || return 0
-  python - "$mcp_client" <<'PY'
+  "$PYTHON_BIN" - "$mcp_client" <<'PY'
 from pathlib import Path
 import sys
 
@@ -69,7 +71,7 @@ if [[ ! -f "$DEPLOY_DIR/.env" ]]; then
   [[ -f "$ROOT/.env.example" ]] || { log_json install error "provider .env.example is missing: $ROOT/.env.example"; exit 1; }
   cp "$ROOT/.env.example" "$DEPLOY_DIR/.env"
 fi
-python - "$DEPLOY_DIR/.env" "$PORT" <<'PY'
+"$PYTHON_BIN" - "$DEPLOY_DIR/.env" "$PORT" <<'PY'
 import os, sys
 path, port = sys.argv[1], sys.argv[2]
 text = open(path, encoding="utf-8").read()
@@ -99,7 +101,7 @@ for key, value in updates.items():
         lines.append(f"{key}={value}")
 open(path, "w", encoding="utf-8").write("\n".join(lines) + "\n")
 PY
-python - "$METRICS" <<'PY'
+"$PYTHON_BIN" - "$METRICS" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 json.dump({"sampledAt": datetime.now(timezone.utc).isoformat(), "platform": "linux", "process": {"cpuPercent": 0, "ramMb": 0, "gpuPercent": 0, "vramMb": 0}, "service": {"requestsTotal": 0, "requestsPerMin": 0, "latencyP50Ms": 0, "latencyP95Ms": 0, "errorsLastHour": 0}, "benchmark": {"headlineMetric": "installed", "secondaryMetric": "ready", "vramPeakMb": 0}}, open(sys.argv[1], "w", encoding="utf-8"), indent=2)

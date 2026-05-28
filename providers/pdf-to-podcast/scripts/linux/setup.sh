@@ -17,8 +17,26 @@ PROVIDER_ENV_KEYS=(
   DEFAULT_VOICE_1
   DEFAULT_VOICE_2
 )
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || command -v python || true)}"
+[[ -n "$PYTHON_BIN" ]] || { echo "python3 or python is required" >&2; exit 1; }
 
 mkdir -p "$DEPLOY_ROOT" "$ROOT/logs" "$ROOT/runtime"
+
+safe_remove_deploy_dir() {
+  case "$(cd "$(dirname "$DEPLOY_DIR")" && pwd)/$(basename "$DEPLOY_DIR")" in
+    "$(cd "$DEPLOY_ROOT" && pwd)"/*) ;;
+    *) echo "Refusing to delete outside deploy root: $DEPLOY_DIR" >&2; exit 1 ;;
+  esac
+  rm -rf "$DEPLOY_DIR" 2>/dev/null || {
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      sudo chown -R "$(id -u):$(id -g)" "$DEPLOY_DIR"
+      rm -rf "$DEPLOY_DIR"
+    else
+      echo "Cannot remove root-owned deploy directory: $DEPLOY_DIR" >&2
+      exit 1
+    fi
+  }
+}
 
 set_env_value() {
   local path="$1" key="$2" value="$3"
@@ -35,7 +53,7 @@ if [[ "${AIHUB_DRY_RUN:-0}" == "1" ]]; then
   mkdir -p "$DEPLOY_DIR"
 elif [[ ! -d "$DEPLOY_DIR/.git" ]]; then
   if [[ -d "$DEPLOY_DIR" && -n "$(ls -A "$DEPLOY_DIR" 2>/dev/null)" ]]; then
-    rm -rf "$DEPLOY_DIR"
+    safe_remove_deploy_dir
   fi
   git clone --branch "$BRANCH" "$REPO_URL" "$DEPLOY_DIR"
 else
@@ -56,7 +74,7 @@ if [[ "${AIHUB_DRY_RUN:-0}" != "1" ]]; then
   done
 fi
 
-python - "$ROOT/runtime/status.json" "$ID" "$PORT" <<'PY'
+"$PYTHON_BIN" - "$ROOT/runtime/status.json" "$ID" "$PORT" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 

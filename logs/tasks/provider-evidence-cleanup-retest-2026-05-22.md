@@ -9,7 +9,7 @@
 ## Initial Audit
 
 - Found one exact duplicate screenshot pair in `web-agent/function`.
-- Found technical evidence files under the earlier `test/provider-functional-evidence-2026-05-21` folder (`.json`, `.txt`, `.log`) that should be replaced by README reports.
+- Found technical evidence files under the earlier `tests/provider-functional-evidence-2026-05-21` folder (`.json`, `.txt`, `.log`) that should be replaced by README reports.
 - `agentic-commerce-blueprint` needs stronger frontend search proof.
 
 ## Agentic Commerce Retest Finding
