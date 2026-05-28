@@ -92,6 +92,129 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --audit-level=moderate
 
+  repository-hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check local README/docs links
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import re
+          import sys
+          from pathlib import Path
+          from urllib.parse import unquote
+
+          root = Path.cwd()
+          md_files = [root / "README.md"]
+          for folder in ("docs", "logs", "plans", "tests", "infra"):
+              base = root / folder
+              if base.exists():
+                  md_files.extend(sorted(base.rglob("*.md")))
+
+          pattern = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)|!\[[^\]]*\]\(([^)]+)\)")
+          missing: list[str] = []
+          for file_path in md_files:
+              text = file_path.read_text(encoding="utf-8", errors="ignore")
+              for match in pattern.finditer(text):
+                  target = match.group(1) or match.group(2) or ""
+                  target = target.strip()
+                  if not target or target.startswith(("#", "http://", "https://", "mailto:")):
+                      continue
+                  target = target.split("#", 1)[0]
+                  if not target:
+                      continue
+                  resolved = (file_path.parent / unquote(target)).resolve()
+                  try:
+                      resolved.relative_to(root)
+                  except ValueError:
+                      missing.append(f"{file_path.relative_to(root)} -> {target} escapes repository")
+                      continue
+                  if not resolved.exists():
+                      missing.append(f"{file_path.relative_to(root)} -> {target}")
+
+          if missing:
+              print("Missing local README/docs links:")
+              print("\n".join(missing))
+              sys.exit(1)
+          print(f"Checked {len(md_files)} markdown files")
+          PY
+
+      - name: Check evidence hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing_readmes="$(find tests -type f -name README.md -print0 | xargs -0 -n1 sh -c 'test -s "$0" || echo "$0"')"
+          if [ -n "$missing_readmes" ]; then
+            echo "$missing_readmes"
+            exit 1
+          fi
+          temp_artifacts="$(find tests -type f \( -name '*.tmp' -o -name '*.har' -o -name '*.log' -o -name '*.json' -o -name 'trace.zip' \) -print)"
+          if [ -n "$temp_artifacts" ]; then
+            echo "$temp_artifacts"
+            exit 1
+          fi
+          duplicates="$(find tests -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) -print0 | xargs -0 sha256sum | sort | awk 'seen[$1] {print $2 " duplicates " seen[$1]} !seen[$1] {seen[$1]=$2}')"
+          if [ -n "$duplicates" ]; then
+            echo "$duplicates"
+            exit 1
+          fi
+
+      - name: Validate Nginx compose config
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose -f docker-compose.nginx.yml config -q
+          docker compose -f docker-compose.nginx.yml up -d nginx
+          docker exec ai-hub-nginx nginx -t
+          docker compose -f docker-compose.nginx.yml down
+
+  setup-smoke:
+    name: Setup smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Run root setup without secrets
+        shell: bash
+        run: printf '\n' | ./setup.sh
+
+      - name: Verify setup output
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./.venv/bin/python backend/scripts/validate_providers.py
+          test -d frontend/node_modules
+          test -x .venv/bin/python
+
   backend:
     name: Backend (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

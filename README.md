@@ -1,20 +1,30 @@
 <div align="center">
 
-![AI Hub interactive banner](banner.gif)
+<picture>
+  <img src="./banner.gif" alt="AI Hub interactive command center banner" width="100%">
+</picture>
 
 # AI Hub
 
 **A local command center for installing, running, observing, and cleaning up AI provider projects from GitHub.**
 
-[![CI](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml)
-[![Frontend Artifact](https://github.com/ambrouse/frontend-test/actions/workflows/frontend-release.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/frontend-release.yml)
-[![Backend Artifact](https://github.com/ambrouse/frontend-test/actions/workflows/backend-release.yml/badge.svg)](https://github.com/ambrouse/frontend-test/actions/workflows/backend-release.yml)
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
-![FastAPI](https://img.shields.io/badge/FastAPI-runtime-009688?logo=fastapi)
-![Docker](https://img.shields.io/badge/Provider_Runtime-Docker_Compose-2496ED?logo=docker)
-![License](https://img.shields.io/badge/License-Apache_2.0-blue)
+<a href="https://github.com/ambrouse/frontend-test/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ambrouse/frontend-test/ci.yml?branch=main&label=CI&style=for-the-badge&logo=githubactions&logoColor=white&color=22c55e" alt="CI status"></a>
+<a href="https://github.com/ambrouse/frontend-test/actions/workflows/security.yml"><img src="https://img.shields.io/github/actions/workflow/status/ambrouse/frontend-test/security.yml?branch=main&label=Security&style=for-the-badge&logo=githubsecuritylab&logoColor=white&color=a855f7" alt="Security workflow status"></a>
+<a href="https://github.com/ambrouse/frontend-test/actions/workflows/frontend-release.yml"><img src="https://img.shields.io/github/actions/workflow/status/ambrouse/frontend-test/frontend-release.yml?branch=main&label=Frontend%20Artifact&style=for-the-badge&logo=nextdotjs&logoColor=white&color=38bdf8" alt="Frontend artifact status"></a>
+<a href="https://github.com/ambrouse/frontend-test/actions/workflows/backend-release.yml"><img src="https://img.shields.io/github/actions/workflow/status/ambrouse/frontend-test/backend-release.yml?branch=main&label=Backend%20Artifact&style=for-the-badge&logo=fastapi&logoColor=white&color=14b8a6" alt="Backend artifact status"></a>
 
-[Quick Start](#quick-start) · [Providers](#active-provider-catalog) · [Architecture](#architecture) · [Docs](#docs-index) · [Verification](#verification) · [Release](#release-and-packaging)
+<img src="https://img.shields.io/badge/Next.js-16-111827?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 16">
+<img src="https://img.shields.io/badge/FastAPI-runtime-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI runtime">
+<img src="https://img.shields.io/badge/Docker_Compose-provider_runtime-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Compose provider runtime">
+<img src="https://img.shields.io/badge/Nginx-LAN_gateway-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx LAN gateway">
+<img src="https://img.shields.io/badge/License-Apache_2.0-7c3aed?style=for-the-badge" alt="Apache 2.0 license">
+
+<a href="#quick-start">Quick Start</a> ·
+<a href="#active-provider-catalog">Providers</a> ·
+<a href="#architecture">Architecture</a> ·
+<a href="#verification">Verification</a> ·
+<a href="#docs-index">Docs</a> ·
+<a href="#release-and-packaging">Release</a>
 
 </div>
 
@@ -30,37 +40,60 @@ It focuses on three things:
 - **Low-latency UX**: backend endpoints are cached and measured, lifecycle actions are queued, and the frontend renders real provider data without blocking.
 - **Cross-platform operations**: Windows and Linux wrapper scripts share one provider contract for setup, run, stop, delete, logs, status, and metrics.
 
+<table>
+  <tr>
+    <td width="33%">
+      <img src="https://img.shields.io/badge/Install-fresh_GitHub_clone-22c55e?style=flat-square" alt="Fresh GitHub clone"><br>
+      <strong>Provider lifecycle</strong><br>
+      Install, run, observe, stop, and delete provider stacks through one backend contract.
+    </td>
+    <td width="33%">
+      <img src="https://img.shields.io/badge/Observe-live_logs-38bdf8?style=flat-square" alt="Live logs"><br>
+      <strong>Runtime visibility</strong><br>
+      Hub detail pages stream task progress, service logs, status, metrics, and config.
+    </td>
+    <td width="33%">
+      <img src="https://img.shields.io/badge/Gateway-Docker_Nginx-14b8a6?style=flat-square" alt="Docker Nginx gateway"><br>
+      <strong>LAN-ready dev</strong><br>
+      Docker-managed Nginx serves frontend and backend through one stable local entrypoint.
+    </td>
+  </tr>
+</table>
+
 ## Active Provider Catalog
 
 AI Hub currently ships exactly eight active provider wrappers:
 
-| Provider ID | Display name | Default port | Runtime mode | Lifecycle |
+| Provider | Runtime | Default entry | Evidence posture | Lifecycle |
 | --- | --- | ---: | --- | --- |
-| `agentic-commerce-blueprint` | Agentic Commerce Blueprint | `8088` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
-| `ai-virtual-assistant-provider` | AI Virtual Assistant Provider | `13301` UI / `13300` API | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
-| `aiq` | NVIDIA AI-Q Blueprint | `13080` | Docker Compose + NVIDIA AI-Q | Install, run, logs, metrics, stop, delete |
-| `nemotron-voice-agent-provider` | Nemotron Voice Agent Provider | `13100` | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
-| `shop-retail-provider` | Shop Retail Provider | provider manifest port | Docker Compose + retail agents | Install, run, logs, metrics, stop, delete |
-| `multi-agent-intelligent-warehouse` | Multi-Agent Intelligent Warehouse | `3001` UI / `8091` API | Docker Compose + NVIDIA API | Install, run, logs, metrics, stop, delete |
-| `pdf-to-podcast` | PDF to Podcast | `7860` frontend / dynamic API | Git Bash + Docker Compose + Python/Gradio + NVIDIA/ElevenLabs API | Install, run, logs, metrics, stop, delete |
-| `web-agent` | Web Agent | provider manifest port | FastAPI/Next.js + Tavily-style web search | Install, run, logs, metrics, stop, delete |
+| `agentic-commerce-blueprint`<br>Agentic Commerce Blueprint | <img src="https://img.shields.io/badge/NVIDIA_Blueprint-commerce-22c55e?style=flat-square" alt="NVIDIA Blueprint commerce"> | `8088` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `ai-virtual-assistant-provider`<br>AI Virtual Assistant Provider | <img src="https://img.shields.io/badge/NVIDIA_Blueprint-assistant-38bdf8?style=flat-square" alt="NVIDIA assistant"> | `13301` UI / `13300` API | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `aiq`<br>NVIDIA AI-Q Blueprint | <img src="https://img.shields.io/badge/RAG-knowledge-84cc16?style=flat-square" alt="RAG knowledge"> | `13080` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `nemotron-voice-agent-provider`<br>Nemotron Voice Agent Provider | <img src="https://img.shields.io/badge/Speech-WebRTC-a855f7?style=flat-square" alt="Speech WebRTC"> | `13100` | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `shop-retail-provider`<br>Shop Retail Provider | <img src="https://img.shields.io/badge/Retail-search-ec4899?style=flat-square" alt="Retail search"> | manifest port | <img src="https://img.shields.io/badge/evidence-partial_warning-f59e0b?style=flat-square" alt="partial warning evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `multi-agent-intelligent-warehouse`<br>Multi-Agent Intelligent Warehouse | <img src="https://img.shields.io/badge/Warehouse-agents-0ea5e9?style=flat-square" alt="Warehouse agents"> | `3001` UI / `8091` API | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `pdf-to-podcast`<br>PDF to Podcast | <img src="https://img.shields.io/badge/Gradio-audio-f97316?style=flat-square" alt="Gradio audio"> | `7860` frontend / dynamic API | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
+| `web-agent`<br>Web Agent | <img src="https://img.shields.io/badge/Tooling-web_search-6366f1?style=flat-square" alt="Tooling web search"> | manifest port | <img src="https://img.shields.io/badge/evidence-pass-22c55e?style=flat-square" alt="pass evidence"> | Install · Run · Logs · Metrics · Stop · Delete |
 
 Removed or archived providers must not appear in the backend registry, frontend fallback data, or provider dispatch scripts.
 
 ## Quick Start
 
-### Fresh clone on Windows PowerShell
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Local dev</strong><br>
+      <code>frontend:3000</code> talks to <code>backend:8000</code> with same-origin API rewrites.
+    </td>
+    <td width="50%">
+      <strong>Nginx gateway</strong><br>
+      <code>localhost:8080</code> or <code>&lt;LAN-IP&gt;:8080</code> serves frontend and API from one origin.
+    </td>
+  </tr>
+</table>
 
-```powershell
-git clone https://github.com/ambrouse/frontend-test.git
-cd frontend-test
-.\setup.ps1
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir backend
-cd frontend
-npm run dev
-```
-
-### Fresh clone on Linux or macOS
+<details open>
+<summary><strong>Fresh clone on Linux or macOS</strong></summary>
 
 ```bash
 git clone https://github.com/ambrouse/frontend-test.git
@@ -71,7 +104,24 @@ cd frontend
 npm run dev
 ```
 
-### Windows Git Bash
+</details>
+
+<details>
+<summary><strong>Fresh clone on Windows PowerShell</strong></summary>
+
+```powershell
+git clone https://github.com/ambrouse/frontend-test.git
+cd frontend-test
+.\setup.ps1
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --app-dir backend
+cd frontend
+npm run dev
+```
+
+</details>
+
+<details>
+<summary><strong>Windows Git Bash</strong></summary>
 
 ```bash
 ./setup.sh
@@ -85,6 +135,8 @@ If reload is unstable in Git Bash, run without reload:
 ```bash
 ./.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend
 ```
+
+</details>
 
 Open the app at:
 
@@ -112,15 +164,19 @@ That means provider-source fixes must be committed and pushed to the provider's 
 
 ```mermaid
 flowchart LR
-  UI[Next.js frontend] --> API[FastAPI backend]
-  API --> Registry[Provider registry]
-  API --> Hardware[Hardware probe]
-  API --> Tasks[Task queue]
-  Tasks --> Scripts[Provider wrapper scripts]
+  Browser[Browser / LAN Client] --> Gateway[Nginx Gateway :8080]
+  Browser --> UI[Next.js Dev UI :3000]
+  Gateway --> UI
+  Gateway --> API[FastAPI Backend :8000]
+  UI --> API
+  API --> Registry[Provider Registry]
+  API --> Hardware[Hardware Probe]
+  API --> Tasks[Task Queue]
+  Tasks --> Scripts[Provider Wrapper Scripts]
   Scripts --> Deploy[deploy/provider-id]
-  Scripts --> Logs[logs + status + metrics]
-  Deploy --> GitHub[Provider GitHub repos]
-  Deploy --> Docker[Docker Compose runtime]
+  Scripts --> Runtime[Docker Compose / Provider Process]
+  Runtime --> Logs[Status + Metrics + Logs]
+  Deploy --> GitHub[Provider GitHub Repos]
 ```
 
 ### Repository Layout
@@ -203,6 +259,7 @@ bash -lc "bash -n setup.sh && find providers -path '*/scripts/linux/*.sh' -print
 | Topic | Document |
 | --- | --- |
 | Setup and LAN/Nginx gateway | [`docs/setup-and-nginx-gateway-2026-05-28.md`](docs/setup-and-nginx-gateway-2026-05-28.md) |
+| CI and README polish | [`docs/ci-and-readme-polish-2026-05-28.md`](docs/ci-and-readme-polish-2026-05-28.md) |
 | Backend API contract | [`docs/backend-api.md`](docs/backend-api.md) |
 | Provider source readiness | [`docs/provider-source-hub-readiness-checklist.md`](docs/provider-source-hub-readiness-checklist.md) |
 | Design system | [`docs/design-system.md`](docs/design-system.md) |
@@ -212,9 +269,12 @@ bash -lc "bash -n setup.sh && find providers -path '*/scripts/linux/*.sh' -print
 GitHub Actions checks:
 
 - workflow linting with `actionlint`;
+- repository hygiene for README/docs links, evidence artifacts, duplicate screenshots, and Nginx compose/template validation;
+- root setup smoke without secrets;
 - frontend typecheck, unit tests, production build, and dependency audit;
 - backend lint, format check, mypy, pytest with coverage gate, provider manifest validation, secret scan, dry-run lifecycle, package build, dependency audit, and latency benchmark;
 - provider wrapper syntax for Bash and PowerShell;
+- Dependency Review and CodeQL security analysis;
 - frontend and backend production artifact generation after successful CI.
 
 ## Release and Packaging
