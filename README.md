@@ -60,6 +60,91 @@ It focuses on three things:
   </tr>
 </table>
 
+## AI Ops Cockpit
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="https://github-readme-stats.vercel.app/api?username=ambrouse&amp;show_icons=true&amp;hide_border=true&amp;bg_color=0b0f14&amp;title_color=22c55e&amp;text_color=e5e7eb&amp;icon_color=38bdf8&amp;ring_color=22c55e" alt="AI Hub repository signal dashboard" width="100%">
+    </td>
+    <td width="50%">
+      <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=ambrouse&amp;layout=compact&amp;hide_border=true&amp;bg_color=0b0f14&amp;title_color=facc15&amp;text_color=e5e7eb&amp;icon_color=38bdf8" alt="Language dashboard" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="https://streak-stats.demolab.com?user=ambrouse&amp;hide_border=true&amp;background=0B0F14&amp;ring=F97316&amp;fire=F97316&amp;currStreakLabel=FACC15&amp;sideLabels=E5E7EB&amp;dates=94A3B8&amp;currStreakNum=FFFFFF&amp;sideNums=FFFFFF" alt="Repository streak dashboard" width="100%">
+    </td>
+    <td width="50%">
+      <table>
+        <tr>
+          <td><img src="https://img.shields.io/badge/providers-8_ready-22c55e?style=for-the-badge" alt="8 providers ready"></td>
+          <td><img src="https://img.shields.io/badge/backend_tests-24_passed-14b8a6?style=for-the-badge" alt="24 backend tests passed"></td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/frontend_tests-9_passed-38bdf8?style=for-the-badge" alt="9 frontend tests passed"></td>
+          <td><img src="https://img.shields.io/badge/audit-0_vulnerabilities-a855f7?style=for-the-badge" alt="0 npm vulnerabilities"></td>
+        </tr>
+        <tr>
+          <td><img src="https://img.shields.io/badge/nginx-gateway_valid-009639?style=for-the-badge&amp;logo=nginx&amp;logoColor=white" alt="Nginx gateway valid"></td>
+          <td><img src="https://img.shields.io/badge/evidence-screenshots_curated-f59e0b?style=for-the-badge" alt="Curated screenshots"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+## Visual Proof Board
+
+<table>
+  <tr>
+    <td width="33%">
+      <a href="tests/ip-access-evidence-2026-05-28/hub-ip-providers.png">
+        <img src="tests/ip-access-evidence-2026-05-28/hub-ip-providers.png" alt="Hub provider dashboard through LAN IP" width="100%">
+      </a>
+      <br><strong>LAN Hub</strong><br>
+      Nginx gateway loads real provider cards through <code>192.168.x.x:8080</code>.
+    </td>
+    <td width="33%">
+      <a href="tests/provider-nvidia-full-stability-evidence-2026-05-27/agentic-commerce-blueprint/function/01-native-checkout-session-output.png">
+        <img src="tests/provider-nvidia-full-stability-evidence-2026-05-27/agentic-commerce-blueprint/function/01-native-checkout-session-output.png" alt="Agentic commerce checkout output" width="100%">
+      </a>
+      <br><strong>Commerce Agent</strong><br>
+      Product selection and checkout session proof from the provider UI.
+    </td>
+    <td width="33%">
+      <a href="tests/provider-nvidia-full-stability-evidence-2026-05-27/aiq/function/02-file-grounded-chat-answer.png">
+        <img src="tests/provider-nvidia-full-stability-evidence-2026-05-27/aiq/function/02-file-grounded-chat-answer.png" alt="AIQ file grounded chat answer" width="100%">
+      </a>
+      <br><strong>AI-Q RAG</strong><br>
+      File-grounded chat answer captured after upload.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%">
+      <a href="tests/provider-nvidia-full-stability-evidence-2026-05-27/multi-agent-intelligent-warehouse/function/02-chat-maintenance-output.png">
+        <img src="tests/provider-nvidia-full-stability-evidence-2026-05-27/multi-agent-intelligent-warehouse/function/02-chat-maintenance-output.png" alt="Warehouse maintenance chat output" width="100%">
+      </a>
+      <br><strong>Warehouse Agents</strong><br>
+      Maintenance assistant output from seeded warehouse data.
+    </td>
+    <td width="33%">
+      <a href="tests/provider-nvidia-full-stability-evidence-2026-05-27/pdf-to-podcast/function/02-generation-completed-from-frontend.png">
+        <img src="tests/provider-nvidia-full-stability-evidence-2026-05-27/pdf-to-podcast/function/02-generation-completed-from-frontend.png" alt="PDF to Podcast generation completed" width="100%">
+      </a>
+      <br><strong>PDF to Podcast</strong><br>
+      Frontend generation flow completed with visible output.
+    </td>
+    <td width="33%">
+      <a href="tests/provider-nvidia-full-stability-evidence-2026-05-27/web-agent/function/01-web-search-openai-output-with-sources.png">
+        <img src="tests/provider-nvidia-full-stability-evidence-2026-05-27/web-agent/function/01-web-search-openai-output-with-sources.png" alt="Web Agent search answer with sources" width="100%">
+      </a>
+      <br><strong>Web Agent</strong><br>
+      Search-backed answer with visible source links.
+    </td>
+  </tr>
+</table>
+
 ## Active Provider Catalog
 
 AI Hub currently ships exactly eight active provider wrappers:
@@ -260,6 +345,7 @@ bash -lc "bash -n setup.sh && find providers -path '*/scripts/linux/*.sh' -print
 | --- | --- |
 | Setup and LAN/Nginx gateway | [`docs/setup-and-nginx-gateway-2026-05-28.md`](docs/setup-and-nginx-gateway-2026-05-28.md) |
 | CI and README polish | [`docs/ci-and-readme-polish-2026-05-28.md`](docs/ci-and-readme-polish-2026-05-28.md) |
+| README visual dashboard | [`docs/readme-visual-dashboard-2026-05-28.md`](docs/readme-visual-dashboard-2026-05-28.md) |
 | Backend API contract | [`docs/backend-api.md`](docs/backend-api.md) |
 | Provider source readiness | [`docs/provider-source-hub-readiness-checklist.md`](docs/provider-source-hub-readiness-checklist.md) |
 | Design system | [`docs/design-system.md`](docs/design-system.md) |

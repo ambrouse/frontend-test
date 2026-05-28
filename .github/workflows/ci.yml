@@ -109,7 +109,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
+          python3 - <<'PY'
           from __future__ import annotations
 
           import re
@@ -124,12 +124,16 @@ jobs:
               if base.exists():
                   md_files.extend(sorted(base.rglob("*.md")))
 
-          pattern = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)|!\[[^\]]*\]\(([^)]+)\)")
+          markdown_pattern = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)|!\[[^\]]*\]\(([^)]+)\)")
+          html_pattern = re.compile(r"""(?:href|src)=["']([^"']+)["']""")
           missing: list[str] = []
           for file_path in md_files:
               text = file_path.read_text(encoding="utf-8", errors="ignore")
-              for match in pattern.finditer(text):
-                  target = match.group(1) or match.group(2) or ""
+              targets: list[str] = []
+              for match in markdown_pattern.finditer(text):
+                  targets.append(match.group(1) or match.group(2) or "")
+              targets.extend(match.group(1) for match in html_pattern.finditer(text))
+              for target in targets:
                   target = target.strip()
                   if not target or target.startswith(("#", "http://", "https://", "mailto:")):
                       continue
@@ -156,21 +160,40 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          missing_readmes="$(find tests -type f -name README.md -print0 | xargs -0 -n1 sh -c 'test -s "$0" || echo "$0"')"
-          if [ -n "$missing_readmes" ]; then
-            echo "$missing_readmes"
-            exit 1
-          fi
-          temp_artifacts="$(find tests -type f \( -name '*.tmp' -o -name '*.har' -o -name '*.log' -o -name '*.json' -o -name 'trace.zip' \) -print)"
-          if [ -n "$temp_artifacts" ]; then
-            echo "$temp_artifacts"
-            exit 1
-          fi
-          duplicates="$(find tests -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) -print0 | xargs -0 sha256sum | sort | awk 'seen[$1] {print $2 " duplicates " seen[$1]} !seen[$1] {seen[$1]=$2}')"
-          if [ -n "$duplicates" ]; then
-            echo "$duplicates"
-            exit 1
-          fi
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import sys
+          from pathlib import Path
+
+          tests = Path("tests")
+          problems: list[str] = []
+          for readme in sorted(tests.rglob("README.md")):
+              if not readme.read_text(encoding="utf-8", errors="ignore").strip():
+                  problems.append(f"{readme} is empty")
+
+          temp_names = {"trace.zip"}
+          temp_suffixes = {".tmp", ".har", ".log", ".json"}
+          for path in sorted(tests.rglob("*")):
+              if path.is_file() and (path.name in temp_names or path.suffix.lower() in temp_suffixes):
+                  problems.append(f"{path} is a temporary test artifact")
+
+          seen: dict[str, Path] = {}
+          for path in sorted(tests.rglob("*")):
+              if path.suffix.lower() not in {".png", ".jpg", ".jpeg"}:
+                  continue
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              if digest in seen:
+                  problems.append(f"{path} duplicates {seen[digest]}")
+              else:
+                  seen[digest] = path
+
+          if problems:
+              print("\n".join(problems))
+              sys.exit(1)
+          print("Evidence hygiene passed")
+          PY
 
       - name: Validate Nginx compose config
         shell: bash

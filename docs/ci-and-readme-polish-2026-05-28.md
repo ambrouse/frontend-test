@@ -7,7 +7,7 @@ This note records the GitHub presentation and CI/CD hardening pass for AI Hub.
 ## README Presentation
 
 - The banner is rendered with explicit HTML image markup:
-  - `src="./banner.gif"`
+  - source path: root `banner.gif`
   - `width="100%"`
   - descriptive alt text
 - This avoids GitHub Markdown's default image sizing behavior and keeps the banner responsive in the repository view.
