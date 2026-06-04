@@ -2,7 +2,7 @@
 
 ## Phạm Vi
 
-Tạo đường cài đặt AI Hub bằng Docker 100%, phát hành image `ambrouse/ai-hub:0.1.1` và kiểm thử bằng container sạch.
+Tạo đường cài đặt AI Hub bằng Docker 100%, phát hành image `baonguyen3568/ai-hub:0.1.1` và kiểm thử bằng container sạch.
 
 ## Thay Đổi
 
@@ -16,7 +16,7 @@ Tạo đường cài đặt AI Hub bằng Docker 100%, phát hành image `ambrou
 ## Cách Chạy
 
 ```bash
-docker run --rm --name ai-hub -p 6901:6901 -p 6902:6902 ambrouse/ai-hub:0.1.1
+docker run --rm --name ai-hub -p 6901:6901 -p 6902:6902 baonguyen3568/ai-hub:0.1.1
 ```
 
 Hoặc:
@@ -27,8 +27,8 @@ docker compose -f docker-compose.hub.yml up -d
 
 ## Kiểm Chứng Đã Chạy
 
-- `docker build -t ambrouse/ai-hub:0.1.1 -t ambrouse/ai-hub:latest .`: đạt.
-- `docker run -d --name ai-hub-docker-test -p 6911:6901 -p 6912:6902 ambrouse/ai-hub:0.1.1`: container healthy.
+- `docker build -t baonguyen3568/ai-hub:0.1.1 -t baonguyen3568/ai-hub:latest .`: đạt.
+- `docker run -d --name ai-hub-docker-test -p 6911:6901 -p 6912:6902 baonguyen3568/ai-hub:0.1.1`: container healthy.
 - `http://localhost:6912/api/health`: trả `{"ok": true}`.
 - `http://localhost:6911`: trả HTTP 200.
 - `http://localhost:6912/api/providers`: trả `total = 8`.
@@ -38,13 +38,13 @@ docker compose -f docker-compose.hub.yml up -d
 
 ## Trạng Thái Docker Hub
 
-- Push `ambrouse/ai-hub:0.1.1` bị Docker Hub từ chối với `insufficient_scope`.
-- Nguyên nhân khả dĩ: repo `ambrouse/ai-hub` chưa tồn tại hoặc Docker Desktop chưa login tài khoản có quyền ghi namespace `ambrouse`.
-- Sau khi login đúng quyền, chạy:
+- Namespace phát hành đã chuyển sang `baonguyen3568`.
+- Đã push thành công:
 
 ```bash
-docker push ambrouse/ai-hub:0.1.1
-docker push ambrouse/ai-hub:latest
+docker push baonguyen3568/ai-hub:0.1.1
+docker push baonguyen3568/ai-hub:latest
 ```
 
-Sau khi push thành công cần pull lại image từ Docker Hub và chạy lại Docker-only smoke test.
+- Docker Hub API xác nhận tag `0.1.1` và `latest` cùng digest `sha256:0be9171fe0c67a89a0fceab908d51fed48cf38e067ef6a8a123a857aa69a91c2`.
+- Smoke test sau push bằng `baonguyen3568/ai-hub:0.1.1`: container healthy, frontend HTTP 200, backend `/api/health` trả `ok=true`, `/api/providers` trả `total=8`.
