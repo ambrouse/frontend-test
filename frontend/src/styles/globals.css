@@ -12054,3 +12054,254 @@ html body .hub-v2-feature-card.is-current .hub-v2-feature-ripple {
     radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.06), transparent 36%) !important;
   filter: blur(1px) saturate(0.62) !important;
 }
+
+/* 2026-06-04 final control palette: align media pills and CTA buttons across light/dark. */
+:root[data-theme="light"] {
+  --hub-control-action-bg: linear-gradient(135deg, #d9fffb 0%, #f7fffe 100%);
+  --hub-control-action-hover: linear-gradient(135deg, #c5fbf6 0%, #ffffff 100%);
+  --hub-control-action-ink: #12383b;
+  --hub-control-action-border: rgba(7, 151, 148, 0.34);
+  --hub-control-action-shadow: 0 10px 28px rgba(7, 126, 123, 0.12);
+  --hub-control-chip-bg: rgba(5, 20, 24, 0.72);
+  --hub-control-chip-ink: #f6ffff;
+  --hub-control-chip-border: rgba(142, 255, 250, 0.36);
+  --hub-control-panel-chip-bg: rgba(239, 252, 251, 0.94);
+  --hub-control-panel-chip-ink: #385053;
+  --hub-control-panel-chip-border: rgba(7, 151, 148, 0.18);
+}
+
+:root[data-theme="dark"] {
+  --hub-control-action-bg: linear-gradient(135deg, rgba(22, 235, 235, 0.94) 0%, rgba(167, 255, 252, 0.96) 100%);
+  --hub-control-action-hover: linear-gradient(135deg, rgba(120, 255, 250, 0.98) 0%, rgba(238, 255, 254, 0.98) 100%);
+  --hub-control-action-ink: #04282a;
+  --hub-control-action-border: rgba(167, 255, 252, 0.62);
+  --hub-control-action-shadow: 0 0 0 1px rgba(22, 235, 235, 0.16), 0 16px 44px rgba(0, 0, 0, 0.28);
+  --hub-control-chip-bg: rgba(3, 13, 16, 0.68);
+  --hub-control-chip-ink: #efffff;
+  --hub-control-chip-border: rgba(109, 248, 248, 0.28);
+  --hub-control-panel-chip-bg: rgba(12, 28, 32, 0.82);
+  --hub-control-panel-chip-ink: #d8f3f3;
+  --hub-control-panel-chip-border: rgba(109, 248, 248, 0.2);
+}
+
+html body .hub-v2-feature-action,
+html body .hub-v2-card-bottom a,
+html body .open-link {
+  color: var(--hub-control-action-ink) !important;
+  border: 1px solid var(--hub-control-action-border) !important;
+  background: var(--hub-control-action-bg) !important;
+  box-shadow: var(--hub-control-action-shadow) !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+html body .hub-v2-feature-action:hover,
+html body .hub-v2-feature-action:focus-visible,
+html body .hub-v2-card-bottom a:hover,
+html body .hub-v2-card-bottom a:focus-visible,
+html body .open-link:hover,
+html body .open-link:focus-visible {
+  color: var(--hub-control-action-ink) !important;
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--hub-control-action-border)) !important;
+  background: var(--hub-control-action-hover) !important;
+  box-shadow: var(--hub-control-action-shadow) !important;
+  transform: translateY(-1px) !important;
+}
+
+html body .hub-v2-feature-meta > span,
+html body .hub-v2-feature-meta .compatibility-ping,
+html body .hub-v2-shortcut small {
+  color: var(--hub-control-chip-ink) !important;
+  border-color: var(--hub-control-chip-border) !important;
+  background: var(--hub-control-chip-bg) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  filter: none !important;
+  text-shadow: none !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html body .hub-v2-card-top > span,
+html body .hub-v2-card-top .compatibility-ping,
+html body .hub-v2-requirements span,
+html body .hub-v2-tags span,
+html body .tag-row span,
+html body .requirement-row span,
+html body .status-pill {
+  color: var(--hub-control-panel-chip-ink) !important;
+  border-color: var(--hub-control-panel-chip-border) !important;
+  background: var(--hub-control-panel-chip-bg) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+html body .compatibility-ping {
+  gap: 6px !important;
+  font-weight: 850 !important;
+}
+
+html body .compatibility-ping span {
+  box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 18%, transparent) !important;
+}
+
+html body .ping-green {
+  color: #18b981 !important;
+  border-color: color-mix(in srgb, #18b981 42%, var(--hub-control-panel-chip-border)) !important;
+}
+
+html body .ping-yellow {
+  color: #d69a17 !important;
+  border-color: color-mix(in srgb, #d69a17 42%, var(--hub-control-panel-chip-border)) !important;
+}
+
+html body .ping-red {
+  color: #e43f5a !important;
+  border-color: color-mix(in srgb, #e43f5a 46%, var(--hub-control-panel-chip-border)) !important;
+}
+
+html body .hub-v2-feature-meta .ping-green,
+html body .hub-v2-feature-meta .ping-yellow,
+html body .hub-v2-feature-meta .ping-red {
+  background: var(--hub-control-chip-bg) !important;
+}
+
+html body .hub-v2-feature-meta .ping-green {
+  color: #4ff0b0 !important;
+  border-color: rgba(79, 240, 176, 0.44) !important;
+}
+
+html body .hub-v2-feature-meta .ping-yellow {
+  color: #ffd36a !important;
+  border-color: rgba(255, 211, 106, 0.44) !important;
+}
+
+html body .hub-v2-feature-meta .ping-red {
+  color: #ff6f87 !important;
+  border-color: rgba(255, 111, 135, 0.48) !important;
+}
+
+:root[data-theme="light"] body .hub-v2-feature-action,
+:root[data-theme="light"] body .hub-v2-card-bottom a,
+:root[data-theme="light"] body .open-link,
+:root[data-theme="dark"] body .hub-v2-feature-action,
+:root[data-theme="dark"] body .hub-v2-card-bottom a,
+:root[data-theme="dark"] body .open-link {
+  color: var(--hub-control-action-ink) !important;
+  border: 1px solid var(--hub-control-action-border) !important;
+  background: var(--hub-control-action-bg) !important;
+  box-shadow: var(--hub-control-action-shadow) !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-theme="light"] body .hub-v2-feature-action:hover,
+:root[data-theme="light"] body .hub-v2-feature-action:focus-visible,
+:root[data-theme="light"] body .hub-v2-card-bottom a:hover,
+:root[data-theme="light"] body .hub-v2-card-bottom a:focus-visible,
+:root[data-theme="light"] body .open-link:hover,
+:root[data-theme="light"] body .open-link:focus-visible,
+:root[data-theme="dark"] body .hub-v2-feature-action:hover,
+:root[data-theme="dark"] body .hub-v2-feature-action:focus-visible,
+:root[data-theme="dark"] body .hub-v2-card-bottom a:hover,
+:root[data-theme="dark"] body .hub-v2-card-bottom a:focus-visible,
+:root[data-theme="dark"] body .open-link:hover,
+:root[data-theme="dark"] body .open-link:focus-visible {
+  color: var(--hub-control-action-ink) !important;
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--hub-control-action-border)) !important;
+  background: var(--hub-control-action-hover) !important;
+  box-shadow: var(--hub-control-action-shadow) !important;
+  transform: translateY(-1px) !important;
+}
+
+:root[data-theme="light"] body .hub-v2-feature-meta > span,
+:root[data-theme="light"] body .hub-v2-feature-meta .compatibility-ping,
+:root[data-theme="light"] body .hub-v2-shortcut small,
+:root[data-theme="dark"] body .hub-v2-feature-meta > span,
+:root[data-theme="dark"] body .hub-v2-feature-meta .compatibility-ping,
+:root[data-theme="dark"] body .hub-v2-shortcut small {
+  color: var(--hub-control-chip-ink) !important;
+  border-color: var(--hub-control-chip-border) !important;
+  background: var(--hub-control-chip-bg) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-theme="light"] body .hub-v2-card-top > span,
+:root[data-theme="light"] body .hub-v2-card-top .compatibility-ping,
+:root[data-theme="light"] body .hub-v2-requirements span,
+:root[data-theme="light"] body .hub-v2-tags span,
+:root[data-theme="light"] body .tag-row span,
+:root[data-theme="light"] body .requirement-row span,
+:root[data-theme="light"] body .status-pill,
+:root[data-theme="dark"] body .hub-v2-card-top > span,
+:root[data-theme="dark"] body .hub-v2-card-top .compatibility-ping,
+:root[data-theme="dark"] body .hub-v2-requirements span,
+:root[data-theme="dark"] body .hub-v2-tags span,
+:root[data-theme="dark"] body .tag-row span,
+:root[data-theme="dark"] body .requirement-row span,
+:root[data-theme="dark"] body .status-pill {
+  color: var(--hub-control-panel-chip-ink) !important;
+  border-color: var(--hub-control-panel-chip-border) !important;
+  background: var(--hub-control-panel-chip-bg) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-theme="light"] body .hub-v2 .hub-v2-feature-action,
+:root[data-theme="light"] body .hub-v2-feature-card .hub-v2-feature-action,
+:root[data-theme="dark"] body .hub-v2 .hub-v2-feature-action,
+:root[data-theme="dark"] body .hub-v2-feature-card .hub-v2-feature-action {
+  color: var(--hub-control-action-ink) !important;
+  border-color: var(--hub-control-action-border) !important;
+  background: var(--hub-control-action-bg) !important;
+  box-shadow: var(--hub-control-action-shadow) !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-theme="light"] body .hub-v2 .hub-v2-feature-action:hover,
+:root[data-theme="light"] body .hub-v2 .hub-v2-feature-action:focus-visible,
+:root[data-theme="light"] body .hub-v2-feature-card .hub-v2-feature-action:hover,
+:root[data-theme="light"] body .hub-v2-feature-card .hub-v2-feature-action:focus-visible,
+:root[data-theme="dark"] body .hub-v2 .hub-v2-feature-action:hover,
+:root[data-theme="dark"] body .hub-v2 .hub-v2-feature-action:focus-visible,
+:root[data-theme="dark"] body .hub-v2-feature-card .hub-v2-feature-action:hover,
+:root[data-theme="dark"] body .hub-v2-feature-card .hub-v2-feature-action:focus-visible {
+  color: var(--hub-control-action-ink) !important;
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--hub-control-action-border)) !important;
+  background: var(--hub-control-action-hover) !important;
+  box-shadow: var(--hub-control-action-shadow) !important;
+}
+
+:root[data-theme="light"] body .hub-v2-feature-card .hub-v2-feature-meta > span,
+:root[data-theme="light"] body .hub-v2-feature-card .hub-v2-feature-meta .compatibility-ping,
+:root[data-theme="dark"] body .hub-v2-feature-card .hub-v2-feature-meta > span,
+:root[data-theme="dark"] body .hub-v2-feature-card .hub-v2-feature-meta .compatibility-ping {
+  color: var(--hub-control-chip-ink) !important;
+  border-color: var(--hub-control-chip-border) !important;
+  background: var(--hub-control-chip-bg) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+:root[data-theme="light"] body .hub-v2-feature-meta .ping-green,
+:root[data-theme="dark"] body .hub-v2-feature-meta .ping-green {
+  color: #4ff0b0 !important;
+  border-color: rgba(79, 240, 176, 0.44) !important;
+}
+
+:root[data-theme="light"] body .hub-v2-feature-meta .ping-yellow,
+:root[data-theme="dark"] body .hub-v2-feature-meta .ping-yellow {
+  color: #ffd36a !important;
+  border-color: rgba(255, 211, 106, 0.44) !important;
+}
+
+:root[data-theme="light"] body .hub-v2-feature-meta .ping-red,
+:root[data-theme="dark"] body .hub-v2-feature-meta .ping-red {
+  color: #ff6f87 !important;
+  border-color: rgba(255, 111, 135, 0.48) !important;
+}
