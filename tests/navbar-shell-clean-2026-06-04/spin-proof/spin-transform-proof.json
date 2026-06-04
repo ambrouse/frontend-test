@@ -1,0 +1,30 @@
+[
+  {
+    "ms": 40,
+    "animationName": "shellRingSpin",
+    "animationDuration": "0.9s",
+    "transform": "matrix(0.98, 0, 0, 0.98, 0, 0)",
+    "opacity": "0.9"
+  },
+  {
+    "ms": 180,
+    "animationName": "shellRingSpin",
+    "animationDuration": "0.9s",
+    "transform": "matrix(0.720105, -0.707891, 0.707891, 0.720105, 0, 0)",
+    "opacity": "0.9"
+  },
+  {
+    "ms": 420,
+    "animationName": "shellRingSpin",
+    "animationDuration": "0.9s",
+    "transform": "matrix(1, 0, 0, 1, 0, 0)",
+    "opacity": "0.9"
+  },
+  {
+    "ms": 880,
+    "animationName": "shellRingSpin",
+    "animationDuration": "0.9s",
+    "transform": "matrix(1, 0, 0, 1, 0, 0)",
+    "opacity": "0.9"
+  }
+]

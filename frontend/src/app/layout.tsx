@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Open_Sans, Rubik } from "next/font/google";
 import "../styles/globals.css";
+import "../styles/shell.css";
 import { AppShell } from "@/components/shell/AppShell";
 
 const openSans = Open_Sans({

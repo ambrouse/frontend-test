@@ -1,0 +1,69 @@
+{
+  "viewport": {
+    "width": 1900,
+    "height": 900,
+    "scrollWidth": 1900,
+    "bodyScrollWidth": 1900,
+    "scrollY": 500
+  },
+  "app": {
+    "x": 0,
+    "y": -500,
+    "width": 1900,
+    "height": 1640,
+    "display": "block",
+    "position": "relative",
+    "marginLeft": "0px",
+    "paddingLeft": "0px",
+    "overflowX": "hidden"
+  },
+  "dock": {
+    "x": 0,
+    "y": 0,
+    "width": 78,
+    "height": 900,
+    "display": "flex",
+    "position": "fixed",
+    "marginLeft": "0px",
+    "paddingLeft": "14px",
+    "overflowX": "visible"
+  },
+  "content": {
+    "x": 78,
+    "y": -500,
+    "width": 1822,
+    "height": 1640,
+    "display": "block",
+    "position": "relative",
+    "marginLeft": "78px",
+    "paddingLeft": "0px",
+    "overflowX": "clip"
+  },
+  "main": {
+    "x": 78,
+    "y": -500,
+    "width": 1822,
+    "height": 1640,
+    "display": "block",
+    "position": "static",
+    "marginLeft": "0px",
+    "paddingLeft": "34px",
+    "overflowX": "visible"
+  },
+  "hero": {
+    "x": 112,
+    "y": -430,
+    "width": 1754,
+    "height": 454,
+    "display": "grid",
+    "position": "static",
+    "marginLeft": "0px",
+    "paddingLeft": "0px",
+    "overflowX": "visible"
+  },
+  "hubBefore": {
+    "animationName": "shellRingSpin",
+    "animationDuration": "0.38s",
+    "animationTimingFunction": "cubic-bezier(0.28, 0.72, 0.28, 1)"
+  }
+}
