@@ -75,7 +75,7 @@ The final Hub install for `pdf-to-podcast` cloned commit `4e9ffb6` from GitHub a
 - Source was deleted locally and cloned again from `https://github.com/ambrouse/frontend-test.git`.
 - Clean clone commit under test: `37ea4f7`.
 - `.env.local` was restored from a local ignored backup; the key was not printed or committed.
-- `setup.ps1` completed successfully from the clean clone.
+- The legacy Windows setup entrypoint completed successfully from the clean clone at that time; the current root runtime now uses `setup.sh` and `stop.sh` only.
 - Backend and frontend started from the clean clone and responded on:
   - `http://127.0.0.1:8000/api/health`
   - `http://127.0.0.1:3000/hub/pdf-to-podcast`

@@ -9,18 +9,17 @@ provider-repo/
   aihub.provider.json
   README.md
   scripts/
-    windows/
-      setup.ps1
-      run.ps1
-      stop.ps1
-      health.ps1
-      collect-metrics.ps1
     linux/
       setup.sh
       run.sh
       stop.sh
       health.sh
       collect-metrics.sh
+    windows/              # optional, only if the provider explicitly supports Windows
+      run.ps1
+      stop.ps1
+      health.ps1
+      collect-metrics.ps1
   config/
     default.json
     profiles/
@@ -32,7 +31,7 @@ provider-repo/
     .gitkeep
 ```
 
-Neu project dung Docker la chinh, van nen co script cho ca hai OS. Script co the chi wrap `docker compose` nhung phai ghi cung mot bo file runtime/log.
+Neu project dung Docker la chinh, Bash scripts la baseline bat buoc. Windows scripts chi la optional provider-level compatibility; root Hub setup hien chi dung `setup.sh` va `stop.sh`.
 
 ## 2. Manifest bat buoc
 
@@ -68,19 +67,18 @@ File `aihub.provider.json` la nguon du lieu chinh de frontend hien thi card va d
     }
   },
   "commands": {
-    "windows": {
-      "setup": "scripts/windows/setup.ps1",
-      "run": "scripts/windows/run.ps1",
-      "stop": "scripts/windows/stop.ps1",
-      "health": "scripts/windows/health.ps1",
-      "metrics": "scripts/windows/collect-metrics.ps1"
-    },
     "linux": {
       "setup": "scripts/linux/setup.sh",
       "run": "scripts/linux/run.sh",
       "stop": "scripts/linux/stop.sh",
       "health": "scripts/linux/health.sh",
       "metrics": "scripts/linux/collect-metrics.sh"
+    },
+    "windows": {
+      "run": "scripts/windows/run.ps1",
+      "stop": "scripts/windows/stop.ps1",
+      "health": "scripts/windows/health.ps1",
+      "metrics": "scripts/windows/collect-metrics.ps1"
     }
   },
   "runtime": {

@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
+import { Open_Sans, Rubik } from "next/font/google";
 import "../styles/globals.css";
 import { AppShell } from "@/components/shell/AppShell";
+
+const openSans = Open_Sans({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-sougen-body",
+  display: "swap",
+});
+
+const rubik = Rubik({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-sougen-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "AI Hub",
@@ -14,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body>
+      <body className={`${openSans.variable} ${rubik.variable}`}>
         <AppShell>{children}</AppShell>
       </body>
     </html>

@@ -50,8 +50,8 @@ Every provider source repository should include:
   - Every supported env key documented.
   - Mandatory real-mode keys clearly marked.
 - Runtime scripts when source owns lifecycle:
-  - Linux: `setup.sh`, `run.sh`, `stop.sh`, `delete.sh` or documented equivalents.
-  - Windows: `setup.ps1`, `run.ps1`, `stop.ps1`, `delete.ps1` when Windows is supported.
+  - Bash baseline: `setup.sh`, `run.sh`, `stop.sh`, `delete.sh` or documented equivalents.
+  - Windows scripts are optional provider-level compatibility when Windows is explicitly supported.
 - Dependency files:
   - Python: `pyproject.toml`, `requirements.txt`, `uv.lock`, or equivalent.
   - Node: `package.json` and lockfile.
@@ -75,13 +75,6 @@ Each Hub provider folder must contain:
   - Requirements and runtime modes are honest.
   - Required tools are listed.
   - Runtime log/status/metrics files are defined.
-- Windows scripts if Windows is supported:
-  - `setup.ps1`
-  - `run.ps1`
-  - `stop.ps1`
-  - `delete.ps1`
-  - `health.ps1`
-  - `collect-metrics.ps1`
 - Linux scripts if Linux is supported:
   - `setup.sh`
   - `run.sh`
@@ -89,6 +82,12 @@ Each Hub provider folder must contain:
   - `delete.sh`
   - `health.sh`
   - `collect-metrics.sh`
+- Optional Windows scripts if Windows is supported:
+  - `run.ps1`
+  - `stop.ps1`
+  - `delete.ps1`
+  - `health.ps1`
+  - `collect-metrics.ps1`
 - Wrapper scripts must pass Hub env correctly:
   - `AIHUB_PROVIDER_ID`
   - `AIHUB_PROVIDER_ROOT`

@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Download, Loader2, Play, RotateCcw, Save, Square, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   clearProviderServiceLogs,
   fetchHardwareSnapshot,
@@ -72,8 +72,13 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   const [isConfigSaving, setIsConfigSaving] = useState(false);
   const [isLogFeedActive, setIsLogFeedActive] = useState(false);
   const [lastLogChangeAt, setLastLogChangeAt] = useState<number>(0);
+  const isConfigEditingRef = useRef(false);
   const terminalRef = useRef<HTMLDivElement | null>(null);
   const latestLogFingerprintRef = useRef("");
+  const statusFingerprintRef = useRef("");
+  const metricsFingerprintRef = useRef("");
+  const logsFingerprintRef = useRef("");
+  const activeTasksFingerprintRef = useRef("");
 
   const visibleLogs = useMemo(() => {
     return activeLogLevel === "all" ? logs : logs.filter((log) => log.level === activeLogLevel);
@@ -169,9 +174,9 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   }, [projectData?.id, projectData?.visual.imageUrl, projectData?.visual.gallery?.join("|")]);
 
   useEffect(() => {
-    if (!config || isConfigEditing) return;
+    if (!config || isConfigEditingRef.current) return;
     setDraftConfig(config);
-  }, [config, isConfigEditing]);
+  }, [config]);
 
   useEffect(() => {
     if (visualImages.length <= 1) {
@@ -194,10 +199,29 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     const load = () => {
       void fetchProviderDetail(projectId, { signal: controller.signal }).then(setProjectData).catch(() => {});
       void fetchHardwareSnapshot({ signal: controller.signal }).then(setHardware).catch(() => {});
-      void fetchProviderStatus(projectId, { signal: controller.signal }).then(setStatus).catch(() => {});
-      void fetchProviderMetrics(projectId, { signal: controller.signal }).then(setMetrics).catch(() => {});
+      void fetchProviderStatus(projectId, { signal: controller.signal }).then((nextStatus) => {
+        const fingerprint = `${nextStatus.state}:${nextStatus.currentStep}:${nextStatus.health?.level ?? ""}`;
+        if (fingerprint !== statusFingerprintRef.current) {
+          statusFingerprintRef.current = fingerprint;
+          setStatus(nextStatus);
+        }
+      }).catch(() => {});
+      void fetchProviderMetrics(projectId, { signal: controller.signal }).then((nextMetrics) => {
+        const fingerprint = JSON.stringify(nextMetrics);
+        if (fingerprint !== metricsFingerprintRef.current) {
+          metricsFingerprintRef.current = fingerprint;
+          startTransition(() => setMetrics(nextMetrics));
+        }
+      }).catch(() => {});
       void fetchProviderConfig(projectId, { signal: controller.signal }).then(setConfig).catch(() => {});
-      void fetchProviderLogs(projectId, { signal: controller.signal }).then((response) => setLogs(response.logs)).catch(() => {});
+      void fetchProviderLogs(projectId, { signal: controller.signal }).then((response) => {
+        const latestLog = response.logs.at(-1);
+        const fingerprint = `${response.logs.length}:${latestLog?.id ?? ""}:${latestLog?.timestamp ?? ""}`;
+        if (fingerprint !== logsFingerprintRef.current) {
+          logsFingerprintRef.current = fingerprint;
+          startTransition(() => setLogs(response.logs));
+        }
+      }).catch(() => {});
       void fetchProviderServiceLogSources(projectId, { signal: controller.signal })
         .then((response) => {
           setServiceLogSources(response.sources);
@@ -218,12 +242,18 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
     const controller = new AbortController();
     const pollTasks = () => {
       void fetchActiveTasks({ signal: controller.signal, timeoutMs: 1200 })
-        .then((response) => setActiveTasks(response.tasks))
+        .then((response) => {
+          const fingerprint = response.tasks.map((task) => `${task.id}:${task.status}:${task.progressPercent}:${task.durationSec}`).join("|");
+          if (fingerprint !== activeTasksFingerprintRef.current) {
+            activeTasksFingerprintRef.current = fingerprint;
+            setActiveTasks(response.tasks);
+          }
+        })
         .catch(() => {});
     };
 
     pollTasks();
-    const interval = window.setInterval(pollTasks, isLifecycleBusy ? 900 : 2500);
+    const interval = window.setInterval(pollTasks, isLifecycleBusy ? 1100 : 3000);
     return () => {
       controller.abort();
       window.clearInterval(interval);
@@ -336,6 +366,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
       });
       setConfig(saved);
       setDraftConfig(saved);
+      isConfigEditingRef.current = false;
       setIsConfigEditing(false);
       setConfigMessage(saved.warnings[0] ?? "Config saved");
       return saved;
@@ -355,6 +386,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   };
 
   const updateDraftConfig = (patch: Partial<ProviderConfig>) => {
+    isConfigEditingRef.current = true;
     setIsConfigEditing(true);
     setConfigMessage("");
     setDraftConfig((current) => {
@@ -364,6 +396,7 @@ export function ProjectDetailView({ projectId, project }: { projectId: string; p
   };
 
   const updateDraftEnv = (key: string, value: string) => {
+    isConfigEditingRef.current = true;
     setIsConfigEditing(true);
     setConfigMessage("");
     setDraftConfig((current) => {

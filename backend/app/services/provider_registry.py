@@ -3,13 +3,14 @@ from __future__ import annotations
 import json
 import platform
 import shutil
+import socket
 import subprocess
 from pathlib import Path
 from threading import Lock, Thread
 from time import monotonic
 from urllib.parse import quote
 
-from app.core.paths import providers_root
+from app.core.paths import deploy_root, providers_root, repo_root
 from app.schemas.models import HubProject, ProviderListResponse, ToolRequirement
 from app.services.compatibility import evaluate_compatibility
 from app.services.hardware import hardware_service
@@ -179,6 +180,14 @@ class ProviderRegistry:
         return data
 
     def _apply_runtime_overlay(self, provider_root: Path, data: dict) -> dict:
+        install_path = _provider_install_path(provider_root, data)
+        if not _is_path_in_deploy(install_path) or not install_path.exists():
+            data["installStatus"] = "not_installed"
+            data["runStatus"] = "stopped"
+            return data
+
+        data["installStatus"] = "installed"
+        data["runStatus"] = "stopped"
         status_path = provider_root / data.get("runtime", {}).get("statusFile", "runtime/status.json")
         if not status_path.exists():
             return data
@@ -193,7 +202,7 @@ class ProviderRegistry:
             data["installStatus"] = "not_installed"
         elif state == "failed":
             data["installStatus"] = "failed"
-        if state == "running":
+        if state == "running" and _is_port_in_use(_provider_port(provider_root, data)):
             data["runStatus"] = "running"
         elif state == "failed":
             data["runStatus"] = "error"
@@ -231,6 +240,55 @@ def _hash_id(provider_id: str) -> int:
     for char in provider_id:
         value = (value * 31 + ord(char)) % 997
     return value
+
+
+def _provider_install_path(provider_root: Path, data: dict) -> Path:
+    editable_config = dict(data.get("editableConfig", {}))
+    local_config = _read_runtime_config(provider_root)
+    if local_config:
+        install_directory = local_config.get("installDirectory")
+        if isinstance(install_directory, str) and install_directory.strip():
+            editable_config["installDirectory"] = install_directory.strip()
+    configured_path = Path(str(editable_config.get("installDirectory", f"deploy/{data.get('id', provider_root.name)}")))
+    if not configured_path.is_absolute():
+        configured_path = repo_root() / configured_path
+    return configured_path.resolve()
+
+
+def _provider_port(provider_root: Path, data: dict) -> int:
+    local_config = _read_runtime_config(provider_root)
+    local_port = local_config.get("port") if local_config else None
+    if isinstance(local_port, int):
+        return local_port
+    editable_port = data.get("editableConfig", {}).get("port")
+    if isinstance(editable_port, int):
+        return editable_port
+    runtime_port = data.get("runtime", {}).get("defaultPort")
+    if isinstance(runtime_port, int):
+        return runtime_port
+    return 0
+
+
+def _read_runtime_config(provider_root: Path) -> dict | None:
+    config_path = provider_root / "runtime" / "config.local.json"
+    try:
+        loaded = json.loads(config_path.read_text(encoding="utf-8-sig"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+    return loaded if isinstance(loaded, dict) else None
+
+
+def _is_path_in_deploy(path: Path) -> bool:
+    base = deploy_root().resolve()
+    return path == base or base in path.parents
+
+
+def _is_port_in_use(port: int) -> bool:
+    if port <= 0:
+        return False
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(0.05)
+        return sock.connect_ex(("127.0.0.1", port)) == 0
 
 
 _TOOL_CACHE: dict[str, tuple[float, dict[str, str | bool | None]]] = {}

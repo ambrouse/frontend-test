@@ -315,15 +315,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Root bash syntax
-        run: bash -n setup.sh
+        run: bash -n setup.sh stop.sh
 
       - name: Provider bash syntax
         run: find providers -path "*/scripts/linux/*.sh" -print0 | xargs -0 -n1 bash -n
 
-      - name: PowerShell syntax
+      - name: Provider PowerShell syntax
         shell: pwsh
         run: |
-          $scripts = @(Get-Item setup.ps1) + @(Get-ChildItem providers -Recurse -Filter *.ps1)
+          $scripts = @(Get-ChildItem providers -Recurse -Filter *.ps1)
           foreach ($script in $scripts) {
             $tokens = $null
             $errors = $null

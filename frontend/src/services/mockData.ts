@@ -1034,6 +1034,141 @@ const projectsSeed = [
                                        "metrics":  "scripts/linux/collect-metrics.sh"
                                    }
                      }
+    },
+    {
+        "id":  "web-agent",
+        "name":  "Web Agent",
+        "type":  "tooling",
+        "repoUrl":  "https://github.com/baolnq-ai/web-agent.git",
+        "description":  "Tavily-first web search chat app with FastAPI, Next.js, SSE streaming, session history, LLM runtime config and optional SearXNG fallback.",
+        "tags":  [
+                     "web-search",
+                     "chat",
+                     "fastapi",
+                     "nextjs",
+                     "tavily"
+                 ],
+        "accentColor":  "#2563eb",
+        "visual":  {
+                       "imageUrl":  "/assets/projects/vision-lab.jpg",
+                       "focus":  "50% 50%",
+                       "ambient":  "#2563eb",
+                       "ambientSoft":  "#172554"
+                   },
+        "installStatus":  "not_installed",
+        "runStatus":  "stopped",
+        "requirements":  {
+                             "minimum":  {
+                                             "cpuCores":  4,
+                                             "ramMb":  8192,
+                                             "vramMb":  0,
+                                             "diskGb":  8,
+                                             "gpuRequired":  false,
+                                             "notes":  "Requires Python 3.12+, Node.js 20+ and an OpenAI-compatible LLM endpoint for answer generation."
+                                         },
+                             "recommended":  {
+                                                 "cpuCores":  8,
+                                                 "ramMb":  16384,
+                                                 "vramMb":  0,
+                                                 "diskGb":  20,
+                                                 "gpuRequired":  false
+                                             }
+                         },
+        "editableConfig":  {
+                               "profile":  "local dev",
+                               "branch":  "main",
+                               "port":  6925,
+                               "installDirectory":  "deploy/web-agent"
+                           },
+        "lastBenchmark":  {
+                              "headlineMetric":  "0 queries/min",
+                              "secondaryMetric":  "not started",
+                              "latencyMs":  0,
+                              "throughput":  0,
+                              "vramPeakMb":  0,
+                              "measuredAt":  "2026-05-20T00:00:00.000Z"
+                          },
+        "lastRunAt":  "2026-05-20T00:00:00.000Z",
+        "runtime":  {
+                        "defaultPort":  6925,
+                        "healthUrl":  "http://localhost:6925",
+                        "metricsUrl":  "http://127.0.0.1:6926/api/v1/health",
+                        "statusFile":  "runtime/status.json",
+                        "metricsFile":  "runtime/metrics.json",
+                        "pidFile":  "runtime/provider.pid",
+                        "logFile":  "logs/runtime.log"
+                    },
+        "environment":  {
+                            "supportedOs":  [
+                                                "windows",
+                                                "linux"
+                                            ],
+                            "architectures":  [
+                                                  "x64",
+                                                  "arm64"
+                                              ],
+                            "frameworks":  [
+                                               "FastAPI",
+                                               "Next.js 16",
+                                               "React 19",
+                                               "Tavily",
+                                               "SearXNG optional"
+                                           ],
+                            "requiredTools":  [
+                                                  {
+                                                      "id":  "git",
+                                                      "label":  "Git",
+                                                      "command":  "git --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Git."
+                                                  },
+                                                  {
+                                                      "id":  "python",
+                                                      "label":  "Python 3.12+",
+                                                      "command":  "python3 --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Python 3.12 or newer."
+                                                  },
+                                                  {
+                                                      "id":  "node",
+                                                      "label":  "Node.js 20+",
+                                                      "command":  "node --version",
+                                                      "required":  true,
+                                                      "installHint":  "Install Node.js 20 or newer."
+                                                  }
+                                              ],
+                            "runtimeModes":  [
+                                                 {
+                                                     "id":  "local_dev",
+                                                     "label":  "Local dev services",
+                                                     "description":  "Runs FastAPI and Next.js dev servers on configurable local ports.",
+                                                     "requiresGpu":  false,
+                                                     "requiresNvidiaKey":  false
+                                                 }
+                                             ],
+                            "setupNotes":  [
+                                               "Install clones the source into deploy/web-agent.",
+                                               "Run starts the backend and frontend on configured local ports."
+                                           ]
+                        },
+        "commands":  {
+                         "windows":  {
+                                         "setup":  "scripts/windows/setup.ps1",
+                                         "run":  "scripts/windows/run.ps1",
+                                         "stop":  "scripts/windows/stop.ps1",
+                                         "delete":  "scripts/windows/delete.ps1",
+                                         "health":  "scripts/windows/health.ps1",
+                                         "metrics":  "scripts/windows/collect-metrics.ps1"
+                                     },
+                         "linux":  {
+                                       "setup":  "scripts/linux/setup.sh",
+                                       "run":  "scripts/linux/run.sh",
+                                       "stop":  "scripts/linux/stop.sh",
+                                       "delete":  "scripts/linux/delete.sh",
+                                       "health":  "scripts/linux/health.sh",
+                                       "metrics":  "scripts/linux/collect-metrics.sh"
+                                   }
+                     }
     }
 ] satisfies Omit<HubProject, "compatibility">[];
 

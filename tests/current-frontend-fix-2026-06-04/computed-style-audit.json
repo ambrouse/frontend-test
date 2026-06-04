@@ -1,0 +1,81 @@
+{
+  "lightSettingsPanel": {
+    "color": "rgb(36, 36, 36)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "borderColor": "rgba(226, 231, 232, 0.96)",
+    "boxShadow": "rgba(22, 38, 42, 0.08) 0px 18px 58px 0px",
+    "filter": "none",
+    "opacity": "0",
+    "display": "block",
+    "animationName": "none",
+    "animationDuration": "0s"
+  },
+  "lightNavCrescent": {
+    "background": "rgba(0, 0, 0, 0) conic-gradient(from 218deg, rgba(0, 0, 0, 0) 0deg, rgba(0, 0, 0, 0) 214deg, rgba(12, 188, 188, 0.94) 216deg, rgba(12, 188, 188, 0.94) 318deg, rgba(0, 0, 0, 0) 320deg, rgba(0, 0, 0, 0) 360deg) repeat scroll 0% 0% / auto padding-box border-box",
+    "borderColor": "rgb(36, 36, 36)",
+    "boxShadow": "none",
+    "opacity": "0",
+    "animationName": "none",
+    "animationDuration": "0s"
+  },
+  "lightOpenHub": {
+    "color": "rgb(17, 17, 17)",
+    "backgroundColor": "rgba(247, 252, 252, 0.98)",
+    "borderColor": "rgba(20, 205, 205, 0.52)",
+    "boxShadow": "none",
+    "filter": "none",
+    "opacity": "1",
+    "display": "grid",
+    "animationName": "none",
+    "animationDuration": "0s"
+  },
+  "lightFilterHover": {
+    "color": "rgb(7, 95, 97)",
+    "backgroundColor": "rgba(231, 250, 249, 0.88)",
+    "borderColor": "rgba(20, 205, 205, 0.52)",
+    "boxShadow": "none",
+    "filter": "none",
+    "opacity": "1",
+    "display": "block",
+    "animationName": "none",
+    "animationDuration": "0s"
+  },
+  "lightFilterHoverBefore": {
+    "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+    "borderColor": "color(srgb 0.0862745 0.921569 0.921569 / 0.46) rgba(0, 0, 0, 0) color(srgb 0.0862745 0.921569 0.921569 / 0.16) color(srgb 0.0862745 0.921569 0.921569 / 0.46)",
+    "boxShadow": "none",
+    "opacity": "0",
+    "animationName": "none",
+    "animationDuration": "0s"
+  },
+  "lightBanner": {
+    "color": "rgb(36, 36, 36)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "borderColor": "rgb(229, 231, 235)",
+    "boxShadow": "none",
+    "filter": "none",
+    "opacity": "0.999719",
+    "display": "grid",
+    "animationName": "slideWaterSurfaceGlassFinal",
+    "animationDuration": "1.18s"
+  },
+  "lightBannerBefore": {
+    "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+    "borderColor": "rgb(36, 36, 36)",
+    "boxShadow": "none",
+    "opacity": "0",
+    "animationName": "none",
+    "animationDuration": "0s"
+  },
+  "firstProviderCard": {
+    "color": "rgb(36, 36, 36)",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "borderColor": "rgb(229, 231, 235)",
+    "boxShadow": "none",
+    "filter": "none",
+    "opacity": "1",
+    "display": "grid",
+    "animationName": "none",
+    "animationDuration": "0s"
+  }
+}

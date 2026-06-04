@@ -178,7 +178,7 @@ Removed or archived providers must not appear in the backend registry, frontend 
 </table>
 
 <details open>
-<summary><strong>Fresh clone on Linux or macOS</strong></summary>
+<summary><strong>Fresh clone with Bash</strong></summary>
 
 ```bash
 git clone https://github.com/ambrouse/frontend-test.git
@@ -186,16 +186,19 @@ cd frontend-test
 ./setup.sh
 ```
 
+`setup.sh` is the only supported root setup entrypoint. It checks Git, Node/npm, Python 3.11+, curl, the configured ports, Docker, and the Nginx image before boot. If a port is already busy, setup asks whether to reuse, kill, or abort. Use `./setup.sh --yes` only for trusted local automation.
+
 </details>
 
 <details>
-<summary><strong>Fresh clone on Windows PowerShell</strong></summary>
+<summary><strong>Stop or restart cleanly</strong></summary>
 
-```powershell
-git clone https://github.com/ambrouse/frontend-test.git
-cd frontend-test
-.\setup.ps1
+```bash
+./stop.sh
+./setup.sh
 ```
+
+`stop.sh` asks before stopping the Nginx gateway, PID-file processes, and listeners on ports `6900-6902`. Add `--providers` to include provider containers/scripts, or `--yes` for non-interactive local automation.
 
 </details>
 
@@ -222,15 +225,15 @@ Open the app at:
 http://localhost:6901
 ```
 
-`setup.sh` starts the backend, frontend, and Docker-managed Nginx gateway when Docker is running. To start the gateway manually after the backend and frontend are running:
+`setup.sh` starts the backend, frontend, and Docker-managed Nginx gateway when Docker is running. It checks whether `nginx:1.27-alpine` exists locally and asks before pulling when the image is missing. To start the gateway manually after the backend and frontend are running:
 
 ```bash
 AIHUB_NGINX_PORT=6900 AIHUB_FRONTEND_UPSTREAM=host.docker.internal:6901 AIHUB_BACKEND_UPSTREAM=host.docker.internal:6902 docker compose -f docker-compose.nginx.yml up -d
 ```
 
-Then open `http://localhost:6900` or the LAN URL printed by `setup.sh` / `setup.ps1`.
+After setup reports ready, open `http://localhost:6900` or the printed LAN gateway URL. If Docker is unavailable, use the printed frontend URL on port `6901`.
 
-The setup scripts check Git, Node/npm, Python 3.11+, Docker, and Docker Compose. Docker is optional for viewing the Hub but required for real provider install/run. If you enter an NVIDIA key, setup updates only `NVIDIA_API_KEY` in `.env.local` and preserves other local variables.
+The root runtime is intentionally Bash-only: `setup.sh` installs dependencies, seeds providers, checks/pulls the Nginx image when allowed, starts services, and prints ports, URLs, logs, and health states. `stop.sh` handles clean shutdown with confirmation prompts. Docker is optional for viewing the Hub frontend, but required for the Nginx gateway and real provider install/run flows. If you enter an NVIDIA key, setup updates only `NVIDIA_API_KEY` in `.env.local` and preserves other local variables.
 
 ## Provider Install Flow
 
