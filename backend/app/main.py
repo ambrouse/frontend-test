@@ -6,7 +6,7 @@ from app.api.routes_health import router as health_router
 from app.api.routes_providers import router as providers_router
 from app.api.routes_tasks import router as tasks_router
 
-app = FastAPI(title="AI Hub Backend", version="0.1.0")
+app = FastAPI(title="AI Hub Backend", version="0.1.1")
 
 app.add_middleware(
     CORSMiddleware,

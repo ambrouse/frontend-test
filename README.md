@@ -116,6 +116,34 @@ Dừng sạch:
 
 `setup.sh` kiểm tra Git, Node/npm, Python, curl, port, Docker và image Nginx trước khi khởi động. Nếu port đang bận, script hỏi cách xử lý thay vì tự ý giết process.
 
+## Cài Bằng Docker Hub
+
+Image all-in-one chạy cả frontend và backend, không cần cài Node.js hoặc Python trên máy host.
+
+```bash
+docker run --rm --name ai-hub -p 6901:6901 -p 6902:6902 ambrouse/ai-hub:0.1.1
+```
+
+Mở ứng dụng:
+
+```text
+http://localhost:6901
+```
+
+Kiểm tra backend:
+
+```bash
+curl http://localhost:6902/api/health
+```
+
+Nếu muốn chạy bằng Compose:
+
+```bash
+docker compose -f docker-compose.hub.yml up -d
+```
+
+Image mục tiêu trên Docker Hub: `ambrouse/ai-hub:0.1.1`. Nếu Docker Hub chưa có tag này, cần login tài khoản có quyền ghi namespace `ambrouse` rồi push image trước.
+
 ## Lệnh Kiểm Chứng
 
 Frontend:
