@@ -90,7 +90,7 @@ jobs:
         run: npm ci
 
       - name: Audit production dependencies
-        run: npm audit --audit-level=moderate
+        run: npm audit --omit=dev --audit-level=moderate
 
   repository-hygiene:
     name: Repository hygiene
@@ -228,7 +228,7 @@ jobs:
 
       - name: Run root setup without secrets
         shell: bash
-        run: printf '\n' | ./setup.sh
+        run: bash ./setup.sh --yes --no-start --skip-nginx
 
       - name: Verify setup output
         shell: bash

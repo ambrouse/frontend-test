@@ -1,27 +1,23 @@
-# README Hub Banner GIF
+# Banner README Hub - 2026-05-22
 
-Date: 2026-05-22
+## Phạm Vi
 
-## Scope
+Tạo banner README từ tương tác Hub local thật và push cập nhật repo Hub.
 
-Create an animated README banner from real local Hub UI interaction and push the Hub repo update.
+## Việc Đã Làm
 
-## Work Done
+- Khởi động backend và frontend Hub local.
+- Chụp các trạng thái UI thật bằng Playwright:
+  - tổng quan dashboard;
+  - danh mục provider Hub;
+  - tìm kiếm/lọc provider;
+  - trang chi tiết Agentic Commerce;
+  - panel activity của provider;
+  - tab service logs.
+- Tạo banner động từ các frame đã chụp.
+- Ghi chú cập nhật 2026-06-04: README hiện đã bỏ banner động cũ và dùng `banner.jpg`.
 
-- Started the Hub backend and frontend locally.
-- Captured real Hub UI states with Playwright:
-  - dashboard overview;
-  - Hub provider catalog;
-  - provider search/filter;
-  - Agentic Commerce provider detail;
-  - provider activity panel;
-  - service logs tab.
-- Built `banner.gif` from the captured frames with a cursor/click indicator.
-- Updated `README.md` to use `banner.gif` as the top banner.
+## Kiểm Chứng
 
-## Verification
-
-- Generated GIF was opened for visual review.
-- GIF is lightweight enough for README use.
-- Runtime capture artifacts remain outside the committed source tree.
-
+- Banner đã được mở để review trực quan.
+- Artifact runtime capture nằm ngoài source tree đã commit.

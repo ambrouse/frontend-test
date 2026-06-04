@@ -1,47 +1,43 @@
-# CI and README Polish - 2026-05-28
+# Tinh Chỉnh CI Và README - 2026-05-28
 
-## Purpose
+## Mục Đích
 
-This note records the GitHub presentation and CI/CD hardening pass for AI Hub.
+Ghi lại lần chỉnh giao diện README trên GitHub và bổ sung cổng CI/CD cho AI Hub.
 
-## README Presentation
+## Trình Bày README
 
-- The banner is rendered with explicit HTML image markup:
-  - source path: root `banner.gif`
-  - `width="100%"`
-  - descriptive alt text
-- This avoids GitHub Markdown's default image sizing behavior and keeps the banner responsive in the repository view.
-- README visual density is improved with GitHub-safe elements:
-  - `for-the-badge` shields for build/runtime signals;
-  - HTML tables for card-like sections;
-  - provider matrix badges;
-  - collapsible setup sections;
-  - updated Mermaid architecture including the Nginx gateway.
+- Banner README hiện dùng ảnh tĩnh local `banner.jpg`, không dùng banner động cũ.
+- Ảnh được render bằng thẻ HTML có `width="100%"` và alt text rõ ràng để GitHub hiển thị ổn định.
+- README dùng các thành phần GitHub-safe:
+  - badge `for-the-badge` cho tín hiệu build/runtime;
+  - bảng Markdown cho matrix trạng thái;
+  - liên kết tới evidence thật trong `tests/`;
+  - sơ đồ Mermaid cho kiến trúc có Nginx gateway.
 
-## CI/CD Additions
+## Bổ Sung CI/CD
 
-The main CI workflow now includes:
+Workflow chính đang kiểm tra:
 
-- Cross-platform frontend typecheck, tests, and build.
-- Cross-platform backend lint, format, typecheck, tests, package build, provider validation, dry-run lifecycle, secret scan, and latency benchmark.
-- Provider Bash and PowerShell syntax validation.
-- Frontend dependency audit.
-- Repository hygiene:
-  - local README/docs link checks;
-  - evidence README checks;
-  - temporary evidence artifact rejection;
-  - duplicate evidence image detection;
-  - Nginx Docker Compose config and `nginx -t`.
-- Root setup smoke test without secrets.
+- Frontend đa nền tảng: typecheck, unit test và build.
+- Backend đa nền tảng: lint, format, typecheck, test coverage, build package, validate provider, dry-run lifecycle, secret scan và benchmark latency.
+- Cú pháp Bash/PowerShell của provider script.
+- Audit dependency production của frontend.
+- Hygiene repo:
+  - kiểm tra link local trong README/docs/logs/plans/tests/infra;
+  - kiểm tra README evidence;
+  - chặn artifact tạm trong evidence;
+  - chặn ảnh evidence bị trùng hash;
+  - validate Docker Compose Nginx và `nginx -t`.
+- Setup smoke từ root, không cần secret provider thật.
 
-The security workflow now includes:
+Workflow security đang kiểm tra:
 
-- Dependency Review on pull requests.
-- CodeQL for Python and JavaScript/TypeScript.
-- Weekly scheduled security analysis.
+- Dependency Review trên pull request.
+- CodeQL cho Python và JavaScript/TypeScript.
+- Lịch quét bảo mật hằng tuần.
 
-## Notes
+## Ghi Chú
 
-- The CI gates intentionally avoid requiring real provider secrets.
-- Provider full-function proof remains documented in `tests/` evidence folders.
-- CodeQL and Dependency Review require GitHub Advanced Security availability depending on repository plan/settings.
+- Các cổng CI không yêu cầu secret provider thật.
+- Bằng chứng provider full-function vẫn nằm trong các thư mục `tests/`.
+- CodeQL và Dependency Review phụ thuộc gói/quyền GitHub Advanced Security của repository.

@@ -1,34 +1,29 @@
-# README Visual Dashboard - 2026-05-28
+# Dashboard README - 2026-05-28
 
-## Purpose
+## Mục Đích
 
-This note records the README visual dashboard pass requested after the initial CI and banner polish.
+Ghi lại lần bổ sung dashboard README sau đợt chỉnh CI và banner ban đầu.
 
-## Changes
+## Thay Đổi
 
-- Added `AI Ops Cockpit` near the top of the README:
-  - GitHub stats card;
-  - top language card;
-  - streak card;
-  - local quality signal badges for provider count, test counts, audit, Nginx, and screenshot evidence.
-- Added `Visual Proof Board`:
-  - LAN Hub provider dashboard;
-  - Agentic Commerce checkout evidence;
-  - AI-Q file-grounded chat evidence;
-  - Warehouse agent output evidence;
-  - PDF to Podcast generation evidence;
-  - Web Agent search-with-sources evidence.
-- Updated CI markdown hygiene to validate local HTML `href` and `src` references as well as Markdown links.
+- Dashboard ảnh ngoài cũ đã được thay bằng bảng tín hiệu nội bộ trong README.
+- README hiện ưu tiên ảnh local và evidence thật:
+  - ảnh Hub light/dark mode;
+  - ảnh navbar light mode;
+  - ảnh provider card và control button;
+  - đường dẫn trực tiếp tới thư mục `tests/`.
+- CI markdown hygiene kiểm tra cả link Markdown lẫn HTML `href` và `src` local.
 
-## Constraints
+## Ràng Buộc
 
-- GitHub Markdown strips custom CSS, so the dashboard uses safe HTML tables, shields, local images, and external SVG stat cards.
-- The screenshots are existing curated evidence under `tests/`; no generated or fake UI evidence was introduced.
+- GitHub Markdown không cho CSS tùy ý, nên README dùng bảng Markdown, badge vừa đủ, ảnh local và Mermaid.
+- Evidence dùng ảnh đã capture trong `tests/`; không đưa ảnh giả hoặc mock không kiểm chứng vào README.
+- README không còn phụ thuộc stat card SVG ngoài để tránh ảnh vỡ trên GitHub.
 
-## Verification
+## Kiểm Chứng
 
-- `actionlint -color`
-- Local README/docs/logs/plans/tests/infra link validation for Markdown links and HTML `href`/`src`
-- Evidence hygiene scan for empty evidence README files, temporary artifacts, and duplicate image hashes
-- Frontend typecheck, unit tests, build, and audit
-- Backend lint/type/test/security/provider checks, OpenAPI smoke, package build, benchmark, and pip-audit
+- `actionlint -color`.
+- Kiểm tra link local trong README/docs/logs/plans/tests/infra, gồm Markdown link và HTML `href`/`src`.
+- Evidence hygiene: chặn README evidence rỗng, artifact tạm và ảnh trùng hash.
+- Frontend: typecheck, unit test, build và audit production dependency.
+- Backend: lint, typecheck, test, security scan, provider check, OpenAPI smoke, package build, benchmark và pip-audit.

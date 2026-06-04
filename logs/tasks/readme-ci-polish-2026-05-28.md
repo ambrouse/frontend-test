@@ -1,56 +1,55 @@
-# README and CI Polish - 2026-05-28
+# Tinh Chỉnh README Và CI - 2026-05-28
 
-## 10:54 Start
+## 10:54 Bắt Đầu
 
-- User reported that the GitHub banner appears cropped and that CI/README presentation still feels too plain.
-- Applied skills: `readme-style`, `push-code-skill`, `plan-skill`, `documentation-skill`, `logging-skill`, `testing-skill`, and `security-skill`.
-- Created plan: `plans/plan-readme-ci-polish-2026-05-28.md`.
+- User báo banner GitHub bị crop và phần trình bày CI/README còn đơn giản.
+- Skill đã áp dụng: `readme-style`, `push-code-skill`, `plan-skill`, `documentation-skill`, `logging-skill`, `testing-skill` và `security-skill`.
+- Đã tạo plan: `plans/plan-readme-ci-polish-2026-05-28.md`.
 
 ## Audit
 
-- `banner.gif` is a `1120 x 501` GIF. README used plain markdown image syntax, which gives less control over GitHub rendering.
-- Existing CI already had cross-platform frontend/backend tests, provider script syntax, release artifacts, audits, provider validation, dry-run lifecycle, and latency benchmark.
-- Missing CI gates identified:
-  - setup smoke from root script;
-  - Nginx compose/template validation;
-  - docs/evidence local-link and artifact hygiene;
-  - dependency review on pull requests;
-  - CodeQL analysis for Python and JavaScript/TypeScript.
+- README thời điểm đó dùng banner động cũ, sau này đã thay bằng ảnh tĩnh local `banner.jpg`.
+- CI đã có test frontend/backend đa nền tảng, kiểm tra cú pháp provider script, release artifact, audit, validate provider, dry-run lifecycle và benchmark latency.
+- Cổng CI còn thiếu:
+  - setup smoke từ root script;
+  - validate Nginx compose/template;
+  - kiểm tra link docs/evidence và hygiene artifact;
+  - Dependency Review trên pull request;
+  - CodeQL cho Python và JavaScript/TypeScript.
 
-## Planned Changes
+## Thay Đổi Dự Kiến
 
-- Replace the README banner markdown with explicit HTML image markup using `width="100%"`.
-- Add richer GitHub-friendly shields, status boards, provider matrix badges, and command cards while keeping the current technical content.
-- Extend CI with repository hygiene and setup/Nginx checks.
-- Add security workflow for dependency review and CodeQL.
+- Render banner README bằng HTML có `width="100%"`.
+- Thêm badge, bảng trạng thái, provider matrix và command card GitHub-safe.
+- Mở rộng CI với repository hygiene và setup/Nginx check.
+- Thêm security workflow cho Dependency Review và CodeQL.
 
-## Changes Applied
+## Đã Áp Dụng
 
-- Updated README hero, badges, provider matrix, quick-start cards, and architecture diagram.
-- Added `docs/ci-and-readme-polish-2026-05-28.md`.
-- Extended `.github/workflows/ci.yml` with repository hygiene and setup smoke jobs.
-- Added `.github/workflows/security.yml` for Dependency Review and CodeQL.
+- Cập nhật README hero, badge, provider matrix, quick-start card và sơ đồ kiến trúc.
+- Thêm `docs/ci-and-readme-polish-2026-05-28.md`.
+- Mở rộng `.github/workflows/ci.yml` với repository hygiene và setup smoke.
+- Thêm `.github/workflows/security.yml` cho Dependency Review và CodeQL.
 
-## Verification
+## Kiểm Chứng
 
-- `actionlint`: passed for GitHub workflow syntax.
-- README/docs local-link check: checked 118 markdown files.
-- Evidence hygiene: README presence, temp artifact scan, and duplicate image scan passed.
-- `docker compose -f docker-compose.nginx.yml config -q`: passed.
-- `docker exec ai-hub-nginx nginx -t`: passed.
-- `npm run typecheck`: passed.
-- `npm test`: 9 passed.
-- `npm audit --audit-level=moderate`: found 0 vulnerabilities.
-- `./.venv/bin/python -m pytest backend/tests`: 24 passed.
-- `./.venv/bin/python backend/scripts/validate_providers.py`: validated 8 provider manifests.
-- `./.venv/bin/python backend/scripts/check_no_secrets.py`: passed.
-- `printf '\n' | ./setup.sh`: passed and seeded 8 providers.
-- `npm run build`: passed.
-- Backend `ruff check`, `ruff format --check`, and `mypy app`: passed.
+- `actionlint`: pass cú pháp GitHub workflow.
+- Kiểm tra link local README/docs: đã kiểm 118 file Markdown.
+- Evidence hygiene: pass README presence, temp artifact scan và duplicate image scan.
+- `docker compose -f docker-compose.nginx.yml config -q`: pass.
+- `docker exec ai-hub-nginx nginx -t`: pass.
+- `npm run typecheck`: pass.
+- `npm test`: 9 test pass.
+- `npm audit --audit-level=moderate`: không có vulnerability.
+- `./.venv/bin/python -m pytest backend/tests`: 24 test pass.
+- `./.venv/bin/python backend/scripts/validate_providers.py`: validate 8 provider manifest.
+- `./.venv/bin/python backend/scripts/check_no_secrets.py`: pass.
+- Setup root đã chạy và seed 8 provider.
+- `npm run build`: pass.
+- Backend `ruff check`, `ruff format --check` và `mypy app`: pass.
 
-## Result
+## Kết Quả
 
-- README is more visually structured for GitHub while preserving the same technical content.
-- Banner now uses responsive HTML image markup instead of plain markdown image syntax.
-- CI now covers root setup, repository hygiene, Nginx config, Dependency Review, and CodeQL in addition to existing frontend/backend/provider gates.
-- Final step: commit and push this polish pass to `origin/main`.
+- README có cấu trúc rõ hơn trên GitHub và vẫn giữ nội dung kỹ thuật.
+- Banner README được render responsive.
+- CI bao phủ setup root, repository hygiene, Nginx config, Dependency Review và CodeQL bên cạnh các cổng frontend/backend/provider.

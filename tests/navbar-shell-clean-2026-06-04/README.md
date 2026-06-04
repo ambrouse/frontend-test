@@ -1,24 +1,23 @@
-# Navbar Shell CSS Cleanup Evidence - 2026-06-04
+# Bằng chứng dọn CSS navbar shell - 2026-06-04
 
-## Scope
+## Phạm vi
 
-- Moved shell, dock navigation, and theme toggle styling into `frontend/src/styles/shell.css`.
-- Removed stacked historical nav/theme override blocks from `frontend/src/styles/globals.css`.
-- Kept the dock buttons and light theme toggle on the same crescent animation geometry as the dark theme toggle.
+- Chuyển style của shell, dock navigation và nút đổi theme vào `frontend/src/styles/shell.css`.
+- Gỡ các lớp override cũ bị chồng trong `frontend/src/styles/globals.css`.
+- Giữ nút dock và theme toggle light mode dùng cùng hình học vòng khuyết với dark mode.
 
-## Evidence
+## Bằng chứng
 
-- `01-dark-theme-hover.png` through `04-dark-settings-hover.png`: dark-mode hover close-ups.
-- `05-light-theme-hover.png` through `08-light-settings-hover.png`: light-mode hover close-ups.
-- `09-light-settings-panel.png` and `10-dark-settings-panel.png`: settings panel sanity checks after CSS cleanup.
-- `computed-style-audit.json`: computed styles for theme, Home, Hub, and Settings buttons.
-- `layout-regression/07-hub-desktop-no-overflow-fixed-nav.png`: desktop Hub with fixed left navbar and no horizontal overflow.
-- `layout-regression/08-hub-scroll-no-overflow-fixed-nav.png`: scrolled page proving the navbar stays fixed.
-- `layout-regression/layout-metrics-no-overflow-fixed-nav.json`: viewport width, scroll width, dock/content rects, and animation timing.
+- `01-dark-theme-hover.png` đến `04-dark-settings-hover.png`: ảnh cận cảnh hover ở dark mode.
+- `05-light-theme-hover.png` đến `08-light-settings-hover.png`: ảnh cận cảnh hover ở light mode.
+- `09-light-settings-panel.png` và `10-dark-settings-panel.png`: kiểm tra nhanh panel cài đặt sau khi dọn CSS.
+- `layout-regression/07-hub-desktop-no-overflow-fixed-nav.png`: Hub desktop có navbar trái cố định và không tràn ngang.
+- `layout-regression/08-hub-scroll-no-overflow-fixed-nav.png`: trang đã cuộn, chứng minh navbar vẫn cố định.
+- `spin-proof/hub-hover-040ms.png` đến `spin-proof/hub-hover-880ms.png`: chuỗi ảnh kiểm tra chuyển động vòng hover.
 
-## Verification
+## Kiểm chứng
 
-- `npm run build` passed.
-- `npm run typecheck` passed after the build regenerated `.next/types`.
-- Playwright screenshots were captured with the real `ai-hub-theme` localStorage key and waited for `document.documentElement.dataset.theme`.
-- Final desktop metrics: dock `x=0`, content `x=78`, content width `calc(100vw - 78px)`, document scroll width equals viewport width, navbar animation is `0.38s` with a slight ease-out.
+- `npm run build` đã đạt.
+- `npm run typecheck` đã đạt sau khi build tạo lại `.next/types`.
+- Ảnh Playwright dùng khóa localStorage thật `ai-hub-theme` và chờ `document.documentElement.dataset.theme`.
+- Kết quả kiểm tra bằng mắt: dock trái cố định, nội dung không tràn ngang, animation navbar giữ thời lượng khoảng `0.38s`.
