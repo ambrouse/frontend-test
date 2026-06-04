@@ -260,7 +260,7 @@ ensure_venv() {
     fi
   fi
 
-  log "Creating Python virtual environment..."
+  log "Creating Python virtual environment..." >&2
   "${python_bin}" -m venv "${VENV_DIR}"
   venv_py="$(venv_python || true)"
   [[ -n "${venv_py}" ]] || fail "Could not locate Python inside .venv."

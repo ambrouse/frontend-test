@@ -15,6 +15,7 @@ Người dùng báo README, docs và logs chưa thống nhất tiếng Việt c�
 - Xóa file `banner.gif` cũ khỏi repo.
 - Dịch docs/log README liên quan và README evidence mới sang tiếng Việt.
 - Cập nhật setup smoke để CI chạy `bash ./setup.sh --yes --no-start --skip-nginx`.
+- Sửa `setup.sh` để log tạo `.venv` đi qua stderr, tránh làm bẩn giá trị path Python trả về qua stdout.
 
 ## Kiểm Chứng
 

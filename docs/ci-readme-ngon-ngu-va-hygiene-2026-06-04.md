@@ -16,11 +16,13 @@ Tài liệu này ghi lại lần sửa README, docs/log liên quan và các lỗ
 - `Frontend dependency audit`: workflow ghi audit production dependencies nhưng command cũ audit cả dev dependency, làm advisory của `vitest` chặn CI.
 - `Repository hygiene`: còn JSON tracked trong `tests/`, trái quy tắc evidence hygiene.
 - `Setup smoke`: CI đang chạy `printf '\n' | ./setup.sh`; command mới dùng `bash ./setup.sh --yes --no-start --skip-nginx` để kiểm tra setup không cần start service.
+- `setup.sh`: khi tạo `.venv` mới, `ensure_venv` từng ghi log ra stdout trong command substitution, làm biến `venv_py` bị lẫn log và gây lỗi command-not-found trên runner sạch.
 
 ## Thay Đổi Chính
 
 - Cập nhật `.github/workflows/ci.yml` để audit đúng production dependency bằng `npm audit --omit=dev --audit-level=moderate`.
 - Cập nhật setup smoke để chạy root setup bằng Bash trên runner Ubuntu, tự động trả lời yes và bỏ qua start/nginx trong smoke test.
+- Chuyển log tạo `.venv` của `setup.sh` sang stderr để stdout chỉ trả về path Python.
 - Xóa `banner.gif` cũ khỏi repo, README dùng `banner.jpg`.
 - Xóa JSON tracked trong `tests/current-frontend-fix-2026-06-04/` và `tests/navbar-shell-clean-2026-06-04/`.
 - Dịch README chính, docs/log README liên quan và README evidence mới sang tiếng Việt có dấu.
@@ -34,4 +36,4 @@ Tài liệu này ghi lại lần sửa README, docs/log liên quan và các lỗ
 - `npm run typecheck`: đạt.
 - `npm run test`: đạt, 9 test pass.
 - `npm run build`: đạt.
-- Setup smoke local không chạy được vì máy Windows hiện chỉ có WSL stub và thiếu `/bin/bash`; phần này sẽ được xác nhận trên GitHub Actions runner Ubuntu sau push.
+- Setup smoke local không chạy được vì máy Windows hiện chỉ có WSL stub và thiếu `/bin/bash`; phần này cần xác nhận trên GitHub Actions runner Ubuntu sau push.
