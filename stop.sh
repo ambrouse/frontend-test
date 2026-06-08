@@ -9,6 +9,7 @@ NGINX_PORT="${AIHUB_NGINX_PORT:-6900}"
 ASSUME_YES="${AIHUB_ASSUME_YES:-0}"
 STOP_PROVIDERS=0
 STOP_DOCKER=1
+DOCKER_SUDO=0
 
 usage() {
   cat <<'EOF'
@@ -61,6 +62,47 @@ is_windows_bash() {
 
 is_number() {
   [[ "${1:-}" =~ ^[0-9]+$ ]]
+}
+
+run_as_root() {
+  if is_windows_bash; then
+    return 127
+  fi
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "$@"
+    return $?
+  fi
+  if command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+    return $?
+  fi
+  return 127
+}
+
+run_docker() {
+  if [[ "${DOCKER_SUDO}" == "1" ]]; then
+    run_as_root docker "$@"
+  else
+    docker "$@"
+  fi
+}
+
+ensure_docker_access() {
+  command -v docker >/dev/null 2>&1 || return 1
+  if docker info >/dev/null 2>&1; then
+    DOCKER_SUDO=0
+    return 0
+  fi
+  if run_as_root docker info >/dev/null 2>&1; then
+    DOCKER_SUDO=1
+    return 0
+  fi
+  return 1
+}
+
+systemd_user_available() {
+  command -v systemctl >/dev/null 2>&1 &&
+    systemctl --user is-system-running >/dev/null 2>&1
 }
 
 port_pids() {
@@ -118,8 +160,27 @@ kill_pids() {
   fi
 }
 
+stop_systemd_unit() {
+  local label="$1" unit="ai-hub-$1.service"
+  if is_windows_bash || ! systemd_user_available; then
+    return 1
+  fi
+  if systemctl --user list-units --all --plain --no-legend "${unit}" 2>/dev/null | grep -q "${unit}"; then
+    if confirm "Stop ${label} systemd user unit ${unit}? [y/N]:" "n"; then
+      systemctl --user stop "${unit}" >/dev/null 2>&1 || true
+      systemctl --user reset-failed "${unit}" >/dev/null 2>&1 || true
+      log "OK: stopped ${unit}."
+    else
+      log "Kept ${unit}."
+    fi
+    return 0
+  fi
+  return 1
+}
+
 stop_pid_file() {
   local label="$1" pid_file="$2" pid
+  stop_systemd_unit "${label}" || true
   pid="$(pid_from_file "${pid_file}" || true)"
   if [[ -z "${pid}" ]]; then
     rm -f "${pid_file}"
@@ -156,12 +217,12 @@ stop_gateway() {
     log "OK: no docker-compose.nginx.yml."
     return 0
   fi
-  if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
+  if ! ensure_docker_access || ! run_docker compose version >/dev/null 2>&1; then
     log "OK: Docker Compose unavailable; skipping gateway stop."
     return 0
   fi
   if confirm "Stop Docker Nginx gateway from docker-compose.nginx.yml? [y/N]:" "n"; then
-    (cd "${ROOT_DIR}" && docker compose -f docker-compose.nginx.yml down --remove-orphans) || true
+    (cd "${ROOT_DIR}" && run_docker compose -f docker-compose.nginx.yml down --remove-orphans) || true
   else
     log "Kept Docker Nginx gateway."
   fi
@@ -177,20 +238,20 @@ stop_provider_scripts() {
 }
 
 stop_provider_containers() {
-  if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+  if ! ensure_docker_access; then
     warn "Docker daemon unavailable; skipping provider container scan."
     return 0
   fi
   local ids=()
   while IFS= read -r id; do
     [[ -n "${id}" ]] && ids+=("${id}")
-  done < <(docker ps -aq --filter "label=aihub.provider" 2>/dev/null || true)
+  done < <(run_docker ps -aq --filter "label=aihub.provider" 2>/dev/null || true)
   if [[ "${#ids[@]}" -eq 0 ]]; then
     log "OK: no provider containers with label aihub.provider."
     return 0
   fi
   if confirm "Stop provider Docker containers (${ids[*]})? [y/N]:" "n"; then
-    docker stop "${ids[@]}" >/dev/null 2>&1 || true
+    run_docker stop "${ids[@]}" >/dev/null 2>&1 || true
   fi
 }
 

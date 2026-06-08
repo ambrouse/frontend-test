@@ -11,13 +11,17 @@ Use the root Bash scripts:
 - Start/setup: `./setup.sh`
 - Stop: `./stop.sh`
 
-The root PowerShell setup entrypoint has been removed. `setup.sh` checks Git, Node/npm, Python 3.11+, curl, Docker, Docker Compose, the Nginx image, and ports `6900-6902`, then starts the Hub runtime and reports ports, URLs, logs, and health states after boot. If a port is already busy, setup asks whether to reuse, kill, or abort. `stop.sh` asks before stopping PID-file processes, Docker gateway services, and matching port listeners. Docker is optional for viewing the Hub shell, but required for the gateway and provider install/run flows.
+The root PowerShell setup entrypoint has been removed. `setup.sh` checks Git, Node/npm, Python 3.11+, curl, Docker, Docker Compose, the Nginx image, and ports `6900-6902`, then starts the Hub runtime and reports ports, URLs, logs, and health states after boot. If a port is already busy, setup asks whether to reuse, kill, or abort. `stop.sh` asks before stopping systemd user units, PID-file processes, Docker gateway services, and matching port listeners. Docker is optional for viewing the Hub shell, but required for the gateway and provider install/run flows.
+
+On Debian/Ubuntu fresh machines, `setup.sh --yes` attempts to install missing host packages with apt, including Git, curl, Python venv support, Docker Engine, and Docker Compose v2. It also starts the Docker daemon when systemd is available and can add the current user to the `docker` group for future no-sudo access. The current shell may still need `newgrp docker` or a new login session before plain `docker` works.
+
+On Windows Git Bash, setup can try `winget` for missing Git/Python/Node/Docker Desktop components when available, but Docker Desktop must still be started by the user after installation. On macOS, setup can use Homebrew for command-line dependencies when `brew` is installed, while Docker Desktop remains the expected runtime for gateway/provider containers. Linux AMD64 and ARM64/aarch64 are supported by the local scripts and by the default Nginx image.
 
 If an NVIDIA key is entered, setup updates only `NVIDIA_API_KEY` in `.env.local` and preserves other local variables. The setup scripts must not write secrets into tracked files.
 
 ## Runtime
 
-`setup.sh` starts backend and frontend as background processes and writes PID/log files under `logs/hub/`:
+`setup.sh` starts backend and frontend as user-managed detached processes and writes PID/log files under `logs/hub/`. On Linux with user systemd, it uses `systemd-run --user` so services survive the setup shell exiting; otherwise it falls back to `nohup`.
 
 ```bash
 tail -f logs/hub/backend.log
@@ -59,7 +63,7 @@ The gateway proxies:
 - `/_next/*` and app routes to the Next.js frontend
 - `/_next/webpack-hmr` with a dedicated dev HMR route
 
-The Nginx template resolves `host.docker.internal` through Docker DNS at request time with IPv6 disabled. This avoids Docker Desktop choosing an unreachable IPv6 upstream for the Windows host while keeping the default upstream values unchanged.
+The Nginx template resolves dynamic upstreams through Docker DNS with IPv6 disabled. On Linux setup passes the host Docker bridge gateway IP as the upstream because variable-based `proxy_pass` does not read `/etc/hosts` entries from `extra_hosts`; on Windows/macOS it keeps the `host.docker.internal` fallback expected by Docker Desktop.
 
 ## Verification
 
@@ -81,4 +85,4 @@ npm audit --prefix frontend --audit-level=moderate
 
 - Evidence screenshots now live under `tests/`.
 - Runtime output under `providers/*/runtime/`, `providers/*/logs/`, and `deploy/` remains ignored.
-- The current Linux validation host is ARM/aarch64; the setup logic is architecture-neutral for Linux AMD64.
+- The setup logic is intended for Linux AMD64 and ARM64/aarch64. Other CPU architectures are reported as untested during setup.

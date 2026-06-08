@@ -88,6 +88,8 @@ Yêu cầu chính:
 - Docker nếu muốn chạy Nginx gateway hoặc provider thật.
 - Bash/Git Bash cho `setup.sh`.
 
+Trên Debian/Ubuntu, `setup.sh --yes` sẽ cố gắng tự cài các gói còn thiếu như `git`, `curl`, `python3-venv`, `docker.io` và Docker Compose v2. Trên Windows Git Bash/macOS, script thử dùng `winget`/Homebrew khi có, nhưng Docker Desktop vẫn cần được mở và chạy xong trước khi gateway/provider containers hoạt động. Nếu script vừa thêm user vào group `docker`, mở terminal mới hoặc chạy `newgrp docker`.
+
 Chạy từ thư mục gốc:
 
 ```bash
@@ -114,7 +116,7 @@ Dừng sạch:
 ./stop.sh
 ```
 
-`setup.sh` kiểm tra Git, Node/npm, Python, curl, port, Docker và image Nginx trước khi khởi động. Nếu port đang bận, script hỏi cách xử lý thay vì tự ý giết process.
+`setup.sh` kiểm tra Git, Node/npm, Python, curl, port, Docker, quyền Docker socket và image Nginx trước khi khởi động. Nếu port đang bận, script hỏi cách xử lý thay vì tự ý giết process.
 
 ## Cài Bằng Docker Hub
 

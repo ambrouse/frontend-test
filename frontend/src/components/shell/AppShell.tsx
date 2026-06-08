@@ -75,7 +75,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-frame">
       <CanvasAtmosphere />
       <LensScrollBackground />
-      <SlowWheelScroll />
       <aside className="side-dock" aria-label="Dieu huong chinh">
         <Link href="/" className="brand-mark" aria-label="AI Hub Home">
           <span className="brand-core">AI</span>
@@ -186,60 +185,6 @@ function LensScrollBackground() {
       observer.disconnect();
       window.removeEventListener("scroll", requestSync);
       if (frameId) window.cancelAnimationFrame(frameId);
-    };
-  }, []);
-
-  return null;
-}
-
-function SlowWheelScroll() {
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion) return;
-
-    let animationFrame = 0;
-    let pendingDelta = 0;
-    const scrollFactor = 0.46;
-    const maxStep = 220;
-    const interactiveSelector = "input, textarea, select, [contenteditable='true'], [role='textbox']";
-
-    const isScrollableElement = (element: Element | null) => {
-      let current: Element | null = element;
-      while (current && current !== document.body && current !== document.documentElement) {
-        const style = window.getComputedStyle(current);
-        const canScrollY = /(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight;
-        if (canScrollY) return true;
-        current = current.parentElement;
-      }
-      return false;
-    };
-
-    const flushScroll = () => {
-      animationFrame = 0;
-      const delta = Math.max(-maxStep, Math.min(maxStep, pendingDelta));
-      pendingDelta -= delta;
-      window.scrollBy({ top: delta, left: 0, behavior: "auto" });
-      if (Math.abs(pendingDelta) > 0.5) {
-        animationFrame = window.requestAnimationFrame(flushScroll);
-      } else {
-        pendingDelta = 0;
-      }
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey) return;
-      const target = event.target instanceof Element ? event.target : null;
-      if (target?.closest(interactiveSelector) || isScrollableElement(target)) return;
-
-      event.preventDefault();
-      pendingDelta += event.deltaY * scrollFactor;
-      if (!animationFrame) animationFrame = window.requestAnimationFrame(flushScroll);
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      if (animationFrame) window.cancelAnimationFrame(animationFrame);
     };
   }, []);
 
